@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "834065889708",
+    "project_id": "balance-team-maker",
+    "storage_bucket": "balance-team-maker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834065889708:android:ac208e00a1022614406209",
+        "android_client_info": {
+          "package_name": "com.balanceteammaker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAifUOW5n-0v6anoMKbNUIfLR72M1CHAtY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

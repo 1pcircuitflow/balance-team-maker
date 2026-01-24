@@ -1,0 +1,5 @@
+{
+  "name": "Balance Team Maker",
+  "description": "축구, 농구, 일반 종목별 최적의 팀 밸런스를 맞춰주는 팀 메이커 서비스입니다.",
+  "requestFramePermissions": []
+}
