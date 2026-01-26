@@ -20,7 +20,7 @@ const {
   PlusIcon, MinusIcon, TrashIcon, EditIcon, CheckIcon, ShuffleIcon,
   UserPlusIcon, UserCheckIcon, ShareIcon, SunIcon, MoonIcon,
   SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon,
-  SettingsIcon, HeartIcon
+  SettingsIcon, HeartIcon, RotateCcwIcon
 } = Icons;
 
 const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean }> = ({ lang, darkMode, isAdFree }) => {
@@ -707,99 +707,120 @@ const UpgradeModal: React.FC<{
 };
 
 const InfoModal: React.FC<{
-  isOpen: boolean; onClose: () => void; lang: Language; darkMode: boolean; isAdFree: boolean; isUnlimitedPos: boolean; isLoggedIn: boolean; onUpgradeRequest: () => void; onRestore: () => void; showAlert: (message: string, title?: string) => void;
-}> = ({ isOpen, onClose, lang, darkMode, isAdFree, isUnlimitedPos, isLoggedIn, onUpgradeRequest, onRestore, showAlert }) => {
+  isOpen: boolean; onClose: () => void; onUpgradeRequest: () => void; onRestore: () => void;
+  lang: Language; darkMode: boolean; isAdFree: boolean; isUnlimitedPos: boolean; user: any;
+  nickname: string; onUpdateNickname: (name: string) => void; onLogin: () => void; onLogout: () => void;
+}> = ({ isOpen, onClose, onUpgradeRequest, onRestore, lang, darkMode, isAdFree, isUnlimitedPos, user, nickname, onUpdateNickname, onLogin, onLogout }) => {
   const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
-  if (!isOpen) return null;
-
   const isPro = isAdFree && isUnlimitedPos;
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempNickname, setTempNickname] = useState(nickname);
+
+  useEffect(() => {
+    setTempNickname(nickname);
+  }, [nickname, isOpen]);
+
+  const onSaveNickname = () => {
+    if (tempNickname.trim()) {
+      onUpdateNickname(tempNickname.trim());
+      setIsEditingName(false);
+    }
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm animate-in duration-200" onClick={onClose}>
       <div className={`w-full max-w-sm rounded-[2.5rem] p-8 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'} space-y-8`} onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h3 className={`text-2xl font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'} tracking-tight`}>{t('infoTitle')}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-2 text-3xl leading-none">&times;</button>
-        </div>
-
-        {/* 프리미엄 섹션 */}
-        <div className={`relative overflow-hidden p-6 rounded-3xl border ${isPro
-          ? 'bg-gradient-to-br from-amber-400 to-amber-600 border-amber-300'
-          : 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 shadow-lg shadow-blue-500/20'}`}>
-
-          <div className="relative z-10">
-            <h4 className="text-white font-black text-lg mb-4 flex items-center gap-2">
-              {isPro ? '✨ ' + t('proStatusActive') : '💎 ' + t('proUpgradeTitle')}
-            </h4>
-
-            <ul className="space-y-4 mb-8">
-              {[
-                { label: t('proBenefitAds'), active: isAdFree },
-                { label: t('proBenefitPos'), active: isUnlimitedPos },
-              ].map((benefit, i) => (
-                <li key={i} className={`flex items-center gap-3 text-[13px] font-black transition-all ${benefit.active ? 'text-white' : 'text-white/70'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-inner ${benefit.active ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>
-                    ✓
-                  </div>
-                  {benefit.label}
-                </li>
-              ))}
-            </ul>
-
-            {!isPro && (
-              <button
-                onClick={onUpgradeRequest}
-                className="w-full py-3 bg-white text-blue-700 font-black rounded-xl text-xs shadow-xl active:scale-95 transition-all"
-              >
-                {t('viewUpgradeOptions' as any)}
-              </button>
-            )}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className={`text-2xl font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'} tracking-tight`}>{t('infoTitle')}</h3>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-2 text-3xl leading-none">&times;</button>
           </div>
 
-          {/* 장식용 배경 */}
-          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        </div>
+          {/* 프로필 섹션 */}
+          <div className={`p-5 rounded-[2rem] border ${darkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  {user ? 'Google Account' : 'Guest Mode'}
+                </span>
+                {isEditingName ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={tempNickname}
+                      onChange={(e) => setTempNickname(e.target.value)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-bold border-2 outline-none focus:border-blue-500 transition-all ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
+                      placeholder={t('nicknamePlaceholder')}
+                      autoFocus
+                    />
+                    <button onClick={onSaveNickname} className="p-2 bg-blue-600 text-white rounded-lg shadow-lg active:scale-90"><CheckIcon /></button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 group">
+                    <span className={`text-lg font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{nickname}</span>
+                    <button onClick={() => setIsEditingName(true)} className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors pointer-events-auto"><EditIcon /></button>
+                  </div>
+                )}
+              </div>
+              {user ? (
+                <button onClick={onLogout} className="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
+                  {t('logout')}
+                </button>
+              ) : (
+                <button onClick={onLogin} className="px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
+                  {t('googleLogin')}
+                </button>
+              )}
+            </div>
+          </div>
 
-        <div className="space-y-3">
-          <a
-            href="mailto:1p.circuitflow@gmail.com?subject=Team Balance Pro Feedback"
-            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
-          >
-            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('contactUs')}</span>
-            <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
-          </a>
-          <a
-            href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
-            target="_blank"
-            rel="noreferrer"
-            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
-          >
-            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('rateApp')}</span>
-            <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
-          </a>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText('1p.circuitflow@gmail.com');
-              showAlert(t('emailCopiedMsg'), t('validationErrorTitle'));
-            }}
-            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
-          >
-            <span className={`text-[12px] font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>1p.circuitflow@gmail.com</span>
-            <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Copy</span>
-          </button>
+          {/* 프리미엄 섹션 */}
+          <div className={`relative overflow-hidden p-6 rounded-3xl border ${isPro
+            ? 'bg-gradient-to-br from-amber-400 to-amber-600 border-amber-300'
+            : 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 shadow-lg shadow-blue-500/20'}`}>
+            <div className="relative z-10">
+              <h4 className="text-white font-black text-lg mb-4 flex items-center gap-2">
+                {isPro ? '✨ ' + t('proStatusActive') : '💎 ' + t('proUpgradeTitle')}
+              </h4>
+              <ul className="space-y-4 mb-8">
+                {[
+                  { label: t('proBenefitAds'), active: isAdFree },
+                  { label: t('proBenefitPos'), active: isUnlimitedPos },
+                ].map((benefit, i) => (
+                  <li key={i} className={`flex items-center gap-3 text-[13px] font-black transition-all ${benefit.active ? 'text-white' : 'text-white/70'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-inner ${benefit.active ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>
+                      ✓
+                    </div>
+                    {benefit.label}
+                  </li>
+                ))}
+              </ul>
+              {!isPro && (
+                <button onClick={onUpgradeRequest} className="w-full py-3 bg-white text-blue-700 font-black rounded-xl text-xs shadow-xl active:scale-95 transition-all">
+                  {t('viewUpgradeOptions' as any)}
+                </button>
+              )}
+            </div>
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          </div>
 
-          <button
-            onClick={onRestore}
-            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
-          >
-            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('restorePurchases' as any)}</span>
-            <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ShuffleIcon /></div>
-          </button>
+          <div className="space-y-3">
+            <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank" rel="noreferrer" className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}>
+              <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('rateApp')}</span>
+              <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
+            </a>
+            <button onClick={onRestore} className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}>
+              <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('restorePurchases' as any)}</span>
+              <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><RotateCcwIcon /></div>
+            </button>
+          </div>
 
-        </div>
-
-        <div className="pt-2 flex justify-center text-[10px] font-black text-slate-400 dark:text-slate-700 uppercase tracking-[0.3em]">
-          {t('version')} 2.0.0
+          <div className="pt-2 flex justify-center text-[10px] font-black text-slate-400 dark:text-slate-700 uppercase tracking-[0.3em]">
+            {t('version')} 2.1.17
+          </div>
         </div>
       </div>
     </div>
@@ -1095,6 +1116,45 @@ const RewardAdModal: React.FC<{
   );
 };
 
+const LoginRecommendModal: React.FC<{
+  isOpen: boolean; onLater: () => void; onLogin: () => void; lang: Language; darkMode: boolean;
+}> = ({ isOpen, onLater, onLogin, lang, darkMode }) => {
+  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[2500] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in duration-300">
+      <div className={`w-full max-w-sm rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'}`}>
+        <div className="w-16 h-16 bg-amber-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-amber-500/20 text-3xl">
+          💡
+        </div>
+
+        <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>
+          {t('loginRecommendTitle' as any)}
+        </h3>
+        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'} mb-8 px-2 leading-relaxed`}>
+          {t('loginRecommendMsg' as any)}
+        </p>
+
+        <div className="space-y-3">
+          <button
+            onClick={onLogin}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+          >
+            {t('googleLogin')}
+          </button>
+          <button
+            onClick={onLater}
+            className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
+          >
+            {t('continueWithoutLogin' as any)}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 
 const App: React.FC = () => {
@@ -1146,10 +1206,24 @@ const App: React.FC = () => {
     message: '',
   });
 
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // 초기 데이터 로드 완료 여부
+
   const [user, setUser] = useState<any>(() => {
     const saved = localStorage.getItem('app_user');
     return saved ? JSON.parse(saved) : null;
   });
+
+  const [userNickname, setUserNickname] = useState(() => {
+    const saved = localStorage.getItem('app_user_nickname');
+    if (saved) return saved;
+
+    // 만약 게스트 이름이 없다면 새로 생성
+    const rand = Math.floor(1000 + Math.random() * 9000); // 1000~9999
+    const newName = `${TRANSLATIONS[lang].guest}(${rand})`;
+    localStorage.setItem('app_user_nickname', newName);
+    return newName;
+  });
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLater, setLoginLater] = useState(false); // 앱 실행 시마다 초기화 (localStorage 제거)
 
@@ -1165,6 +1239,9 @@ const App: React.FC = () => {
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
   const [isUnlimitedPos, setIsUnlimitedPos] = useState(() => localStorage.getItem('app_is_unlimited_pos') === 'true');
   const isPro = isAdFree && isUnlimitedPos;
+
+  const [showLoginRecommendModal, setShowLoginRecommendModal] = useState(false);
+  const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'UNLIMITED_POS' | 'FULL' | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false); // 결제/로그인 중복 클릭 방지
 
@@ -1252,7 +1329,13 @@ const App: React.FC = () => {
         if (cloudPlayers && cloudPlayers.length > 0) {
           setPlayers(cloudPlayers);
         }
+        setIsDataLoaded(true);
+      }).catch(() => {
+        setIsDataLoaded(true);
       });
+    } else {
+      // 비로그인 상태면 로컬 데이터 로딩 useEffect에서 처리하므로 여기선 대기하거나 true 설정 (상황에 따라 다름)
+      // 일단 로그인 체크 완료 의미로 사용
     }
 
     // Google Auth 초기화 (웹 환경 대응 포함)
@@ -1309,14 +1392,26 @@ const App: React.FC = () => {
 
   const handleUpgradePro = async (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => {
     if (isProcessing) return;
-    setIsProcessing(true);
 
+    // 로그인이 안 되어 있다면 권장 팝업 표시
+    if (!user) {
+      setPendingUpgradeType(type);
+      setShowLoginRecommendModal(true);
+      return;
+    }
+
+    await executePurchase(type);
+  };
+
+  const executePurchase = async (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => {
+    setIsProcessing(true);
     try {
       let productId: string = '';
       if (type === 'AD_FREE') productId = PRODUCT_IDS.AD_FREE;
       else if (type === 'UNLIMITED_POS') productId = PRODUCT_IDS.UNLIMITED_POS;
       else if (type === 'FULL') productId = PRODUCT_IDS.FULL_PACK;
 
+      console.log('Starting purchase for:', productId);
       const success = await paymentService.purchase(productId as any);
 
       if (success) {
@@ -1331,8 +1426,17 @@ const App: React.FC = () => {
 
         setShowLimitModal(false);
         setShowUpgradeModal(false);
+        setShowLoginRecommendModal(false);
         showAlert(t('upgradeSuccessMsg'), t('upgradeSuccessTitle'));
+      } else {
+        // 결제 실패 또는 취소 시 알림 (무반응 해결)
+        // showAlert(t('restoreFailed' as any), t('validationErrorTitle')); 
+        // -> 보통 취소는 무시하지만 오류일 수 있으므로 로그를 남기거나 간단한 알림이 필요할 수 있음
+        console.log('Purchase failed or cancelled');
       }
+    } catch (err) {
+      console.error('Purchase error:', err);
+      showAlert(t('restoreFailed' as any), t('validationErrorTitle'));
     } finally {
       setIsProcessing(false);
     }
@@ -1379,15 +1483,23 @@ const App: React.FC = () => {
       console.log('Google User:', googleUser);
       setUser(googleUser);
       localStorage.setItem('app_user', JSON.stringify(googleUser));
+
+      // 로그인 성공 시 닉네임을 구글 이름으로 자동 설정 (기존 닉네임이 게스트일 경우에만)
+      if (userNickname.startsWith(TRANSLATIONS[lang].guest)) {
+        setUserNickname(googleUser.givenName);
+        localStorage.setItem('app_user_nickname', googleUser.givenName);
+      }
+
       setShowLoginModal(false);
       showAlert(`${googleUser.givenName}님, 환영합니다!`, 'Login Success');
 
-      // 클라우드에서 데이터 가져오기 (전면 무료)
+      // 클라우드에서 데이터 가져오기
+      setIsDataLoaded(false); // 로드 시작 전 플래그 리셋
       const cloudPlayers = await loadPlayersFromCloud(googleUser.id);
       if (cloudPlayers && cloudPlayers.length > 0) {
         setPlayers(cloudPlayers);
-        // showAlert('클라우드에서 명단을 불러왔습니다.', 'Sync Success'); 
       }
+      setIsDataLoaded(true);
     } catch (e: any) {
       console.error('Login failed', e);
       if (e.error !== 'user_cancelled') {
@@ -1396,6 +1508,31 @@ const App: React.FC = () => {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await GoogleAuth.signOut();
+    } catch (e) {
+      console.error('Sign out error', e);
+    }
+
+    setUser(null);
+    localStorage.removeItem('app_user');
+
+    // 닉네임 초기화 (게스트로 복구)
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    const newGuestName = `${TRANSLATIONS[lang].guest}(${rand})`;
+    setUserNickname(newGuestName);
+    localStorage.setItem('app_user_nickname', newGuestName);
+
+    // 명단 데이터 샘플로 초기화
+    setIsDataLoaded(false);
+    setPlayers(SAMPLE_PLAYERS_BY_LANG[lang] || []);
+    localStorage.removeItem(STORAGE_KEY);
+    setIsDataLoaded(true);
+
+    showAlert('로그아웃되었습니다. 명단이 초기화되었습니다.', 'Logout');
   };
 
   const handleLoginLater = () => {
@@ -1454,6 +1591,7 @@ const App: React.FC = () => {
     } else {
       setPlayers(SAMPLE_PLAYERS_BY_LANG[lang]);
       localStorage.setItem('app_sample_version', SAMPLE_DATA_VERSION);
+      setIsDataLoaded(true);
     }
   }, []); // 마운트 시 1회만 실행하여 유저 데이터 보존
 
@@ -1464,10 +1602,10 @@ const App: React.FC = () => {
 
   // 선수 데이터가 변경될 때마다 클라우드에 자동 저장 (로그인 시 무료)
   useEffect(() => {
-    if (user?.id && players.length > 0) {
+    if (isDataLoaded && user?.id && players.length > 0) {
       savePlayersToCloud(user.id, players);
     }
-  }, [players, user]);
+  }, [players, user, isDataLoaded]);
 
   useEffect(() => {
     // 수동으로 저장된 쿼터가 있는지 먼저 확인
@@ -2533,9 +2671,23 @@ const App: React.FC = () => {
       )}
 
 
-      <InfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} lang={lang} darkMode={darkMode} isAdFree={isAdFree} isUnlimitedPos={isUnlimitedPos} isLoggedIn={!!user} onUpgradeRequest={() => { setShowInfoModal(false); setShowUpgradeModal(true); }}
+      <InfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        onUpgradeRequest={() => { setShowInfoModal(false); setShowUpgradeModal(true); }}
+        onLogin={() => { setShowInfoModal(false); setShowLoginModal(true); }}
+        onLogout={handleLogout}
+        nickname={userNickname}
+        onUpdateNickname={(name) => {
+          setUserNickname(name);
+          localStorage.setItem('app_user_nickname', name);
+        }}
         onRestore={handleRestorePurchases}
-        showAlert={showAlert}
+        lang={lang}
+        darkMode={darkMode}
+        isAdFree={isAdFree}
+        isUnlimitedPos={isUnlimitedPos}
+        user={user}
       />
       <ReviewPrompt isOpen={showReviewPrompt} onLater={handleReviewLater} onRate={handleRateApp} lang={lang} darkMode={darkMode} />
       <AlertModal
@@ -2574,6 +2726,23 @@ const App: React.FC = () => {
         onUpgrade={handleUpgradePro}
         isAdFree={isAdFree}
         isUnlimitedPos={isUnlimitedPos}
+        lang={lang}
+        darkMode={darkMode}
+      />
+      <LoginRecommendModal
+        isOpen={showLoginRecommendModal}
+        onLogin={() => {
+          setShowLoginRecommendModal(false);
+          handleGoogleLogin().then(() => {
+            // 로그인 성공 여부와 관계없이 나중에 구매 진행하거나 안내
+          });
+        }}
+        onLater={() => {
+          setShowLoginRecommendModal(false);
+          if (pendingUpgradeType) {
+            executePurchase(pendingUpgradeType);
+          }
+        }}
         lang={lang}
         darkMode={darkMode}
       />
