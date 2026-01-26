@@ -23,6 +23,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="balanceteam" android:host="join" />
+            </intent-filter>
+
         </activity>
 
         <provider
@@ -39,6 +46,10 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4761157658396004~2347234809"/>
+
+        <!-- Push Notifications -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@mipmap/ic_launcher" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/colorAccent" />
     </application>
 
     <!-- Permissions -->
@@ -47,4 +58,5 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
                      android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

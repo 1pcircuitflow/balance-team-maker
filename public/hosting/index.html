@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>참가 신청 - Balance Team Maker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #020617;
+            color: white;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pitch-container {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 3/4;
+            margin: 0 auto;
+        }
+
+        .pitch-bg {
+            position: absolute;
+            inset: 0;
+            background: #0f172a;
+            border-radius: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 900;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .node:active {
+            scale: 0.9;
+        }
+
+        .node-label {
+            font-size: 8px;
+            line-height: 1;
+            margin-top: 1px;
+        }
+
+        .menu-popup {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-12px);
+            background: #1e293b;
+            border-radius: 9999px;
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            animation: pop 0.2s ease-out;
+        }
+
+        .menu-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 900;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .menu-btn:active {
+            scale: 0.8;
+        }
+
+        @keyframes pop {
+            from {
+                scale: 0.5;
+                opacity: 0;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            to {
+                scale: 1;
+                opacity: 1;
+                transform: translateX(-50%) translateY(-12px);
+            }
+        }
+
+        /* Pitch Lines */
+        .line {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="app" class="w-full max-w-md space-y-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-black tracking-tighter text-blue-500">Balance Team Maker</h1>
+            <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Smart Recruitment System v3.0</p>
+        </div>
+
+        <div id="loading" class="flex flex-col items-center gap-4 py-20">
+            <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-slate-500 font-bold text-sm">운동장을 준비하고 있습니다...</p>
+        </div>
+
+        <div id="roomInfo" class="glass rounded-[2.5rem] p-6 space-y-2 hidden text-center">
+            <h2 id="roomSport" class="text-2xl font-black text-white">---</h2>
+            <p id="roomDateTime" class="text-blue-400 font-black text-sm">---</p>
+        </div>
+
+        <form id="applyForm" class="glass rounded-[2.5rem] p-6 space-y-6 hidden">
+            <div>
+                <label
+                    class="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest ml-1">이름</label>
+                <input type="text" id="name" required placeholder="본인의 이름을 입력하세요"
+                    class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-600 font-black text-white">
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">실력
+                    티어</label>
+                <div class="grid grid-cols-5 gap-1.5" id="tierGroup">
+                    <button type="button" data-tier="S"
+                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">S</button>
+                    <button type="button" data-tier="A"
+                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">A</button>
+                    <button type="button" data-tier="B"
+                        class="tier-btn py-3 rounded-xl font-black text-xs bg-blue-600 text-white shadow-lg shadow-blue-900/40 transition-all">B</button>
+                    <button type="button" data-tier="C"
+                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">C</button>
+                    <button type="button" data-tier="D"
+                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">D</button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">포지션 선호도
+                    (터치하여 선택)</label>
+                <div class="pitch-container" id="pitch">
+                    <div class="pitch-bg" id="pitchLines"></div>
+                    <!-- Nodes will be injected here -->
+                </div>
+                <p class="text-center text-[10px] text-slate-500 italic font-bold">노드를 터치하여 100 / 75 / 50 / X 를 선택하세요
+                </p>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full py-5 bg-blue-600 text-white font-black rounded-3xl transition-all active:scale-95 shadow-xl shadow-blue-900/40 text-lg">
+                참가 신청 완료
+            </button>
+        </form>
+
+        <div id="success" class="glass rounded-[2.5rem] p-10 text-center space-y-6 hidden">
+            <div class="text-6xl">✅</div>
+            <h3 class="text-2xl font-black">신청 완료!</h3>
+            <p class="text-slate-400 text-sm font-medium">방장님이 승인하면 팀 편성에 포함됩니다.<br>조금만 기다려주세요!</p>
+            <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
+                class="block w-full py-4 bg-white text-slate-950 font-black rounded-2xl">앱으로 결과 확인하기</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX43ePWFhdIbCUZUtoMePqMdTXiAowlx0",
+            authDomain: "balance-team-maker.firebaseapp.com",
+            projectId: "balance-team-maker",
+            storageBucket: "balance-team-maker.firebasestorage.app",
+            messagingSenderId: "834065889708",
+            appId: "1:834065889708:web:0fb72121f685619d406209"
+        };
+
+        const POS_CONFIG = {
+            'Soccer': [
+                { id: 'GK', x: 50, y: 85 }, { id: 'LB', x: 15, y: 65 }, { id: 'DF', x: 50, y: 65 }, { id: 'RB', x: 85, y: 65 },
+                { id: 'MF', x: 50, y: 42 }, { id: 'LW', x: 15, y: 25 }, { id: 'FW', x: 50, y: 18 }, { id: 'RW', x: 85, y: 25 }
+            ],
+            'Futsal': [
+                { id: 'GK', x: 50, y: 82 }, { id: 'FIX', x: 50, y: 62 }, { id: 'ALA', x: 50, y: 40 }, { id: 'PIV', x: 50, y: 18 }
+            ],
+            'Basketball': [
+                { id: 'PG', x: 35, y: 72 }, { id: 'SG', x: 65, y: 72 }, { id: 'SF', x: 25, y: 45 }, { id: 'PF', x: 75, y: 45 }, { id: 'C', x: 50, y: 28 }
+            ]
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+        let currentSport = 'Soccer';
+        let selections = {}; // { posId: 1 | 2 | 3 | 'X' }
+        let selectedTier = 'B';
+
+        // 티어 선택 로직
+        document.querySelectorAll('.tier-btn').forEach(btn => {
+            btn.onclick = () => {
+                selectedTier = btn.dataset.tier;
+                document.querySelectorAll('.tier-btn').forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
+                    b.classList.add('bg-slate-800', 'text-slate-400');
+                });
+                btn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
+                btn.classList.remove('bg-slate-800', 'text-slate-400');
+            };
+        });
+
+        async function init() {
+            if (!roomId) return alert('유효하지 않은 링크입니다.');
+            const docSnap = await getDoc(doc(db, "rooms", roomId));
+            if (!docSnap.exists()) return alert('방을 찾을 수 없습니다.');
+
+            const data = docSnap.data();
+            // 대소문자 무관하게 매칭되도록 보정 (SOCCER -> Soccer 등)
+            const rawSport = data.sport || 'Soccer';
+            currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
+            if (rawSport.toUpperCase() === 'SOCCER') currentSport = 'Soccer';
+            if (rawSport.toUpperCase() === 'FUTSAL') currentSport = 'Futsal';
+            if (rawSport.toUpperCase() === 'BASKETBALL') currentSport = 'Basketball';
+
+            document.getElementById('roomSport').textContent = currentSport;
+            document.getElementById('roomDateTime').textContent = `${data.matchDate} ${data.matchTime}`;
+
+            renderPitch();
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('roomInfo').classList.remove('hidden');
+            document.getElementById('applyForm').classList.remove('hidden');
+        }
+
+        function renderPitch() {
+            const container = document.getElementById('pitch');
+            const lines = document.getElementById('pitchLines');
+            const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
+
+            // 렌더링 전 기존 노드 제거 (중복 방지)
+            const existingNodes = container.querySelectorAll('.node');
+            existingNodes.forEach(n => n.remove());
+
+            // Render Lines
+            if (currentSport === 'Basketball') {
+                lines.innerHTML = `<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1/4 border-2 border-white/10"></div>
+                                   <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white/10 rounded-full"></div>`;
+            } else if (currentSport === 'Futsal') {
+                // 풋살은 중앙 라인과 노란색 느낌의 라인으로 차별화 가능
+                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-white/20"></div>
+                                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/20 rounded-full"></div>
+                                   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-b border-white/10"></div>
+                                   <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-t border-white/10"></div>`;
+            } else {
+                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-white/10"></div>
+                                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border border-white/10 rounded-full"></div>
+                                   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-b border-white/10"></div>
+                                   <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-t border-white/10"></div>`;
+            }
+
+            config.forEach(pos => {
+                const node = document.createElement('div');
+                node.className = 'node bg-slate-700';
+                node.style.left = pos.x + '%';
+                node.style.top = pos.y + '%';
+                node.id = 'node-' + pos.id;
+                node.innerHTML = `<span>${pos.id}</span><span class="node-label" id="label-${pos.id}"></span>`;
+                node.onclick = () => showMenu(pos.id, node);
+                container.appendChild(node);
+            });
+        }
+
+        function showMenu(posId, anchor) {
+            document.querySelectorAll('.menu-popup').forEach(m => m.remove());
+            const menu = document.createElement('div');
+            menu.className = 'menu-popup';
+            const options = [
+                { l: 1, v: '100', c: 'bg-emerald-500' },
+                { l: 2, v: '75', c: 'bg-yellow-400' },
+                { l: 3, v: '50', c: 'bg-orange-400' },
+                { l: 'X', v: 'X', c: 'bg-rose-500' }
+            ];
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `menu-btn ${opt.c}`;
+                btn.textContent = opt.v;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    selectPos(posId, opt);
+                    menu.remove();
+                };
+                menu.appendChild(btn);
+            });
+            anchor.appendChild(menu);
+        }
+
+        function selectPos(posId, opt) {
+            // 먼저 현재 선택을 기록
+            selections[posId] = opt.l;
+
+            // 지망(1, 2, 3)을 선택한 경우에만 나머지 자동 불가능 처리 (기존 지망은 유지)
+            if (opt.l === 1 || opt.l === 2 || opt.l === 3) {
+                const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
+                config.forEach(pos => {
+                    // 현재 선택한 포지션이 아니고, 아직 아무 지망도 선택되지 않은(또는 이미 X인) 포지션만 X로 설정
+                    const currentLevel = selections[pos.id];
+                    if (pos.id !== posId && currentLevel !== 1 && currentLevel !== 2 && currentLevel !== 3) {
+                        selections[pos.id] = 'X';
+                        updateNodeUI(pos.id, { l: 'X', v: 'X', c: 'bg-rose-500' });
+                    }
+                });
+            }
+
+            updateNodeUI(posId, opt);
+        }
+
+        function updateNodeUI(posId, opt) {
+            const node = document.getElementById('node-' + posId);
+            const label = document.getElementById('label-' + posId);
+            if (!node || !label) return;
+
+            // 배경색 적용 (클래스 교체)
+            node.className = `node ${opt.c}`;
+            label.textContent = opt.v;
+        }
+
+        document.getElementById('applyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            if (Object.keys(selections).length === 0) return alert('최소 하나 이상의 포지션 선호도를 선택해주세요.');
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '신청 중...';
+
+            const p = [], s = [], t = [], f = [];
+            Object.entries(selections).forEach(([pos, level]) => {
+                if (level === 1) p.push(pos);
+                else if (level === 2) s.push(pos);
+                else if (level === 3) t.push(pos);
+                else if (level === 'X') f.push(pos);
+            });
+
+            try {
+                await updateDoc(doc(db, "rooms", roomId), {
+                    applicants: arrayUnion({
+                        id: Math.random().toString(36).substr(2, 9),
+                        name,
+                        tier: selectedTier,
+                        position: p[0] || 'NONE', // 하위 호환성용
+                        primaryPositions: p,
+                        secondaryPositions: s,
+                        tertiaryPositions: t,
+                        forbiddenPositions: f,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                document.getElementById('applyForm').classList.add('hidden');
+                document.getElementById('success').classList.remove('hidden');
+            } catch (err) {
+                alert('신청 실패: ' + err.message);
+                submitBtn.disabled = false;
+            }
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -14,6 +14,18 @@ import { SAMPLE_PLAYERS_BY_LANG } from './sampleData';
 import { AnalyticsService } from './services/analyticsService';
 import { savePlayersToCloud, loadPlayersFromCloud } from './services/firebase.ts';
 import { paymentService, PRODUCT_IDS } from './services/paymentService';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { App as CapApp } from '@capacitor/app';
+import {
+  createRecruitmentRoom,
+  getRoomInfo,
+  applyForParticipation,
+  cancelApplication,
+  subscribeToRoom,
+  updateRoomFcmToken,
+  RecruitmentRoom,
+  Applicant
+} from './services/firebaseService';
 
 import * as Icons from './Icons';
 const {
@@ -1302,8 +1314,220 @@ const LoginRecommendModal: React.FC<{
     </div>
   );
 };
+// V3.0 모집 현황 배지
+const RecruitmentStatusBadge: React.FC<{ count: number; darkMode: boolean }> = ({ count, darkMode }) => {
+  if (count === 0) return null;
+  return (
+    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white ring-2 ring-white dark:ring-slate-950 animate-bounce">
+      {count}
+    </span>
+  );
+};
 
+// 방장용 모집 관리 모달
+const HostRoomModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onRoomCreated: (room: RecruitmentRoom) => void;
+  activeRoom: RecruitmentRoom | null;
+  activeTab: SportType;
+  onCloseRoom: () => void;
+  onApproveAll: (players: Player[]) => void;
+  lang: Language;
+  darkMode: boolean;
+  isPro: boolean;
+  onUpgrade: () => void;
+  userNickname: string;
+}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname }) => {
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [time, setTime] = useState('20:00');
+  const [loading, setLoading] = useState(false);
+  const t = (key: any) => (TRANSLATIONS[lang] as any)[key] || key;
 
+  useEffect(() => {
+    if (activeRoom?.id && isOpen) {
+      const unsub = subscribeToRoom(activeRoom.id, (room) => {
+        if (room) onRoomCreated(room);
+      });
+      return () => unsub();
+    }
+  }, [activeRoom?.id, isOpen]);
+
+  const handleCreate = async () => {
+    // 테스트를 위해 PRO 권한 체크 임시 해제
+    /*
+    if (!isPro) {
+      onUpgrade();
+      return;
+    }
+    */
+    setLoading(true);
+    try {
+      const roomId = await createRecruitmentRoom({
+        hostId: 'host_' + Math.random().toString(36).substr(2, 5),
+        hostName: userNickname,
+        sport: activeTab,
+        matchDate: date,
+        matchTime: time,
+        fcmToken: localStorage.getItem('fcm_token') || undefined
+      });
+      const room = await getRoomInfo(roomId);
+      if (room) onRoomCreated(room);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!activeRoom) return;
+
+    // 로컬 테스트 환경(localhost)에서 포트가 없는 경우 3000번을 강제로 주입 (임시 테스트용)
+    const currentOrigin = window.location.origin;
+    const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':3000'))
+      ? 'http://localhost:3000'
+      : currentOrigin;
+
+    const webUrl = `${webOrigin}/hosting/index.html?room=${activeRoom.id}`;
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({
+          title: t('shareRecruitLink'),
+          text: `${activeRoom.hostName}님이 참여자를 모집합니다!`,
+          url: webUrl,
+          dialogTitle: t('shareRecruitLink'),
+        });
+      } else {
+        await navigator.clipboard.writeText(webUrl);
+        alert(t('copySuccess'));
+      }
+    } catch (e) {
+      await navigator.clipboard.writeText(webUrl);
+      alert(t('copySuccess'));
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-8 space-y-6">
+          <div className="flex justify-between items-start">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('recruitParticipants')}</h3>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200"><PlusIcon className="rotate-45" /></button>
+          </div>
+
+          {!activeRoom ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchDate')}</label>
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchTime')}</label>
+                <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
+              </div>
+              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('createRecruitRoom')}</button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center">
+                <p className="text-emerald-500 font-black text-sm uppercase tracking-widest mb-1">RECRUITING ACTIVE</p>
+                <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{activeRoom.applicants.length} 명</p>
+                <p className="text-[9px] text-slate-400 mt-2 font-mono opacity-50">ID: {activeRoom.id}</p>
+              </div>
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+                {activeRoom.applicants.length === 0 ? <p className="text-center py-10 text-slate-400 font-bold text-sm">{t('noApplicants')}</p> :
+                  activeRoom.applicants.map(app => (
+                    <div key={app.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl">
+                      <div><p className="font-black text-slate-900 dark:text-white">{app.name}</p><p className="text-[10px] text-slate-400 font-bold">{app.tier} 티어 • {app.position}</p></div>
+                      <button
+                        onClick={() => cancelApplication(activeRoom.id, app)}
+                        className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-full transition-all"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  ))
+                }
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={handleShare} className="py-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black rounded-2xl text-xs">{t('shareRecruitLink')}</button>
+                <button onClick={() => {
+                  const players: Player[] = activeRoom.applicants.map(a => {
+                    const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
+                    const s1 = (a as any).secondaryPositions || [];
+                    const t1 = (a as any).tertiaryPositions || [];
+                    const f1 = (a as any).forbiddenPositions || [];
+
+                    return {
+                      id: 'p_' + Math.random().toString(36).substr(2, 9),
+                      name: a.name,
+                      tier: (Tier as any)[a.tier] || Tier.B,
+                      isActive: true,
+                      sportType: activeRoom.sport as SportType,
+                      primaryPosition: p1[0] || 'NONE',
+                      primaryPositions: p1,
+                      secondaryPosition: s1[0] || 'NONE',
+                      secondaryPositions: s1,
+                      tertiaryPositions: t1,
+                      forbiddenPositions: f1
+                    };
+                  });
+                  onApproveAll(players); onCloseRoom(); onClose();
+                }} className="py-4 bg-blue-600 text-white font-black rounded-2xl text-xs">{t('approveAll')}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 참가 신청 모달
+const ApplyRoomModal: React.FC<{
+  isOpen: boolean;
+  roomId: string | null;
+  onClose: () => void;
+  onSuccess: () => void;
+  lang: Language;
+  darkMode: boolean;
+}> = ({ isOpen, roomId, onClose, onSuccess, lang, darkMode }) => {
+  const [name, setName] = useState('');
+  const [tier, setTier] = useState<string>('B');
+  const [pos, setPos] = useState<string>('MF');
+  const [room, setRoom] = useState<RecruitmentRoom | null>(null);
+  const [loading, setLoading] = useState(false);
+  const t = (key: any) => (TRANSLATIONS[lang] as any)[key] || key;
+  useEffect(() => { if (roomId && isOpen) getRoomInfo(roomId).then(setRoom); }, [roomId, isOpen]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!roomId || !name) return;
+    setLoading(true);
+    try { await applyForParticipation(roomId, { name, tier, position: pos }); onSuccess(); } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+  if (!isOpen || !room) return null;
+  return (
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 space-y-6">
+        <div className="text-center space-y-2"><h3 className="text-xl font-black text-slate-900 dark:text-white">{room.sport} 참가 신청</h3><p className="text-blue-500 font-bold text-sm">{room.matchDate} {room.matchTime}</p></div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="성함을 입력하세요" className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 dark:text-white font-bold" />
+          <div className="grid grid-cols-5 gap-1.5">
+            {['S', 'A', 'B', 'C', 'D'].map(v => <button key={v} type="button" onClick={() => setTier(v)} className={`py-3 rounded-xl font-black text-xs ${tier === v ? 'bg-slate-900 text-white dark:bg-slate-200' : 'bg-slate-50 dark:bg-slate-950 text-slate-400'}`}>{v}</button>)}
+          </div>
+          <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 text-white font-black rounded-3xl mt-4 shadow-xl shadow-blue-500/20">{loading ? '...' : '참가 신청 완료'}</button>
+          <button type="button" onClick={onClose} className="w-full py-3 text-slate-400 font-bold text-sm">닫기</button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(getInitialLang());
@@ -1387,6 +1611,8 @@ const App: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return localStorage.getItem('app_onboarding_done_v3') !== 'true';
   });
+  const [pendingJoinRoomId, setPendingJoinRoomId] = useState<string | null>(null);
+  const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
 
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
   const [isUnlimitedPos, setIsUnlimitedPos] = useState(() => localStorage.getItem('app_is_unlimited_pos') === 'true');
@@ -1395,6 +1621,9 @@ const App: React.FC = () => {
   const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'UNLIMITED_POS' | 'FULL' | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false); // 결제/로그인 중복 클릭 방지
+
+  const [showHostRoomModal, setShowHostRoomModal] = useState(false);
+  const [showApplyRoomModal, setShowApplyRoomModal] = useState(false);
 
   const showAlert = (message: string, title?: string) => {
     setAlertState({ isOpen: true, message, title });
@@ -1515,6 +1744,86 @@ const App: React.FC = () => {
       localStorage.setItem('app_position_usage', JSON.stringify(freshUsage));
     }
   }, []);
+
+  // V3.0 푸시 알림 및 딥링크 초기화
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const initPush = async () => {
+      try {
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+        if (permStatus.receive === 'granted') {
+          await PushNotifications.register();
+        }
+      } catch (e) {
+        console.error('Push init failed', e);
+      }
+    };
+
+    const addPushListeners = () => {
+      PushNotifications.addListener('registration', (token) => {
+        console.log('Push registration success, token: ' + token.value);
+        localStorage.setItem('fcm_token', token.value);
+        // 특정 활성 방이 있다면 토큰 업데이트
+        if (currentActiveRoom?.id) {
+          updateRoomFcmToken(currentActiveRoom.id, token.value);
+        }
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Error on registration: ' + JSON.stringify(error));
+      });
+
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Push received: ' + JSON.stringify(notification));
+        // 인앱 팝업 알림
+        if (notification.body) {
+          setAlertState({
+            isOpen: true,
+            message: notification.body,
+            title: notification.title || t('appTitle')
+          });
+        }
+      });
+    };
+
+    const addDeepLinkListener = () => {
+      CapApp.addListener('appUrlOpen', (data) => {
+        try {
+          console.log('App opened with URL:', data.url);
+          // balanceteam://join?room=ABC 형태 처리
+          if (data.url.includes('room=')) {
+            const url = new URL(data.url);
+            const roomId = url.searchParams.get('room');
+            if (roomId) {
+              setPendingJoinRoomId(roomId);
+            }
+          }
+        } catch (e) {
+          console.error('Deep link parsing failed', e);
+        }
+      });
+    };
+
+    initPush();
+    addPushListeners();
+    addDeepLinkListener();
+
+    return () => {
+      PushNotifications.removeAllListeners();
+      CapApp.removeAllListeners();
+    };
+  }, [currentActiveRoom?.id, lang]);
+
+  // 딥링크 진입 시 신청 모달 자동 오픈
+  useEffect(() => {
+    if (pendingJoinRoomId) {
+      setShowApplyRoomModal(true);
+    }
+  }, [pendingJoinRoomId]);
 
   const handleWatchRewardAd = async () => {
     setShowLimitModal(false);
@@ -2411,6 +2720,26 @@ const App: React.FC = () => {
             {/* 팀 묶기 / 나누기 버튼 추가 구역 */}
             <div className="px-4 pb-2 flex gap-1.5" data-capture-ignore="true">
               <button
+                onClick={() => {
+                  setPendingJoinRoomId(null); // 혹시 남은게 있다면 초기화
+                  setShowHostRoomModal(true);
+                }}
+                className={`py-3 px-4 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-2 group shadow-lg ${currentActiveRoom
+                  ? 'bg-emerald-500 text-white shadow-emerald-900/20'
+                  : 'bg-blue-600 text-white shadow-blue-900/20 ring-1 ring-blue-400/30'
+                  }`}
+              >
+                <div className="relative">
+                  <UserPlusIcon />
+                  {currentActiveRoom && (
+                    <div className="absolute -top-1.5 -right-1.5">
+                      <RecruitmentStatusBadge count={currentActiveRoom.applicants.length} darkMode={darkMode} />
+                    </div>
+                  )}
+                </div>
+                {t('recruitParticipants')}
+              </button>
+              <button
                 onClick={() => { setSelectionMode('MATCH'); setSelectedPlayerIds([]); }}
                 className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-2 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5"
               >
@@ -2893,9 +3222,7 @@ const App: React.FC = () => {
         isOpen={showLoginRecommendModal}
         onLogin={() => {
           setShowLoginRecommendModal(false);
-          handleGoogleLogin().then(() => {
-            // 로그인 성공 여부와 관계없이 나중에 구매 진행하거나 안내
-          });
+          handleGoogleLogin();
         }}
         onLater={() => {
           setShowLoginRecommendModal(false);
@@ -2906,8 +3233,64 @@ const App: React.FC = () => {
         lang={lang}
         darkMode={darkMode}
       />
-
-      {/* 하단 고정 배너 광고 및 고정 영역 (스크롤 콘텐츠 가림 방지 여백 포함) */}
+      <HostRoomModal
+        isOpen={showHostRoomModal}
+        onClose={() => setShowHostRoomModal(false)}
+        onRoomCreated={(room) => {
+          setCurrentActiveRoom(room);
+          AnalyticsService.logEvent('recruit_room_created', { sport: room.sport });
+        }}
+        activeRoom={currentActiveRoom}
+        activeTab={activeTab}
+        onCloseRoom={() => setCurrentActiveRoom(null)}
+        onApproveAll={(approvedPlayers) => {
+          setPlayers(prev => {
+            const newList = [...prev];
+            approvedPlayers.forEach(ap => {
+              const existingIdx = newList.findIndex(p => p.name === ap.name);
+              if (existingIdx > -1) {
+                // 이름이 같으면 기존 선수 정보 업데이트 및 참가 활성화
+                newList[existingIdx] = {
+                  ...newList[existingIdx],
+                  tier: ap.tier,
+                  sportType: ap.sportType,
+                  primaryPosition: ap.primaryPosition,
+                  primaryPositions: ap.primaryPositions,
+                  secondaryPosition: ap.secondaryPosition,
+                  secondaryPositions: ap.secondaryPositions,
+                  tertiaryPositions: ap.tertiaryPositions,
+                  forbiddenPositions: ap.forbiddenPositions,
+                  isActive: true
+                };
+              } else {
+                // 새로운 이름이면 명단에 새로 추가
+                newList.push(ap);
+              }
+            });
+            return newList;
+          });
+        }}
+        lang={lang}
+        darkMode={darkMode}
+        isPro={isPro}
+        onUpgrade={() => { setShowHostRoomModal(false); setShowUpgradeModal(true); }}
+        userNickname={userNickname}
+      />
+      <ApplyRoomModal
+        isOpen={showApplyRoomModal}
+        roomId={pendingJoinRoomId}
+        onClose={() => {
+          setShowApplyRoomModal(false);
+          setPendingJoinRoomId(null);
+        }}
+        onSuccess={() => {
+          setShowApplyRoomModal(false);
+          setPendingJoinRoomId(null);
+          // 팝업 알림 (t 함수 접근 문제 처리 필요시 showAlert 등 활용)
+        }}
+        lang={lang}
+        darkMode={darkMode}
+      />
       <div className="h-[calc(60px+env(safe-area-inset-bottom))]" />
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} />
     </div>
