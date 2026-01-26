@@ -4,4 +4,5 @@
     <string name="title_activity_main">Belo</string>
     <string name="package_name">com.balanceteammaker</string>
     <string name="custom_url_scheme">com.balanceteammaker</string>
+    <string name="server_client_id">834065889708-h51gv3lorhvq919876lbt91mc06kblj9.apps.googleusercontent.com</string>
 </resources>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Player, Tier, BalanceResult, SportType, Position, TeamConstraint } from './types';
 import { STORAGE_KEY } from './constants';
 import { generateBalancedTeams } from './services/balanceService';
@@ -8,24 +8,67 @@ import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { AdMob, BannerAdSize, BannerAdPosition, RewardAdPluginEvents, RewardAdOptions, InterstitialAdPluginEvents, AdLoadInfo } from '@capacitor-community/admob';
 import { SAMPLE_PLAYERS_BY_LANG } from './sampleData';
 import { AnalyticsService } from './services/analyticsService';
+import { savePlayersToCloud, loadPlayersFromCloud } from './services/firebase.ts';
+import { paymentService, PRODUCT_IDS } from './services/paymentService';
 
-const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>;
-const MinusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /></svg>;
-const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>;
-const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>;
-const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
-const ShuffleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18L22 6" /><path d="M2 6l20 12" /><path d="M11 11l2 2" /></svg>;
-const UserPlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="16" y1="11" x2="22" y2="11" /></svg>;
-const UserCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></svg>;
-const ShareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>;
-const SunIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>;
-const MoonIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>;
-const SlidersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="2" y1="14" x2="6" y2="14" /><line x1="10" y1="8" x2="14" y2="8" /><line x1="18" y1="16" x2="22" y2="16" /></svg>;
-const InfoIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>;
-const ExternalLinkIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>;
-const HeartIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="red" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>;
+import * as Icons from './Icons';
+const {
+  PlusIcon, MinusIcon, TrashIcon, EditIcon, CheckIcon, ShuffleIcon,
+  UserPlusIcon, UserCheckIcon, ShareIcon, SunIcon, MoonIcon,
+  SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon,
+  SettingsIcon, HeartIcon
+} = Icons;
+
+const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean }> = ({ lang, darkMode, isAdFree }) => {
+  useEffect(() => {
+    let timerId: any = null;
+
+    if (isAdFree) {
+      AdMob.hideBanner().catch(() => { });
+      return;
+    }
+
+    const showBanner = async () => {
+      // Bridge 초기화 시간을 확보하기 위해 약간의 딜레이 추가 (크래시 방지)
+      timerId = setTimeout(async () => {
+        try {
+          const options = {
+            adId: 'ca-app-pub-4761157658396004/6797378026',
+            adSize: BannerAdSize.ADAPTIVE_BANNER,
+            position: BannerAdPosition.BOTTOM_CENTER,
+            margin: 0,
+            isTesting: false
+          };
+          await AdMob.showBanner(options);
+        } catch (e) {
+          console.error('Show Banner Failed', e);
+        }
+      }, 1500);
+    };
+
+    showBanner();
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+      AdMob.hideBanner().catch(() => { });
+    };
+  }, [isAdFree]);
+
+  if (isAdFree) return <div className="fixed bottom-0 left-0 w-full h-[env(safe-area-inset-bottom)] bg-white dark:bg-slate-950 z-[2000] transition-colors duration-300" />;
+
+  return (
+    <div className={`fixed bottom-0 left-0 w-full bg-white dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] z-[2000] transition-colors duration-300 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]`}>
+      <div className={`h-[56px] w-full flex items-center justify-center text-[8px] font-black tracking-[0.2em] uppercase ${darkMode ? 'text-slate-800' : 'text-slate-200'}`}>
+        {/* AdMob Banner will be overlaid here */}
+      </div>
+    </div>
+  );
+};
+
 
 const TIER_COLORS: Record<Tier, string> = {
   [Tier.S]: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
@@ -533,14 +576,13 @@ const PromotionFooter: React.FC<{ lang: Language; darkMode: boolean }> = ({ lang
   );
 };
 
-const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; darkMode: boolean; countdown: number }> = ({ lang, activeTab, darkMode, countdown }) => {
+const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; darkMode: boolean; countdown: number; isAdFree: boolean }> = ({ lang, activeTab, darkMode, countdown, isAdFree }) => {
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
     if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
     return String(translation || key);
   };
   const icon = activeTab === SportType.BASKETBALL ? '🏀' : activeTab === SportType.SOCCER ? '⚽' : activeTab === SportType.FUTSAL ? '🥅' : '🏆';
-  const isGeneratingAdVisible = false; // 출시 버전에서는 광고 영역을 숨깁니다.
 
   return (
     <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-950/90' : 'bg-white/95'} backdrop-blur-xl animate-in duration-300`}>
@@ -558,15 +600,7 @@ const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; darkMode:
           </p>
         </div>
 
-        {/* 광고 영역 Placeholder */}
-        {isGeneratingAdVisible && (
-          <div className={`w-full aspect-video rounded-3xl border-2 border-dashed flex flex-col items-center justify-center mb-8 transition-all ${darkMode ? 'bg-slate-900/50 border-slate-800 text-slate-700' : 'bg-slate-50 border-slate-200 text-slate-300'
-            }`}>
-            <div className="w-12 h-12 rounded-2xl bg-current opacity-10 mb-3" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">{t('adPlacementSlot')}</span>
-            <p className="text-[11px] font-bold mt-1 opacity-60 px-6 text-center">{t('loadingAdMessage')}</p>
-          </div>
-        )}
+
 
         <div className="w-full space-y-4">
           <div className={`w-full h-1.5 ${darkMode ? 'bg-slate-800' : 'bg-slate-100'} rounded-full overflow-hidden`}>
@@ -588,50 +622,183 @@ const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; darkMode:
   );
 };
 
-const InfoModal: React.FC<{
-  isOpen: boolean; onClose: () => void; lang: Language; darkMode: boolean; showAlert: (message: string, title?: string) => void;
-}> = ({ isOpen, onClose, lang, darkMode, showAlert }) => {
+const UpgradeModal: React.FC<{
+  isOpen: boolean; onClose: () => void; onUpgrade: (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => void; isAdFree: boolean; isUnlimitedPos: boolean; lang: Language; darkMode: boolean;
+}> = ({ isOpen, onClose, onUpgrade, isAdFree, isUnlimitedPos, lang, darkMode }) => {
   const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
   if (!isOpen) return null;
 
+  const products = [
+    { type: 'AD_FREE' as const, title: t('buyAdFree' as any), desc: t('adFreeDesc' as any), icon: '🚫', active: isAdFree, color: 'from-blue-500 to-cyan-500', price: t('price_adfree' as any), original: '12,900' },
+    { type: 'UNLIMITED_POS' as const, title: t('buyUnlimitedPos' as any), icon: '♾️', desc: t('unlimitedPosDesc' as any), active: isUnlimitedPos, color: 'from-indigo-500 to-purple-500', price: t('price_unlimited' as any), original: '12,900' },
+    { type: 'FULL' as const, title: t('buyFullPack' as any), desc: t('fullPackDesc' as any), icon: '💎', active: isAdFree && isUnlimitedPos, color: 'from-amber-400 to-orange-600', highlight: true, price: t('price_full' as any), original: '25,800' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[2200] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in duration-300" onClick={onClose}>
+      <div
+        className={`w-full max-w-sm rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'} space-y-4`}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="text-center pb-2">
+          <div className={`inline-block px-4 py-1.5 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 text-[10px] font-black uppercase tracking-tighter mb-3 shadow-sm`}>
+            <span>🎁 {t('limitedOfferTime' as any)}</span>
+          </div>
+          <h3 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'} tracking-tight`}>{t('proUpgradeTitle')}</h3>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Select your upgrade</p>
+        </div>
+
+        <div className="space-y-3">
+          {products.map((p, i) => (
+            <div
+              key={i}
+              className={`relative overflow-hidden rounded-3xl border transition-all ${p.highlight ? 'ring-2 ring-amber-500/20' : ''} ${p.active ? 'opacity-60 grayscale-[0.5]' : 'hover:scale-[1.02] shadow-sm'} ${darkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'}`}
+            >
+              <div className="p-5 flex items-center gap-4 relative z-10">
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${p.color} flex items-center justify-center text-2xl shadow-lg`}>
+                  {p.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className={`text-sm font-black truncate ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{p.title}</h4>
+                    {!p.active && (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[9px] text-slate-400 line-through font-bold">₩{p.original}</span>
+                        <span className={`text-[11px] font-black ${p.highlight ? 'text-amber-500' : 'text-slate-900 dark:text-slate-100'}`}>₩{p.price}</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] font-medium text-slate-500 leading-tight mt-0.5">{p.desc}</p>
+                </div>
+              </div>
+
+              <button
+                disabled={p.active}
+                onClick={() => onUpgrade(p.type)}
+                className={`w-full py-4 text-xs font-black transition-all ${p.active
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-default'
+                  : `bg-gradient-to-r ${p.color} text-white shadow-lg active:scale-95 hover:brightness-110`}`}
+              >
+                {p.active ? '✓ ' + t('proStatusActive') : t('buy' as any)}
+              </button>
+
+              {p.highlight && (
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-orange-500 text-[7px] font-black px-3 py-1 text-white rounded-bl-xl uppercase tracking-tighter shadow-sm">
+                  🔥 {t('mostPopularTag' as any)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <p className="text-[9px] text-center text-slate-400 font-bold px-4 leading-relaxed italic opacity-80">
+          " {t('supportDevNote' as any)} "
+        </p>
+
+        <button
+          onClick={onClose}
+          className={`w-full py-4 text-xs font-bold rounded-2xl transition-all ${darkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          {t('cancel')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const InfoModal: React.FC<{
+  isOpen: boolean; onClose: () => void; lang: Language; darkMode: boolean; isAdFree: boolean; isUnlimitedPos: boolean; isLoggedIn: boolean; onUpgradeRequest: () => void; onRestore: () => void; showAlert: (message: string, title?: string) => void;
+}> = ({ isOpen, onClose, lang, darkMode, isAdFree, isUnlimitedPos, isLoggedIn, onUpgradeRequest, onRestore, showAlert }) => {
+  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
+  if (!isOpen) return null;
+
+  const isPro = isAdFree && isUnlimitedPos;
+
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm animate-in duration-200" onClick={onClose}>
-      <div className={`w-full max-w-sm rounded-[2rem] p-6 ${darkMode ? 'bg-slate-900' : 'bg-white'} space-y-6`} onClick={e => e.stopPropagation()}>
+      <div className={`w-full max-w-sm rounded-[2.5rem] p-8 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'} space-y-8`} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className={`text-xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('infoTitle')}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-2 text-2xl leading-none">&times;</button>
+          <h3 className={`text-2xl font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'} tracking-tight`}>{t('infoTitle')}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-2 text-3xl leading-none">&times;</button>
+        </div>
+
+        {/* 프리미엄 섹션 */}
+        <div className={`relative overflow-hidden p-6 rounded-3xl border ${isPro
+          ? 'bg-gradient-to-br from-amber-400 to-amber-600 border-amber-300'
+          : 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 shadow-lg shadow-blue-500/20'}`}>
+
+          <div className="relative z-10">
+            <h4 className="text-white font-black text-lg mb-4 flex items-center gap-2">
+              {isPro ? '✨ ' + t('proStatusActive') : '💎 ' + t('proUpgradeTitle')}
+            </h4>
+
+            <ul className="space-y-4 mb-8">
+              {[
+                { label: t('proBenefitAds'), active: isAdFree },
+                { label: t('proBenefitPos'), active: isUnlimitedPos },
+              ].map((benefit, i) => (
+                <li key={i} className={`flex items-center gap-3 text-[13px] font-black transition-all ${benefit.active ? 'text-white' : 'text-white/70'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-inner ${benefit.active ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>
+                    ✓
+                  </div>
+                  {benefit.label}
+                </li>
+              ))}
+            </ul>
+
+            {!isPro && (
+              <button
+                onClick={onUpgradeRequest}
+                className="w-full py-3 bg-white text-blue-700 font-black rounded-xl text-xs shadow-xl active:scale-95 transition-all"
+              >
+                {t('viewUpgradeOptions' as any)}
+              </button>
+            )}
+          </div>
+
+          {/* 장식용 배경 */}
+          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         </div>
 
         <div className="space-y-3">
           <a
             href="mailto:1p.circuitflow@gmail.com?subject=Team Balance Pro Feedback"
-            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${darkMode ? 'bg-slate-950 hover:bg-black' : 'bg-slate-100 hover:bg-slate-200'}`}
+            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
           >
             <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('contactUs')}</span>
-            <ExternalLinkIcon />
+            <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
           </a>
           <a
             href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
             target="_blank"
             rel="noreferrer"
-            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${darkMode ? 'bg-slate-950 hover:bg-black' : 'bg-slate-100 hover:bg-slate-200'}`}
+            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
           >
-            <span className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-blue-600'}`}>{t('rateApp')}</span>
-            <ExternalLinkIcon />
+            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('rateApp')}</span>
+            <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
           </a>
           <button
             onClick={() => {
               navigator.clipboard.writeText('1p.circuitflow@gmail.com');
-              showAlert(lang === 'ko' ? '이메일 주소가 복사되었습니다.' : 'Email address copied to clipboard.', lang === 'ko' ? '알림' : 'Notice');
+              showAlert(t('emailCopiedMsg'), t('validationErrorTitle'));
             }}
-            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${darkMode ? 'bg-slate-950 hover:bg-black' : 'bg-slate-100 hover:bg-slate-200'}`}
+            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
           >
-            <span className={`text-sm font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-400'}`}>1p.circuitflow@gmail.com</span>
-            <span className="text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500">Copy</span>
+            <span className={`text-[12px] font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>1p.circuitflow@gmail.com</span>
+            <span className={`text-[10px] font-black uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Copy</span>
           </button>
+
+          <button
+            onClick={onRestore}
+            className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+          >
+            <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('restorePurchases' as any)}</span>
+            <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ShuffleIcon /></div>
+          </button>
+
         </div>
 
-        <div className="pt-2 flex justify-center text-[10px] font-semibold text-slate-400 dark:text-slate-600 uppercase tracking-widest">
+        <div className="pt-2 flex justify-center text-[10px] font-black text-slate-400 dark:text-slate-700 uppercase tracking-[0.3em]">
           {t('version')} 2.0.0
         </div>
       </div>
@@ -672,6 +839,53 @@ const ReviewPrompt: React.FC<{
   );
 };
 
+const LoginModal: React.FC<{
+  isOpen: boolean; onLater: () => void; onLogin: () => void; lang: Language; darkMode: boolean;
+}> = ({ isOpen, onLater, onLogin, lang, darkMode }) => {
+  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[1500] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in duration-300">
+      <div className={`w-full max-w-sm rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 shadow-2xl border border-slate-800' : 'bg-white shadow-2xl'}`}>
+        <div className="w-16 h-16 bg-blue-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+        </div>
+
+        <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>
+          {t('loginTitle')}
+        </h3>
+        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'} mb-8 px-2 leading-relaxed`}>
+          {t('loginMsg')}
+        </p>
+
+        <div className="space-y-3">
+          <button
+            onClick={onLogin}
+            className="w-full py-4 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl transition-all active:scale-95 shadow-md flex items-center justify-center gap-3 border border-slate-200"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+              <path fill="#1976D2" d="M43.611,20.083L43.611,20.083L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+            </svg>
+            {t('googleLogin')}
+          </button>
+          <button
+            onClick={onLater}
+            className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
+          >
+            {t('loginLater')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AlertModal: React.FC<{
   isOpen: boolean; title?: string; message: string; onConfirm: () => void; lang: Language; darkMode: boolean;
 }> = ({ isOpen, title, message, onConfirm, lang, darkMode }) => {
@@ -698,27 +912,189 @@ const AlertModal: React.FC<{
   );
 };
 
-const AdBanner: React.FC<{ lang: Language; darkMode: boolean }> = ({ lang, darkMode }) => {
-  const isAdVisible = false; // 출시 버전에서는 광고 배너를 숨깁니다.
+const PositionLimitModal: React.FC<{
+  isOpen: boolean; onWatchAd: () => void; onUpgrade: () => void; onClose: () => void; lang: Language; darkMode: boolean;
+}> = ({ isOpen, onWatchAd, onUpgrade, onClose, lang, darkMode }) => {
+  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
+  if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed bottom-0 left-0 right-0 z-[900] transition-colors duration-300 flex flex-col ${darkMode ? 'bg-slate-950' : 'bg-white'}`}
-      style={{
-        height: `calc(${isAdVisible ? '60px' : '0px'} + env(safe-area-inset-bottom, 0px))`
-      }}
-    >
-      {isAdVisible && (
-        <div className="h-[60px] flex items-center justify-center">
-          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] animate-pulse">
-            Ad Space (Testing)
-          </span>
+    <div className="fixed inset-0 z-[1600] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in duration-300">
+      <div className={`w-full max-w-sm rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'}`}>
+        <div className="w-16 h-16 bg-amber-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-amber-500/20 text-3xl">
+          ⏳
         </div>
-      )}
-      <div style={{ height: 'env(safe-area-inset-bottom, 0px)' }} />
+
+        <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>
+          {t('dailyLimitReached')}
+        </h3>
+        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'} mb-8 px-2 leading-relaxed`}>
+          {t('positionLimitMsg')}
+        </p>
+
+        <div className="space-y-3">
+          <button
+            onClick={onWatchAd}
+            className="w-full py-4 bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-2xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+          >
+            <span>📺</span>
+            {t('watchAdUnlock')}
+          </button>
+          <button
+            onClick={onUpgrade}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+          >
+            <span>💎</span>
+            {t('unlimitedUnlock')}
+          </button>
+          <button
+            onClick={onClose}
+            className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
+          >
+            {t('cancel')}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
+
+const LanguageMenu: React.FC<{
+  lang: Language; onLangChange: (l: Language) => void; t: any;
+}> = ({ lang, onLangChange, t }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const languages: { code: Language; flag: string; name: string }[] = [
+    { code: 'ko', flag: '🇰🇷', name: '한국어' },
+    { code: 'en', flag: '🇺🇸', name: 'English' },
+    { code: 'pt', flag: '🇧🇷', name: 'Português' },
+    { code: 'es', flag: '🇪🇸', name: 'Español' },
+    { code: 'ja', flag: '🇯🇵', name: '日本語' },
+  ];
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+        aria-label="Change Language"
+      >
+        <GlobeIcon />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 p-2 z-[1500] animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-2">
+            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">{t('language')}</span>
+            <div className="space-y-1">
+              {languages.map(l => (
+                <button
+                  key={l.code}
+                  onClick={() => { onLangChange(l.code); setIsOpen(false); }}
+                  className={`w-full h-10 px-3 rounded-xl flex items-center justify-between transition-all ${lang === l.code ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+                >
+                  <span className="text-sm font-bold">{l.name}</span>
+                  <span className="text-base">{l.flag}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const RewardAdModal: React.FC<{
+  isOpen: boolean;
+  onComplete: () => void;
+  onClose: () => void;
+  lang: Language;
+  darkMode: boolean;
+}> = ({ isOpen, onComplete, onClose, lang, darkMode }) => {
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [canSkip, setCanSkip] = useState(false);
+  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeLeft(15);
+      setCanSkip(false);
+      const timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setCanSkip(true);
+            return 0;
+          }
+          if (prev <= 11) setCanSkip(true); // 15 - 10 = 5초 경과 시 스킵 활성화
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[2500] bg-black flex flex-col items-center justify-center animate-in fade-in duration-500">
+      {/* 상단 스킵/상태 바 */}
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+        <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
+          <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+          <span className="text-white text-[10px] font-black tracking-widest uppercase">
+            {timeLeft > 0 ? `Reward in ${timeLeft}s` : 'Reward Ready'}
+          </span>
+        </div>
+
+        {canSkip ? (
+          <button
+            onClick={onComplete}
+            className="bg-white text-black px-6 py-2.5 rounded-full font-black text-[11px] tracking-widest uppercase shadow-2xl active:scale-95 transition-all animate-in zoom-in-50"
+          >
+            Skip & Get Reward
+          </button>
+        ) : (
+          <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+            <span className="text-white/40 text-[10px] font-black tracking-widest uppercase italic">Skip available in {timeLeft - 10}s</span>
+          </div>
+        )}
+      </div>
+
+      {/* 광고 내용 시뮬레이션 */}
+      <div className="flex flex-col items-center text-center px-10">
+        <div className="w-24 h-24 bg-blue-600 rounded-[2.5rem] mb-8 flex items-center justify-center text-5xl shadow-2xl shadow-blue-500/30 animate-bounce">
+          🏆
+        </div>
+        <h2 className="text-3xl font-black text-white mb-4 tracking-tighter leading-tight">
+          Watch & Unlock<br />Premium Features
+        </h2>
+        <p className="text-white/50 text-sm font-medium leading-relaxed max-w-xs">
+          Thank you for supporting our free app. Your reward is being prepared!
+        </p>
+      </div>
+
+      {/* 하단 진행 바 */}
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/10">
+        <div
+          className="h-full bg-blue-500 transition-all duration-1000 ease-linear shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+          style={{ width: `${((15 - timeLeft) / 15) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
 
 
 const App: React.FC = () => {
@@ -763,15 +1139,84 @@ const App: React.FC = () => {
   const [useTeamColors, setUseTeamColors] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedTeamColors, setSelectedTeamColors] = useState<string[]>(['#ef4444', '#3b82f6']);
+  const [useRandomMix, setUseRandomMix] = useState(false);
 
   const [alertState, setAlertState] = useState<{ isOpen: boolean; title?: string; message: string }>({
     isOpen: false,
     message: '',
   });
 
+  const [user, setUser] = useState<any>(() => {
+    const saved = localStorage.getItem('app_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginLater, setLoginLater] = useState(false); // 앱 실행 시마다 초기화 (localStorage 제거)
+
+  const [positionUsage, setPositionUsage] = useState<{ count: number, lastDate: string }>(() => {
+    const saved = localStorage.getItem('app_position_usage');
+    return saved ? JSON.parse(saved) : { count: 0, lastDate: '' };
+  });
+  const [totalGenCount, setTotalGenCount] = useState(() => parseInt(localStorage.getItem('app_total_gen_count') || '0', 10));
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [showRewardAd, setShowRewardAd] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
+  const [isUnlimitedPos, setIsUnlimitedPos] = useState(() => localStorage.getItem('app_is_unlimited_pos') === 'true');
+  const isPro = isAdFree && isUnlimitedPos;
+
+  const [isProcessing, setIsProcessing] = useState(false); // 결제/로그인 중복 클릭 방지
+
   const showAlert = (message: string, title?: string) => {
     setAlertState({ isOpen: true, message, title });
   };
+
+
+  useEffect(() => {
+    const initAdMob = async () => {
+      try {
+        await AdMob.initialize({
+          initializeForTesting: false,
+        });
+
+        if (Capacitor.getPlatform() === 'ios') {
+          await AdMob.requestTrackingAuthorization();
+        }
+
+        AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: any) => {
+          console.log('User earned reward', reward);
+          handleRewardAdComplete();
+        });
+      } catch (e) {
+        console.error('AdMob init failed', e);
+      }
+    };
+
+    const initIAP = async () => {
+      try {
+        await paymentService.initialize();
+        const restored = await paymentService.restorePurchases();
+
+        // 광고 제거 상태 동기화
+        const hasAdFree = restored.includes(PRODUCT_IDS.AD_FREE) || restored.includes(PRODUCT_IDS.FULL_PACK);
+        setIsAdFree(hasAdFree);
+        localStorage.setItem('app_is_ad_free', hasAdFree ? 'true' : 'false');
+
+        // 무제한 포지션 상태 동기화
+        const hasUnlimited = restored.includes(PRODUCT_IDS.UNLIMITED_POS) || restored.includes(PRODUCT_IDS.FULL_PACK);
+        setIsUnlimitedPos(hasUnlimited);
+        localStorage.setItem('app_is_unlimited_pos', hasUnlimited ? 'true' : 'false');
+
+        console.log('IAP Sync completed:', { hasAdFree, hasUnlimited });
+      } catch (err) {
+        console.error('IAP initialization failed', err);
+      }
+    };
+
+    initAdMob();
+    initIAP();
+  }, []); // 마운트 시 1회만 실행
 
   useEffect(() => {
     const initSystemLang = async () => {
@@ -796,7 +1241,168 @@ const App: React.FC = () => {
     };
     initSystemLang();
     AnalyticsService.logAppOpen(); // 앱 실행 기록
+
+    if (!user && !loginLater) {
+      setShowLoginModal(true);
+    }
+
+    // 자동 로그인 시 클라우드 데이터 로드 (로그인만 하면 무료)
+    if (user?.id) {
+      loadPlayersFromCloud(user.id).then(cloudPlayers => {
+        if (cloudPlayers && cloudPlayers.length > 0) {
+          setPlayers(cloudPlayers);
+        }
+      });
+    }
+
+    // Google Auth 초기화 (웹 환경 대응 포함)
+    const initAuth = async () => {
+      try {
+        await GoogleAuth.initialize();
+      } catch (e) {
+        console.error('Auth init failed', e);
+      }
+    };
+    initAuth();
+
+    // 일일 제한 초기화 체크
+    const today = new Date().toISOString().split('T')[0];
+    const savedUsage = localStorage.getItem('app_position_usage');
+    if (savedUsage) {
+      const parsed = JSON.parse(savedUsage);
+      if (parsed.lastDate !== today) {
+        const freshUsage = { count: 0, lastDate: today };
+        setPositionUsage(freshUsage);
+        localStorage.setItem('app_position_usage', JSON.stringify(freshUsage));
+      }
+    } else {
+      const freshUsage = { count: 0, lastDate: today };
+      setPositionUsage(freshUsage);
+      localStorage.setItem('app_position_usage', JSON.stringify(freshUsage));
+    }
   }, []);
+
+  const handleWatchRewardAd = async () => {
+    setShowLimitModal(false);
+
+    try {
+      const options: RewardAdOptions = {
+        adId: 'ca-app-pub-4761157658396004/2646854681',
+        isTesting: false
+      };
+      await AdMob.prepareRewardVideoAd(options);
+      await AdMob.showRewardVideoAd();
+      console.log('Reward Ad shown successfully');
+    } catch (e) {
+      console.error('Reward Ad failed', e);
+      // 광고 실패 시에도 일단 혜택 제공 (UX 차원)
+      handleRewardAdComplete();
+    }
+  };
+
+  const handleRewardAdComplete = () => {
+    setShowRewardAd(false);
+    // 보너스 사용권 3회 제공 (오늘 날짜 유지하며 카운트를 -3하여 다음 3회 시도 통과)
+    setPositionUsage(prev => ({ ...prev, count: Math.max(0, prev.count - 3) }));
+    showAlert(t('bonusUnlockedMsg'), t('bonusUnlockedTitle'));
+  };
+
+  const handleUpgradePro = async (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    try {
+      let productId: string = '';
+      if (type === 'AD_FREE') productId = PRODUCT_IDS.AD_FREE;
+      else if (type === 'UNLIMITED_POS') productId = PRODUCT_IDS.UNLIMITED_POS;
+      else if (type === 'FULL') productId = PRODUCT_IDS.FULL_PACK;
+
+      const success = await paymentService.purchase(productId as any);
+
+      if (success) {
+        if (type === 'AD_FREE' || type === 'FULL') {
+          setIsAdFree(true);
+          localStorage.setItem('app_is_ad_free', 'true');
+        }
+        if (type === 'UNLIMITED_POS' || type === 'FULL') {
+          setIsUnlimitedPos(true);
+          localStorage.setItem('app_is_unlimited_pos', 'true');
+        }
+
+        setShowLimitModal(false);
+        setShowUpgradeModal(false);
+        showAlert(t('upgradeSuccessMsg'), t('upgradeSuccessTitle'));
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
+
+  const handleRestorePurchases = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      const restored = await paymentService.restorePurchases();
+      let restoredAny = false;
+
+      if (restored.includes(PRODUCT_IDS.AD_FREE) || restored.includes(PRODUCT_IDS.FULL_PACK)) {
+        setIsAdFree(true);
+        localStorage.setItem('app_is_ad_free', 'true');
+        restoredAny = true;
+      }
+      if (restored.includes(PRODUCT_IDS.UNLIMITED_POS) || restored.includes(PRODUCT_IDS.FULL_PACK)) {
+        setIsUnlimitedPos(true);
+        localStorage.setItem('app_is_unlimited_pos', 'true');
+        restoredAny = true;
+      }
+
+      if (restoredAny) {
+        showAlert(t('upgradeSuccessMsg'), t('upgradeSuccessTitle'));
+      } else {
+        showAlert(t('noPurchasesFound' as any), t('infoTitle'));
+      }
+    } catch (err) {
+      console.error('Restore failed', err);
+      showAlert(t('restoreFailed' as any), t('validationErrorTitle'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      const googleUser = await GoogleAuth.signIn();
+      console.log('Google User:', googleUser);
+      setUser(googleUser);
+      localStorage.setItem('app_user', JSON.stringify(googleUser));
+      setShowLoginModal(false);
+      showAlert(`${googleUser.givenName}님, 환영합니다!`, 'Login Success');
+
+      // 클라우드에서 데이터 가져오기 (전면 무료)
+      const cloudPlayers = await loadPlayersFromCloud(googleUser.id);
+      if (cloudPlayers && cloudPlayers.length > 0) {
+        setPlayers(cloudPlayers);
+        // showAlert('클라우드에서 명단을 불러왔습니다.', 'Sync Success'); 
+      }
+    } catch (e: any) {
+      console.error('Login failed', e);
+      if (e.error !== 'user_cancelled') {
+        showAlert(`Login failed: ${e.message || 'Unknown error'}`, 'Error');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleLoginLater = () => {
+    setShowLoginModal(false);
+    setLoginLater(true);
+    // localStorage.setItem('app_login_later', 'true'); // 저장하지 않음 (앱 껐다 키면 다시 나오게)
+  };
 
   const handleManualLangChange = (newLang: Language) => {
     setLang(newLang);
@@ -811,13 +1417,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const SAMPLE_DATA_VERSION = 'v2'; // 포지션 다양화 반영 버전
+    const SAMPLE_DATA_VERSION = 'v2';
     const stored = localStorage.getItem(STORAGE_KEY);
     const storedVersion = localStorage.getItem('app_sample_version');
 
     const isSampleData = (playerList: Player[]) => {
       if (!playerList || playerList.length === 0) return true;
       const sampleIdPattern = /^(ko|en|pt|es|ja)_/;
+      // 모든 선수의 ID가 샘플 패턴(언어코드_)으로 시작해야 샘플로 간주
       return playerList.every(p => sampleIdPattern.test(p.id));
     };
 
@@ -825,15 +1432,16 @@ const App: React.FC = () => {
       try {
         const parsed = JSON.parse(stored);
         if (parsed?.length > 0) {
-          // 샘플 데이터 형식이면서 버전이 낮거나 없다면 강제 업데이트
-          if (isSampleData(parsed) && storedVersion !== SAMPLE_DATA_VERSION) {
-            setPlayers(SAMPLE_PLAYERS_BY_LANG[lang]);
-            localStorage.setItem('app_sample_version', SAMPLE_DATA_VERSION);
-          } else if (isSampleData(parsed)) {
-            // 버전은 맞지만 언어가 바뀌었을 때를 위한 처리
-            setPlayers(SAMPLE_PLAYERS_BY_LANG[lang]);
+          if (isSampleData(parsed)) {
+            // 샘플 데이터인 경우: 버전이 바뀌었거나, 저장된 언어와 현재 언어가 다른 경우에만 업데이트
+            if (storedVersion !== SAMPLE_DATA_VERSION) {
+              setPlayers(SAMPLE_PLAYERS_BY_LANG[lang]);
+              localStorage.setItem('app_sample_version', SAMPLE_DATA_VERSION);
+            } else {
+              setPlayers(parsed);
+            }
           } else {
-            // 사용자 데이터인 경우 그대로 유지
+            // 사용자 데이터인 경우(한 명이라도 직접 추가했거나 ID가 바뀜): 무조건 유지
             setPlayers(parsed);
           }
         } else {
@@ -847,12 +1455,19 @@ const App: React.FC = () => {
       setPlayers(SAMPLE_PLAYERS_BY_LANG[lang]);
       localStorage.setItem('app_sample_version', SAMPLE_DATA_VERSION);
     }
-  }, [lang]);
+  }, []); // 마운트 시 1회만 실행하여 유저 데이터 보존
 
-  // useEffect(() => { localStorage.setItem('app_lang', lang); }, [lang]); // 더 이상 매번 저장하지 않음
+  // useEffect(() => {localStorage.setItem('app_lang', lang); }, [lang]); // 더 이상 매번 저장하지 않음
   useEffect(() => { localStorage.setItem('app_dark_mode', darkMode.toString()); if (darkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [darkMode]);
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); }, [players]);
   useEffect(() => { localStorage.setItem(`app_constraints`, JSON.stringify(teamConstraints)); }, [teamConstraints]);
+
+  // 선수 데이터가 변경될 때마다 클라우드에 자동 저장 (로그인 시 무료)
+  useEffect(() => {
+    if (user?.id && players.length > 0) {
+      savePlayersToCloud(user.id, players);
+    }
+  }, [players, user]);
 
   useEffect(() => {
     // 수동으로 저장된 쿼터가 있는지 먼저 확인
@@ -915,7 +1530,7 @@ const App: React.FC = () => {
 
   const handleReviewLater = () => {
     const nextPromptDate = new Date();
-    nextPromptDate.setDate(nextPromptDate.getDate() + 7);
+    nextPromptDate.setDate(nextPromptDate.getDate() + 14);
     localStorage.setItem('app_review_cooldown', nextPromptDate.toISOString());
     setShowReviewPrompt(false);
   };
@@ -960,20 +1575,45 @@ const App: React.FC = () => {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const participating = players.filter(p => p.isActive && p.sportType === activeTab);
     if (participating.length < teamCount) {
       showAlert(t('minPlayersAlert', teamCount, participating.length));
       return;
     }
 
+    // 포지션 인원 설정이 하나라도 있는지 확인 (있으면 고급 기능 사용)
+    const isAdvanced = Object.values(quotas).some(v => v !== null);
+
+    // 광고 정책: 가입 후 최초 10회는 무조건 통과, 이후 일일 3회 제한
+    if (isAdvanced && !isUnlimitedPos && totalGenCount > 10 && positionUsage.count >= 3) {
+      setShowLimitModal(true);
+      return;
+    }
+
     setIsGenerating(true);
-    setCountdown(5);
+    // 광고 제거 전은 1.5초(연출), 광고 제거 후는 0.5초(빠름)
+    const waitTime = isAdFree ? 500 : 1500;
+    setCountdown(isAdFree ? 1 : 5);
 
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
+
+          // 전체 생성 횟수 기록
+          const nextTotal = totalGenCount + 1;
+          setTotalGenCount(nextTotal);
+          localStorage.setItem('app_total_gen_count', nextTotal.toString());
+
+          // 포지션 사용 횟수 기록 (10회 이후부터 카운트)
+          if (isAdvanced && !isUnlimitedPos && nextTotal > 10) {
+            setPositionUsage(prevUsage => {
+              const next = { ...prevUsage, count: prevUsage.count + 1 };
+              localStorage.setItem('app_position_usage', JSON.stringify(next));
+              return next;
+            });
+          }
           return 0;
         }
         return prev - 1;
@@ -987,7 +1627,7 @@ const App: React.FC = () => {
     });
 
     setTimeout(() => {
-      const res = generateBalancedTeams(participating, teamCount, quotas, activeConstraints);
+      const res = generateBalancedTeams(participating, teamCount, quotas, activeConstraints, useRandomMix);
 
       // 팀 색상 할당
       if (useTeamColors) {
@@ -1015,11 +1655,11 @@ const App: React.FC = () => {
         showAlert(t('balanceWarning', res.maxDiff));
       }
 
-      // 팀 생성 횟수 기반 리뷰 유도 (3회 이상)
+      // 팀 생성 횟수 기반 리뷰 유도 (10회 이상)
       const genCount = parseInt(localStorage.getItem('app_gen_count') || '0', 10) + 1;
       localStorage.setItem('app_gen_count', genCount.toString());
 
-      if (genCount >= 3) {
+      if (genCount >= 10) {
         const cooldown = localStorage.getItem('app_review_cooldown');
         if (cooldown !== 'DONE') {
           const now = new Date();
@@ -1038,7 +1678,7 @@ const App: React.FC = () => {
         player_count: participating.length,
         team_count: teamCount
       });
-    }, 5000);
+    }, waitTime);
   };
 
   const handleShare = async (elementId: string, fileName: string) => {
@@ -1082,35 +1722,35 @@ const App: React.FC = () => {
 
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
-            * { 
-              transition: none !important; 
-              animation: none !important; 
-              -webkit-print-color-adjust: exact; 
-              font-family: "Pretendard Variable", Pretendard, sans-serif !important;
+                        * {
+                          transition: none !important;
+                        animation: none !important;
+                        -webkit-print-color-adjust: exact;
+                        font-family: "Pretendard Variable", Pretendard, sans-serif !important;
             }
-            .truncate { 
-              overflow: visible !important; 
-              white-space: normal !important; 
-              text-overflow: clip !important; 
+                        .truncate {
+                          overflow: visible !important;
+                        white-space: normal !important;
+                        text-overflow: clip !important; 
             }
-            .overflow-hidden { 
-              overflow: visible !important; 
+                        .overflow-hidden {
+                          overflow: visible !important; 
             }
-            span, p, h1, h2, h3, h4 { 
-              -webkit-print-color-adjust: exact; 
-              font-family: inherit !important;
+                        span, p, h1, h2, h3, h4 {
+                          -webkit - print - color - adjust: exact;
+                        font-family: inherit !important;
             }
-            .animate-in { opacity: 1 !important; transform: none !important; animation: none !important; visibility: visible !important; }
-            [data-capture-ignore] { display: none !important; visibility: hidden !important; }
-            .bg-slate-950 { background-color: #020617 !important; }
-            .bg-\\[\\#fdfcf9\\] { background-color: #fdfcf9 !important; }
-            .flex { display: flex !important; }
-            .items-center { align-items: center !important; }
-            .justify-between { justify-content: space-between !important; }
-            .flex-col { flex-direction: column !important; }
-            .text-sm { font-size: 14px !important; }
-            .font-semibold { font-weight: 600 !important; }
-          `;
+                        .animate-in {opacity: 1 !important; transform: none !important; animation: none !important; visibility: visible !important; }
+                        [data-capture-ignore] {display: none !important; visibility: hidden !important; }
+                        .bg-slate-950 {background - color: #020617 !important; }
+                        .bg-\\[\\#fdfcf9\\] {background - color: #fdfcf9 !important; }
+                        .flex {display: flex !important; }
+                        .items-center {align - items: center !important; }
+                        .justify-between {justify - content: space-between !important; }
+                        .flex-col {flex - direction: column !important; }
+                        .text-sm {font - size: 14px !important; }
+                        .font-semibold {font - weight: 600 !important; }
+                        `;
           clonedDoc.head.appendChild(style);
 
           clonedElement.style.opacity = '1';
@@ -1276,35 +1916,50 @@ const App: React.FC = () => {
         paddingTop: 'calc(1rem + env(safe-area-inset-top))',
         paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))'
       }}>
-      {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} />}
+      {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isPro={isPro} />}
 
       <header className="w-full flex flex-col items-center mb-0">
         <div className="w-full flex justify-between items-center mb-4 bg-white dark:bg-slate-950 p-1.5">
           <div className="flex gap-2">
-            <button onClick={() => setDarkMode(!darkMode)} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 transition-all hover:border-transparent" aria-label="Toggle dark mode">
-              {darkMode ? <SunIcon /> : <MoonIcon />}
-            </button>
-            <button onClick={() => setShowInfoModal(true)} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 transition-all hover:border-transparent" aria-label="Show app Info">
-              <InfoIcon />
+            <button
+              onClick={() => setShowUpgradeModal(true)}
+              className={`p-2.5 rounded-xl transition-all flex items-center gap-2 group relative ${isPro
+                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                : 'bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30'}`}
+            >
+              <div className="relative">
+                <span className={`text-lg block transition-transform group-active:scale-90 ${isPro ? 'animate-pulse' : ''}`}>
+                  {isPro ? '✨' : '💎'}
+                </span>
+                {!isPro && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950" />
+                )}
+              </div>
+              <span className="text-[10px] font-black tracking-widest uppercase pt-0.5">
+                {isPro ? 'PRO' : 'SALE'}
+              </span>
             </button>
           </div>
-          <div className="flex gap-1.5">
-            {(['ko', 'en', 'pt', 'es', 'ja'] as Language[]).map(l => {
-              const flags = { ko: '🇰🇷', en: '🇺🇸', pt: '🇧🇷', es: '🇪🇸', ja: '🇯🇵' };
-              return (
-                <button
-                  key={l}
-                  onClick={() => handleManualLangChange(l)}
-                  className={`p-2 rounded-lg transition-all flex items-center justify-center ${lang === l
-                    ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900'
-                    : 'bg-white text-slate-400 dark:bg-slate-900 hover:border-transparent'
-                    }`}
-                  title={l}
-                >
-                  <span className="text-xs leading-none">{flags[l]}</span>
-                </button>
-              );
-            })}
+          <div className="flex gap-1 items-center">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <SunIcon /> : <MoonIcon />}
+            </button>
+            <LanguageMenu
+              lang={lang}
+              onLangChange={handleManualLangChange}
+              t={t}
+            />
+            <button
+              onClick={() => setShowInfoModal(true)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+              aria-label="Show app Info"
+            >
+              <InfoIcon />
+            </button>
           </div>
         </div>
         <div className="flex items-center justify-center gap-2.5">
@@ -1601,6 +2256,20 @@ const App: React.FC = () => {
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider">{t('useTeamColorsLabel')}</span>
                   </label>
 
+                  {/* 무작위 섞기 추가 */}
+                  <label className="flex items-center gap-2 cursor-pointer group ml-auto mr-4">
+                    <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${useRandomMix ? 'bg-rose-500 border-rose-500 text-white shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950'}`}>
+                      {useRandomMix && <CheckIcon />}
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={useRandomMix}
+                      onChange={e => setUseRandomMix(e.target.checked)}
+                    />
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors uppercase tracking-wider">{t('randomMix')}</span>
+                  </label>
+
                   {/* 창이 닫혀있을 때의 요약 UI */}
                   {useTeamColors && !showColorPicker && (
                     <div
@@ -1680,7 +2349,13 @@ const App: React.FC = () => {
           <div id="results-capture-section" className="space-y-3 pt-3 animate-in duration-500">
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
-              <div data-capture-ignore="true">
+              <div data-capture-ignore="true" className="flex gap-2">
+                <button
+                  onClick={() => setResult(null)}
+                  className="bg-slate-950 dark:bg-slate-100 text-slate-100 dark:text-slate-950 font-black px-3 py-1 rounded-md text-[10px] flex items-center gap-1 hover:bg-slate-800 dark:hover:bg-white transition-all"
+                >
+                  ← {t('backToRoster')}
+                </button>
                 <button
                   onClick={() => handleShare('results-capture-section', 'team-balance-result')}
                   disabled={!!isSharing}
@@ -1857,9 +2532,11 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* <AdBanner lang={lang} darkMode={darkMode} /> */}
 
-      <InfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} lang={lang} darkMode={darkMode} showAlert={showAlert} />
+      <InfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} lang={lang} darkMode={darkMode} isAdFree={isAdFree} isUnlimitedPos={isUnlimitedPos} isLoggedIn={!!user} onUpgradeRequest={() => { setShowInfoModal(false); setShowUpgradeModal(true); }}
+        onRestore={handleRestorePurchases}
+        showAlert={showAlert}
+      />
       <ReviewPrompt isOpen={showReviewPrompt} onLater={handleReviewLater} onRate={handleRateApp} lang={lang} darkMode={darkMode} />
       <AlertModal
         isOpen={alertState.isOpen}
@@ -1869,7 +2546,42 @@ const App: React.FC = () => {
         lang={lang}
         darkMode={darkMode}
       />
-    </div >
+      <LoginModal
+        isOpen={showLoginModal}
+        onLater={handleLoginLater}
+        onLogin={handleGoogleLogin}
+        lang={lang}
+        darkMode={darkMode}
+      />
+      <PositionLimitModal
+        isOpen={showLimitModal}
+        onWatchAd={handleWatchRewardAd}
+        onUpgrade={() => { setShowLimitModal(false); setShowUpgradeModal(true); }}
+        onClose={() => setShowLimitModal(false)}
+        lang={lang}
+        darkMode={darkMode}
+      />
+      <RewardAdModal
+        isOpen={showRewardAd}
+        onComplete={handleRewardAdComplete}
+        onClose={() => setShowRewardAd(false)}
+        lang={lang}
+        darkMode={darkMode}
+      />
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={handleUpgradePro}
+        isAdFree={isAdFree}
+        isUnlimitedPos={isUnlimitedPos}
+        lang={lang}
+        darkMode={darkMode}
+      />
+
+      {/* 하단 고정 배너 광고 및 고정 영역 (스크롤 콘텐츠 가림 방지 여백 포함) */}
+      <div className="h-[calc(60px+env(safe-area-inset-bottom))]" />
+      <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} />
+    </div>
   );
 };
 

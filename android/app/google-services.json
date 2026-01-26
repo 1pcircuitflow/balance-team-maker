@@ -12,7 +12,28 @@
           "package_name": "com.balanceteammaker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "834065889708-05gk9ntvph4a5239pl05vo8o5aglqart.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.balanceteammaker",
+            "certificate_hash": "8b857ce207b7b76b492bca9d9acd8f20674c775e"
+          }
+        },
+        {
+          "client_id": "834065889708-55v6b8920oi4idos3et5djamumd7u4cg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.balanceteammaker",
+            "certificate_hash": "d1e244169d1dcd94d3c3b560b92662c8bc1f7ac2"
+          }
+        },
+        {
+          "client_id": "834065889708-h51gv3lorhvq919876lbt91mc06kblj9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAifUOW5n-0v6anoMKbNUIfLR72M1CHAtY"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834065889708-h51gv3lorhvq919876lbt91mc06kblj9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

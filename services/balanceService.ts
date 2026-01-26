@@ -7,7 +7,8 @@ export const generateBalancedTeams = (
     players: Player[],
     teamCount: number,
     customQuotas?: Partial<Record<Position, number | null>>,
-    constraints: TeamConstraint[] = []
+    constraints: TeamConstraint[] = [],
+    ignoreTier: boolean = false
 ): BalanceResult => {
     const activePlayers = [...players.filter(p => p.isActive)];
     if (activePlayers.length === 0) return { teams: [], standardDeviation: 0 };
@@ -112,7 +113,7 @@ export const generateBalancedTeams = (
                     // 5. 배정 점수 계산
                     const playerCountWeight = team.players.length * 100000000; // 팀원 수 균등화 (1억 점 단위 - 최우선)
                     const positionPenaltyWeight = preferencePenalty * 1000;
-                    const skillWeight = team.totalSkill * 1;
+                    const skillWeight = ignoreTier ? 0 : team.totalSkill * 1; // 티어 무시 시 실력 점수 배제
                     const evaluationScore = playerCountWeight + quotaPenalty + positionPenaltyWeight + skillWeight + constraintWeight;
 
                     if (!bestEvaluation || evaluationScore < bestEvaluation.score) {
@@ -174,7 +175,9 @@ export const generateBalancedTeams = (
             });
         }
 
-        const imbalanceScore = Number((hardRuleViolationPenalty + standardDeviation).toFixed(2));
+        const imbalanceScore = ignoreTier
+            ? Number(hardRuleViolationPenalty.toFixed(2))
+            : Number((hardRuleViolationPenalty + standardDeviation).toFixed(2));
         const maxDiff = Number((Math.max(...totalSkills) - Math.min(...totalSkills)).toFixed(1));
         const isValid = !isConstraintViolated && !isQuotaViolated && (hardRuleViolationPenalty < 1000000);
 
@@ -192,6 +195,8 @@ export const generateBalancedTeams = (
             bestResult = nextResult;
             bestScore = nextScore;
         }
+        // 티어 무시 옵션 활성화 시, 첫 번째로 유효한(포지션 규칙 만족) 결과를 찾으면 즉시 종료
+        if (ignoreTier && bestResult.isValid) break;
         if (bestScore < 1.0) break;
         attempts++;
     }

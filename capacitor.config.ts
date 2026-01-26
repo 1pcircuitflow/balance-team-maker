@@ -12,6 +12,11 @@ const config: CapacitorConfig = {
       backgroundColor: '#020617',
       // 상태바의 글자(시계, 배터리 등)를 흰색으로 바꿉니다. (배경이 어두우니까요!)
       style: 'DARK'
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '834065889708-h51gv3lorhvq919876lbt91mc06kblj9.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
     }
   }
 };
