@@ -1,7 +1,7 @@
 {
   "name": "balance-team-maker",
   "private": true,
-  "version": "2.1.15",
+  "version": "2.1.18",
   "type": "module",
   "scripts": {
     "dev": "vite",
