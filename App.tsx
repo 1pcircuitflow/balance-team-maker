@@ -3423,9 +3423,7 @@ const App: React.FC = () => {
           </div>
         )}
       </main >
-      <footer className="mt-8 py-6 text-slate-400 dark:text-slate-500 text-[10px] font-semibold w-full text-center max-w-4xl pb-[max(2rem,env(safe-area-inset-bottom))]">
-        <p className="uppercase tracking-[0.3em] opacity-80">{t('footerTagline')}</p>
-      </footer>
+
 
       {/* 선택 모드 하단 제어 바 */}
       {selectionMode && (
@@ -3630,7 +3628,7 @@ const App: React.FC = () => {
         lang={lang}
         darkMode={darkMode}
       />
-      <div className="h-[calc(60px+env(safe-area-inset-bottom))]" />
+      <div className="h-[calc(10px+env(safe-area-inset-bottom))]" />
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} />
     </div>
   );
