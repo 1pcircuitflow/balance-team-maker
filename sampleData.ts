@@ -4,7 +4,7 @@ import { Language } from './translations';
 export const SAMPLE_PLAYERS_BY_LANG: Record<Language, Player[]> = {
     ko: [
         ...[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].flatMap((st) =>
-            ['김민수', '이지혜', '박지훈', '최서연', '정우진', '강다은', '윤준호', '한미소', '임성민', '오유진'].map((name, i) => {
+            ['(예시) 김민수', '(예시) 이지혜', '(예시) 박지훈', '(예시) 최서연', '(예시) 정우진', '(예시) 강다은', '(예시) 윤준호', '(예시) 한미소', '(예시) 임성민', '(예시) 오유진'].map((name, i) => {
                 const isSoccer = st === SportType.SOCCER;
                 const isFutsal = st === SportType.FUTSAL;
                 const isBasket = st === SportType.BASKETBALL;
@@ -81,7 +81,7 @@ export const SAMPLE_PLAYERS_BY_LANG: Record<Language, Player[]> = {
     ],
     en: [
         ...[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].flatMap((st) =>
-            ['John Smith', 'Emma Wilson', 'Michael Brown', 'Olivia Taylor', 'James Davis', 'Sophia Miller', 'Robert Johnson', 'Ava Garcia', 'Chris Evans', 'Jessica Parker'].map((name, i) => {
+            ['(Sample) John Smith', '(Sample) Emma Wilson', '(Sample) Michael Brown', '(Sample) Olivia Taylor', '(Sample) James Davis', '(Sample) Sophia Miller', '(Sample) Robert Johnson', '(Sample) Ava Garcia', '(Sample) Chris Evans', '(Sample) Jessica Parker'].map((name, i) => {
                 const isSoccer = st === SportType.SOCCER;
                 const isFutsal = st === SportType.FUTSAL;
                 const isBasket = st === SportType.BASKETBALL;
@@ -157,7 +157,7 @@ export const SAMPLE_PLAYERS_BY_LANG: Record<Language, Player[]> = {
     ],
     pt: [
         ...[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].flatMap((st) =>
-            ['João Silva', 'Maria Santos', 'Lucas Pereira', 'Ana Costa', 'Gabriel Rodrigues', 'Juliana Oliveira', 'Pedro Fernandes', 'Larissa Souza', 'Rafael Almeida', 'Camila Lima'].map((name, i) => {
+            ['(Exemplo) João Silva', '(Exemplo) Maria Santos', '(Exemplo) Lucas Pereira', '(Exemplo) Ana Costa', '(Exemplo) Gabriel Rodrigues', '(Exemplo) Juliana Oliveira', '(Exemplo) Pedro Fernandes', '(Exemplo) Larissa Souza', '(Exemplo) Rafael Almeida', '(Exemplo) Camila Lima'].map((name, i) => {
                 const isSoccer = st === SportType.SOCCER;
                 const isFutsal = st === SportType.FUTSAL;
                 const isBasket = st === SportType.BASKETBALL;
@@ -232,7 +232,7 @@ export const SAMPLE_PLAYERS_BY_LANG: Record<Language, Player[]> = {
     ],
     es: [
         ...[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].flatMap((st) =>
-            ['Carlos García', 'Lucía Fernández', 'Javier Rodríguez', 'Elena Martínez', 'Diego López', 'Marta Sánchez', 'Pablo Ruiz', 'Sara Morales', 'Jorge Castro', 'Paula Ortiz'].map((name, i) => {
+            ['(Ejemplo) Carlos García', '(Ejemplo) Lucía Fernández', '(Ejemplo) Javier Rodríguez', '(Ejemplo) Elena Martínez', '(Ejemplo) Diego López', '(Ejemplo) Marta Sánchez', '(Ejemplo) Pablo Ruiz', '(Ejemplo) Sara Morales', '(Ejemplo) Jorge Castro', '(Ejemplo) Paula Ortiz'].map((name, i) => {
                 const isSoccer = st === SportType.SOCCER;
                 const isFutsal = st === SportType.FUTSAL;
                 const isBasket = st === SportType.BASKETBALL;
@@ -305,7 +305,7 @@ export const SAMPLE_PLAYERS_BY_LANG: Record<Language, Player[]> = {
     ],
     ja: [
         ...[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].flatMap((st) =>
-            ['田中 太郎', '佐藤 花子', '鈴木 一郎', '高橋 健太', '伊藤 結衣', '渡辺 誠', '山本 翔太', '中村 文子', '小林 健二', '加藤 恵'].map((name, i) => {
+            ['(例) 田中 太郎', '(例) 佐藤 花子', '(例) 鈴木 一郎', '(例) 高橋 健太', '(例) 伊藤 結衣', '(例) 渡辺 誠', '(例) 山本 翔太', '(例) 中村 文子', '(例) 小林 健二', '(例) 加藤 恵'].map((name, i) => {
                 const isSoccer = st === SportType.SOCCER;
                 const isFutsal = st === SportType.FUTSAL;
                 const isBasket = st === SportType.BASKETBALL;

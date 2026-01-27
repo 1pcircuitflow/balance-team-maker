@@ -32,10 +32,8 @@
         .pitch-bg {
             position: absolute;
             inset: 0;
-            background: #0f172a;
-            border-radius: 1.5rem;
             border: 2px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
+            /* overflow: hidden 제거 - 팝업 가려짐 방지 */
         }
 
         .node {
@@ -124,7 +122,7 @@
 </head>
 
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
-    <div id="app" class="w-full max-w-md space-y-6">
+    <div id="app" class="w-full max-w-[350px] space-y-4">
         <div class="text-center">
             <h1 class="text-3xl font-black tracking-tighter text-blue-500">Balance Team Maker</h1>
             <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Smart Recruitment System v3.0</p>
@@ -135,12 +133,22 @@
             <p class="text-slate-500 font-bold text-sm">운동장을 준비하고 있습니다...</p>
         </div>
 
-        <div id="roomInfo" class="glass rounded-[2.5rem] p-6 space-y-2 hidden text-center">
-            <h2 id="roomSport" class="text-2xl font-black text-white">---</h2>
-            <p id="roomDateTime" class="text-blue-400 font-black text-sm">---</p>
+        <div id="roomInfo" class="glass rounded-[2rem] p-5 space-y-1 hidden text-center">
+            <h2 id="roomSport" class="text-xl font-black text-white">---</h2>
+            <p id="roomDateTime" class="text-blue-400 font-black text-xs">---</p>
         </div>
 
-        <form id="applyForm" class="glass rounded-[2.5rem] p-6 space-y-6 hidden">
+        <div id="participantsInfo" class="glass rounded-[2rem] p-5 space-y-3 hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">참가 현황</span>
+                <span id="participantCount" class="text-xs font-black text-blue-400">0명</span>
+            </div>
+            <div id="participantList" class="flex flex-wrap gap-1.5">
+                <!-- Participants injected here -->
+            </div>
+        </div>
+
+        <form id="applyForm" class="glass rounded-[2rem] p-5 space-y-5 hidden">
             <div>
                 <label
                     class="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest ml-1">이름</label>
@@ -165,7 +173,7 @@
                 </div>
             </div>
 
-            <div class="space-y-3">
+            <div id="posSection" class="space-y-3">
                 <label class="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">포지션 선호도
                     (터치하여 선택)</label>
                 <div class="pitch-container" id="pitch">
@@ -220,11 +228,78 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        const L = {
+            en: {
+                title: "Balance Team Maker",
+                tagline: "Smart Matchmaking System",
+                host: "Host",
+                participants: "Status",
+                name: "Name",
+                namePlaceholder: "Enter your name",
+                tier: "Skill Tier",
+                position: "Primary Position",
+                submit: "Apply Now",
+                waiting: "Join Waiting List",
+                successTitle: "Success!",
+                successMsg: "Your application is submitted. Please wait for the host's approval.",
+                loading: "Loading information...",
+                invalid: "Invalid link.",
+                expired: "Room not found or expired.",
+                full: "Recruitment Closed (Join Waiting List)",
+                closed: "Finished",
+                recruiting: "Recruiting",
+                list: "Applicant List",
+                noList: "No applicants yet.",
+                pos_fw: "Forward (FW)", pos_mf: "Midfielder (MF)", pos_df: "Defender (DF)", pos_gk: "Goalkeeper (GK)",
+                pos_pg: "Point Guard (PG)", pos_sg: "Shooting Guard (SG)", pos_sf: "Small Forward (SF)", pos_pf: "Power Forward (PF)", pos_c: "Center (C)"
+            },
+            ko: {
+                title: "Balance Team Maker",
+                tagline: "스마트 참가 신청 시스템",
+                host: "방장",
+                participants: "인원 현황",
+                name: "이름",
+                namePlaceholder: "본인의 이름을 입력하세요",
+                tier: "실력 티어",
+                position: "주 포지션",
+                submit: "참가 신청하기",
+                waiting: "대기자 신청하기",
+                successTitle: "신청 완료!",
+                successMsg: "팀 편성이 완료되면 알려드릴게요. 방장의 승인을 기다려주세요.",
+                loading: "정보를 불러오고 있습니다...",
+                invalid: "유효하지 않은 링크입니다.",
+                expired: "만료되었거나 존재하지 않는 방입니다.",
+                full: "모집 마감 (대기자 신청)",
+                closed: "마감됨",
+                recruiting: "모집중",
+                list: "참가자 목록",
+                noList: "아직 신청자가 없습니다.",
+                pos_fw: "포워드 (FW)", pos_mf: "미드필더 (MF)", pos_df: "수비수 (DF)", pos_gk: "골키퍼 (GK)",
+                pos_pg: "포인트 가드 (PG)", pos_sg: "슈팅 가드 (SG)", pos_sf: "스몰 포워드 (SF)", pos_pf: "파워 포워드 (PF)", pos_c: "센터 (C)"
+            }
+        };
+
         const urlParams = new URLSearchParams(window.location.search);
+        const langParam = urlParams.get('lang');
+        const userLang = langParam && L[langParam] ? langParam : (navigator.language.startsWith('ko') ? 'ko' : 'en');
+        const t = L[userLang];
+
         const roomId = urlParams.get('room');
         let currentSport = 'Soccer';
         let selections = {}; // { posId: 1 | 2 | 3 | 'X' }
         let selectedTier = 'B';
+        let currentRoomData = null;
+
+        // 텍스트 일괄 적용
+        document.querySelector('h1').textContent = t.title;
+        document.querySelector('p.text-slate-400').textContent = t.tagline;
+        document.getElementById('loading').querySelector('p').textContent = t.loading;
+        document.getElementById('name').placeholder = t.namePlaceholder;
+        document.getElementById('tierGroup').previousElementSibling.textContent = t.tier;
+        document.getElementById('submitBtn').textContent = t.submit;
+        document.getElementById('success').querySelector('h3').textContent = t.successTitle;
+        document.getElementById('success').querySelector('p').innerHTML = t.successMsg;
+        document.getElementById('pitch').previousElementSibling.textContent = t.position;
 
         // 티어 선택 로직
         document.querySelectorAll('.tier-btn').forEach(btn => {
@@ -245,6 +320,7 @@
             if (!docSnap.exists()) return alert('방을 찾을 수 없습니다.');
 
             const data = docSnap.data();
+            currentRoomData = data;
             // 대소문자 무관하게 매칭되도록 보정 (SOCCER -> Soccer 등)
             const rawSport = data.sport || 'Soccer';
             currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
@@ -255,10 +331,54 @@
             document.getElementById('roomSport').textContent = currentSport;
             document.getElementById('roomDateTime').textContent = `${data.matchDate} ${data.matchTime}`;
 
-            renderPitch();
+            if (data.sport === 'GENERAL' || data.sport === '일반' || data.sport === 'General') {
+                document.getElementById('posSection').classList.add('hidden');
+            } else {
+                document.getElementById('posSection').classList.remove('hidden');
+                renderPitch();
+            }
+
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('roomInfo').classList.remove('hidden');
+            document.getElementById('participantsInfo').classList.remove('hidden');
             document.getElementById('applyForm').classList.remove('hidden');
+
+            renderParticipants(data.activeParticipants || data.applicants || []);
+        }
+
+        function renderParticipants(participants) {
+            const container = document.getElementById('participantList');
+            const countEl = document.getElementById('participantCount');
+
+            // activeParticipants 필드가 있으면 이미 필터링된 데이터이므로 바로 사용
+            // applicants 필드(구버전)라면 isApproved 필터링 수행
+            const approved = participants[0]?.isApproved !== undefined
+                ? participants.filter(a => a.isApproved)
+                : participants;
+
+            countEl.textContent = `${approved.length}명`;
+
+            if (approved.length === 0) {
+                container.innerHTML = '<p class="text-[10px] text-slate-500 font-bold ml-1">아직 참가자가 없습니다.</p>';
+                return;
+            }
+
+            container.innerHTML = approved.map(a => `
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-300">
+                    ${a.name}
+                </span>
+            `).join('');
+        }
+
+        function getTierColor(tier) {
+            switch (tier) {
+                case 'S': return 'bg-purple-400';
+                case 'A': return 'bg-rose-400';
+                case 'B': return 'bg-blue-400';
+                case 'C': return 'bg-emerald-400';
+                case 'D': return 'bg-slate-400';
+                default: return 'bg-slate-200';
+            }
         }
 
         function renderPitch() {
@@ -294,15 +414,27 @@
                 node.style.top = pos.y + '%';
                 node.id = 'node-' + pos.id;
                 node.innerHTML = `<span>${pos.id}</span><span class="node-label" id="label-${pos.id}"></span>`;
-                node.onclick = () => showMenu(pos.id, node);
+
+                // 클릭 반응성 개선: pointerdown 사용
+                node.onpointerdown = (e) => {
+                    e.preventDefault();
+                    showMenu(pos.id, node);
+                };
                 container.appendChild(node);
             });
         }
 
         function showMenu(posId, anchor) {
             document.querySelectorAll('.menu-popup').forEach(m => m.remove());
+            document.querySelectorAll('.node').forEach(n => n.style.zIndex = "10");
+            anchor.style.zIndex = "1000"; // 클릭된 노드를 최상위로
+
             const menu = document.createElement('div');
             menu.className = 'menu-popup';
+            // 메뉴 클릭 및 터치 시 부모 노드(anchor)의 onpointerdown이 다시 실행되지 않도록 방지
+            menu.onpointerdown = (e) => e.stopPropagation();
+            menu.onmousedown = (e) => e.stopPropagation();
+
             const options = [
                 { l: 1, v: '100', c: 'bg-emerald-500' },
                 { l: 2, v: '75', c: 'bg-yellow-400' },
@@ -314,8 +446,13 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = `menu-btn ${opt.c}`;
-                btn.textContent = opt.v;
-                btn.onclick = (e) => {
+                // 버튼 내부 텍스트가 클릭 이벤트를 방해하지 않도록 처리
+                btn.style.userSelect = 'none';
+                btn.innerHTML = `<span style="pointer-events: none;">${opt.v}</span>`;
+
+                // onclick 대신 onpointerdown을 사용하여 즉각적인 반응 보장
+                btn.onpointerdown = (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     selectPos(posId, opt);
                     menu.remove();
@@ -358,7 +495,9 @@
         document.getElementById('applyForm').onsubmit = async (e) => {
             e.preventDefault();
             const name = document.getElementById('name').value;
-            if (Object.keys(selections).length === 0) return alert('최소 하나 이상의 포지션 선호도를 선택해주세요.');
+            const isGeneral = currentRoomData && (currentRoomData.sport === 'GENERAL' || currentRoomData.sport === '일반' || currentRoomData.sport === 'General');
+
+            if (Object.keys(selections).length === 0 && !isGeneral) return alert('최소 하나 이상의 포지션 선호도를 선택해주세요.');
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;

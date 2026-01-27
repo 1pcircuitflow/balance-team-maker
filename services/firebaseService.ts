@@ -39,20 +39,32 @@ export interface Applicant {
     position: string;
     timestamp: string;
     fcmToken?: string;
+    isWaiting?: boolean; // 항목 9: 대기자 여부
+    isApproved?: boolean; // 개별 승인 여부
 }
 
 export interface RecruitmentRoom {
     id: string;
     hostId: string;
     hostName: string;
+    title: string; // 항목 5: 모임명
     sport: string;
     matchDate: string;
     matchTime: string;
     status: 'OPEN' | 'CLOSED';
+    maxApplicants: number; // 항목 9: 모집 인원 제한
     applicants: Applicant[];
     createdAt: string;
     fcmToken?: string; // 방장의 FCM 토큰
 }
+
+export const translations = {
+    appliedMsg: (name: string, count: number) => `${name}가 참가 신청을 하였습니다. (현재참가인원 : ${count}명)`,
+    delete_recruit_room: '모집 방 삭제',
+    confirm_delete_room: '이 모집 방을 완전히 삭제하시겠습니까? 신청자 정보가 모두 사라집니다.',
+    approve: '승인',
+    approved: '승인됨',
+};
 
 /**
  * 1. 신규 모집방 생성
@@ -150,4 +162,19 @@ export const updateRoomFcmToken = async (roomId: string, token: string) => {
     } catch (error) {
         console.error("Error updating FCM token:", error);
     }
+};
+/**
+ * 7. 사용자가 방장인 모든 방 실시간 감시
+ */
+export const subscribeToUserRooms = (hostId: string, callback: (rooms: RecruitmentRoom[]) => void) => {
+    const q = query(
+        collection(db, "rooms"),
+        where("hostId", "==", hostId),
+        orderBy("createdAt", "desc")
+    );
+
+    return onSnapshot(q, (snap) => {
+        const rooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecruitmentRoom));
+        callback(rooms);
+    });
 };

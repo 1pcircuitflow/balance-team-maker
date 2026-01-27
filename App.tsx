@@ -5,6 +5,7 @@ import { generateBalancedTeams } from './services/balanceService';
 import { TRANSLATIONS, Language } from './translations';
 import html2canvas from 'html2canvas';
 import { Share } from '@capacitor/share';
+import { Clipboard } from '@capacitor/clipboard';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
@@ -22,10 +23,13 @@ import {
   applyForParticipation,
   cancelApplication,
   subscribeToRoom,
+  subscribeToUserRooms,
   updateRoomFcmToken,
   RecruitmentRoom,
-  Applicant
+  Applicant,
+  db
 } from './services/firebaseService';
+import { doc, updateDoc } from 'firebase/firestore';
 
 import * as Icons from './Icons';
 const {
@@ -426,13 +430,13 @@ interface PlayerItemProps {
   onEditToggle: (id: string | null) => void;
   onUpdate: (id: string, updates: Partial<Player>) => void;
   onRemove: (e: React.MouseEvent, id: string) => void;
-  isSelected?: boolean;
-  onSelect?: (id: string) => void;
   isSelectionMode?: boolean;
+  showTier?: boolean; // 항목 2: 티어 숨기기
 }
 
+
 const PlayerItem: React.FC<PlayerItemProps> = ({
-  player, isEditing, lang, onToggle, onEditToggle, onUpdate, onRemove, isSelected, onSelect, isSelectionMode
+  player, isEditing, lang, onToggle, onEditToggle, onUpdate, onRemove, isSelected, onSelect, isSelectionMode, showTier
 }) => {
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
@@ -464,8 +468,8 @@ const PlayerItem: React.FC<PlayerItemProps> = ({
               {isSelected && <CheckIcon />}
             </div>
           )}
-          {!isEditing && !player.isActive && !isSelectionMode && (
-            <div className={`w-5 h-5 rounded-lg ${TIER_COLORS[player.tier]} flex items-center justify-center text-[10px] font-semibold shrink-0 pt-0.5`}>
+          {!isEditing && !isSelectionMode && showTier && (
+            <div className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${TIER_COLORS[player.tier]} pt-1 shrink-0`}>
               {Tier[player.tier]}
             </div>
           )}
@@ -641,9 +645,7 @@ const UpgradeModal: React.FC<{
   if (!isOpen) return null;
 
   const products = [
-    { type: 'AD_FREE' as const, title: t('buyAdFree' as any), desc: t('adFreeDesc' as any), icon: '🚫', active: isAdFree, color: 'from-blue-500 to-cyan-500', price: t('price_adfree' as any), original: '12,900' },
-    { type: 'UNLIMITED_POS' as const, title: t('buyUnlimitedPos' as any), icon: '♾️', desc: t('unlimitedPosDesc' as any), active: isUnlimitedPos, color: 'from-indigo-500 to-purple-500', price: t('price_unlimited' as any), original: '12,900' },
-    { type: 'FULL' as const, title: t('buyFullPack' as any), desc: t('fullPackDesc' as any), icon: '💎', active: isAdFree && isUnlimitedPos, color: 'from-amber-400 to-orange-600', highlight: true, price: t('price_full' as any), original: '25,800' },
+    { type: 'AD_FREE' as const, title: t('buyAdFree' as any), desc: t('adFreeDesc' as any), icon: '🚫', active: isAdFree, color: 'from-blue-500 to-cyan-500', price: t('price_adfree' as any), original: '4,900', highlight: false },
   ];
 
   return (
@@ -652,12 +654,11 @@ const UpgradeModal: React.FC<{
         className={`w-full max-w-sm rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'} space-y-4`}
         onClick={e => e.stopPropagation()}
       >
-        <div className="text-center pb-2">
-          <div className={`inline-block px-4 py-1.5 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 text-[10px] font-black uppercase tracking-tighter mb-3 shadow-sm`}>
+        <div className="text-center pb-1">
+          <div className={`inline-block px-4 py-1 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 text-[10px] font-black uppercase tracking-tighter mb-2 shadow-sm`}>
             <span>🎁 {t('limitedOfferTime' as any)}</span>
           </div>
-          <h3 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'} tracking-tight`}>{t('proUpgradeTitle')}</h3>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Select your upgrade</p>
+          <h3 className={`text-lg font-black ${darkMode ? 'text-white' : 'text-slate-900'} tracking-tight`}>{t('proUpgradeTitle')}</h3>
         </div>
 
         <div className="space-y-3">
@@ -666,8 +667,8 @@ const UpgradeModal: React.FC<{
               key={i}
               className={`relative overflow-hidden rounded-3xl border transition-all ${p.highlight ? 'ring-2 ring-amber-500/20' : ''} ${p.active ? 'opacity-60 grayscale-[0.5]' : 'hover:scale-[1.02] shadow-sm'} ${darkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'}`}
             >
-              <div className="p-5 flex items-center gap-4 relative z-10">
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${p.color} flex items-center justify-center text-2xl shadow-lg`}>
+              <div className="p-4 flex items-center gap-4 relative z-10">
+                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${p.color} flex items-center justify-center text-xl shadow-lg`}>
                   {p.icon}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -676,11 +677,11 @@ const UpgradeModal: React.FC<{
                     {!p.active && (
                       <div className="flex flex-col items-end">
                         <span className="text-[9px] text-slate-400 line-through font-bold">₩{p.original}</span>
-                        <span className={`text-[11px] font-black ${p.highlight ? 'text-amber-500' : 'text-slate-900 dark:text-slate-100'}`}>₩{p.price}</span>
+                        <span className={`text-[12px] font-black ${p.highlight ? 'text-amber-500' : 'text-slate-900 dark:text-slate-100'}`}>₩{p.price}</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] font-medium text-slate-500 leading-tight mt-0.5">{p.desc}</p>
+                  <p className="text-[9px] font-medium text-slate-500 leading-tight mt-0.5">{p.desc}</p>
                 </div>
               </div>
 
@@ -724,7 +725,7 @@ const InfoModal: React.FC<{
   nickname: string; onUpdateNickname: (name: string) => void; onLogin: () => void; onLogout: () => void;
 }> = ({ isOpen, onClose, onUpgradeRequest, onRestore, lang, darkMode, isAdFree, isUnlimitedPos, user, nickname, onUpdateNickname, onLogin, onLogout }) => {
   const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
-  const isPro = isAdFree && isUnlimitedPos;
+  const isPro = isAdFree;
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempNickname, setTempNickname] = useState(nickname);
@@ -800,7 +801,6 @@ const InfoModal: React.FC<{
               <ul className="space-y-4 mb-8">
                 {[
                   { label: t('proBenefitAds'), active: isAdFree },
-                  { label: t('proBenefitPos'), active: isUnlimitedPos },
                 ].map((benefit, i) => (
                   <li key={i} className={`flex items-center gap-3 text-[13px] font-black transition-all ${benefit.active ? 'text-white' : 'text-white/70'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-inner ${benefit.active ? 'bg-white text-blue-600' : 'bg-white/20 text-white'}`}>
@@ -1330,6 +1330,9 @@ const HostRoomModal: React.FC<{
   onClose: () => void;
   onRoomCreated: (room: RecruitmentRoom) => void;
   activeRoom: RecruitmentRoom | null;
+  activeRooms: RecruitmentRoom[]; // 항목 7: 멀티 모임
+  onSelectRoom: (room: RecruitmentRoom) => void;
+  onAddNewRoom: () => void;
   activeTab: SportType;
   onCloseRoom: () => void;
   onApproveAll: (players: Player[]) => void;
@@ -1338,37 +1341,46 @@ const HostRoomModal: React.FC<{
   isPro: boolean;
   onUpgrade: () => void;
   userNickname: string;
-}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname }) => {
+  currentUserId: string;
+  activePlayerCount: number;
+}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, onSelectRoom, onAddNewRoom, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount }) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState('20:00');
+  const [title, setTitle] = useState(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} 모임`);
   const [loading, setLoading] = useState(false);
+  const [useLimit, setUseLimit] = useState(false);
+  const [maxApplicants, setMaxApplicants] = useState(12);
+  const [showHostTiers, setShowHostTiers] = useState(true);
   const t = (key: any) => (TRANSLATIONS[lang] as any)[key] || key;
 
   useEffect(() => {
     if (activeRoom?.id && isOpen) {
+      // 실시간 방 정보 구독
       const unsub = subscribeToRoom(activeRoom.id, (room) => {
         if (room) onRoomCreated(room);
       });
+
+      // 방장의 최신 푸시 토큰 동기화 (알림용)
+      const latestToken = localStorage.getItem('fcm_token');
+      if (latestToken) {
+        updateRoomFcmToken(activeRoom.id, latestToken);
+      }
+
       return () => unsub();
     }
   }, [activeRoom?.id, isOpen]);
 
   const handleCreate = async () => {
-    // 테스트를 위해 PRO 권한 체크 임시 해제
-    /*
-    if (!isPro) {
-      onUpgrade();
-      return;
-    }
-    */
     setLoading(true);
     try {
       const roomId = await createRecruitmentRoom({
-        hostId: 'host_' + Math.random().toString(36).substr(2, 5),
+        hostId: currentUserId,
         hostName: userNickname,
+        title: title,
         sport: activeTab,
         matchDate: date,
         matchTime: time,
+        maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
         fcmToken: localStorage.getItem('fcm_token') || undefined
       });
       const room = await getRoomInfo(roomId);
@@ -1380,32 +1392,55 @@ const HostRoomModal: React.FC<{
     }
   };
 
+  const handleUpdateLimit = async (newLimit: number) => {
+    if (!activeRoom) return;
+    try {
+      await updateDoc(doc(db, "rooms", activeRoom.id), { maxApplicants: newLimit });
+    } catch (e) { console.error(e); }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!activeRoom) return;
+    const newStatus = activeRoom.status === 'OPEN' ? 'CLOSED' : 'OPEN';
+    try {
+      await updateDoc(doc(db, "rooms", activeRoom.id), { status: newStatus });
+    } catch (e) { console.error(e); }
+  };
+
   const handleShare = async () => {
     if (!activeRoom) return;
-
-    // 로컬 테스트 환경(localhost)에서 포트가 없는 경우 3000번을 강제로 주입 (임시 테스트용)
     const currentOrigin = window.location.origin;
     const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':3000'))
       ? 'http://localhost:3000'
       : currentOrigin;
-
-    const webUrl = `${webOrigin}/hosting/index.html?room=${activeRoom.id}`;
+    const webUrl = `${webOrigin}/hosting/index.html?room=${activeRoom.id}&lang=${lang}`;
 
     try {
       if (Capacitor.isNativePlatform()) {
-        await Share.share({
-          title: t('shareRecruitLink'),
-          text: `${activeRoom.hostName}님이 참여자를 모집합니다!`,
-          url: webUrl,
-          dialogTitle: t('shareRecruitLink'),
-        });
+        try {
+          await Share.share({
+            title: t('shareRecruitLink'),
+            text: `[${activeRoom.title}] 모임에 ${activeRoom.hostName}님이 참여자를 모집합니다!`,
+            url: webUrl,
+            dialogTitle: t('shareRecruitLink'),
+          });
+        } catch (shareError) {
+          // 공유 창이 취소되거나 에러가 나면 클립보드 복사로 대처
+          await Clipboard.write({ string: webUrl });
+          alert(t('copySuccess'));
+        }
       } else {
-        await navigator.clipboard.writeText(webUrl);
+        await Clipboard.write({ string: webUrl });
         alert(t('copySuccess'));
       }
     } catch (e) {
-      await navigator.clipboard.writeText(webUrl);
-      alert(t('copySuccess'));
+      // 최후의 수단: navigator fallback (이미 Clipboard 플러그인이 처리하지만 한 번 더 안전장치)
+      try {
+        await Clipboard.write({ string: webUrl });
+        alert(t('copySuccess'));
+      } catch (err) {
+        alert('Copy failed: ' + webUrl);
+      }
     }
   };
 
@@ -1416,48 +1451,165 @@ const HostRoomModal: React.FC<{
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-8 space-y-6">
-          <div className="flex justify-between items-start">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('recruitParticipants')}</h3>
+          <div className="flex justify-between items-center">
+            <button
+              onClick={() => setShowHostTiers(!showHostTiers)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black text-slate-600 dark:text-slate-400 active:scale-95 transition-all"
+            >
+              {showHostTiers ? t('hideTier') : t('showTier')}
+            </button>
             <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200"><PlusIcon className="rotate-45" /></button>
           </div>
+
+          {/* 멀티 모임 탭 */}
+          {activeRooms.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4" data-capture-ignore="true">
+              {activeRooms.map((room, idx) => (
+                <button
+                  key={room.id}
+                  onClick={() => onSelectRoom(room)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${activeRoom?.id === room.id ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+                >
+                  {room.title || `모임 ${idx + 1}`}
+                </button>
+              ))}
+              {activeRooms.length < 2 && (
+                <button
+                  onClick={onAddNewRoom}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700"
+                >
+                  + 새 모임
+                </button>
+              )}
+            </div>
+          )}
 
           {!activeRoom ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchDate')}</label>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">모임명</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="모임 이름을 입력하세요" className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchTime')}</label>
-                <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchDate')}</label>
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchTime')}</label>
+                  <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold text-sm" />
+                </div>
               </div>
-              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('createRecruitRoom')}</button>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">모집 인원 제한</label>
+                  <button
+                    onClick={() => setUseLimit(!useLimit)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useLimit ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                {useLimit && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">모집 인원 (정원)</label>
+                    <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-3">
+                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
+                      <span className="flex-1 text-center font-black dark:text-white">{maxApplicants}명</span>
+                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center">
-                <p className="text-emerald-500 font-black text-sm uppercase tracking-widest mb-1">RECRUITING ACTIVE</p>
-                <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{activeRoom.applicants.length} 명</p>
-                <p className="text-[9px] text-slate-400 mt-2 font-mono opacity-50">ID: {activeRoom.id}</p>
+              <div className="flex items-center gap-3">
+                <div className={`flex-1 p-5 rounded-3xl border transition-all ${activeRoom.status === 'OPEN' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
+                  <p className={`font-black text-[10px] uppercase tracking-widest mb-1 ${activeRoom.status === 'OPEN' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {activeRoom.status === 'OPEN' ? 'RECRUITING ACTIVE' : 'RECRUITMENT CLOSED'}
+                  </p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">
+                    {activePlayerCount} / {activeRoom.maxApplicants > 0 ? `${activeRoom.maxApplicants}명` : '무제한'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleStatus}
+                  className={`px-4 py-8 rounded-3xl font-black text-[10px] uppercase tracking-tighter transition-all shadow-lg active:scale-95 ${activeRoom.status === 'OPEN' ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}`}
+                >
+                  {activeRoom.status === 'OPEN' ? '마감하기' : '모집재개'}
+                </button>
               </div>
               <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
                 {activeRoom.applicants.length === 0 ? <p className="text-center py-10 text-slate-400 font-bold text-sm">{t('noApplicants')}</p> :
-                  activeRoom.applicants.map(app => (
+                  activeRoom.applicants.filter(app => !app.isApproved).map(app => (
                     <div key={app.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl">
-                      <div><p className="font-black text-slate-900 dark:text-white">{app.name}</p><p className="text-[10px] text-slate-400 font-bold">{app.tier} 티어 • {app.position}</p></div>
-                      <button
-                        onClick={() => cancelApplication(activeRoom.id, app)}
-                        className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-full transition-all"
-                      >
-                        <TrashIcon />
-                      </button>
+                      <div>
+                        <p className="font-black text-slate-900 dark:text-white">{app.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold">
+                          {showHostTiers && `${app.tier} 티어 • `}{app.position}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {app.isApproved ? (
+                          <span className="text-[10px] font-bold text-emerald-500 px-2 py-1 bg-emerald-500/10 rounded-lg">{t('approved')}</span>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              // 개별 승인 로직
+                              const updatedApplicants = activeRoom.applicants.map(a =>
+                                a.id === app.id ? { ...a, isApproved: true } : a
+                              );
+                              const roomRef = doc(db, 'rooms', activeRoom.id);
+                              await updateDoc(roomRef, { applicants: updatedApplicants });
+
+                              // Player 객체로 변환하여 메인 리스트에 추가
+                              const p1 = (app as any).primaryPositions || [app.position || 'NONE'];
+                              const s1 = (app as any).secondaryPositions || [];
+                              const t1 = (app as any).tertiaryPositions || [];
+                              const f1 = (app as any).forbiddenPositions || [];
+
+                              const newPlayer = {
+                                id: 'p_' + Math.random().toString(36).substr(2, 9),
+                                name: app.name,
+                                tier: (Tier as any)[app.tier] || Tier.B,
+                                isActive: true,
+                                sportType: activeRoom.sport as SportType,
+                                primaryPosition: p1[0] || 'NONE',
+                                primaryPositions: p1,
+                                secondaryPosition: s1[0] || 'NONE',
+                                secondaryPositions: s1,
+                                tertiaryPositions: t1,
+                                forbiddenPositions: f1
+                              };
+                              onApproveAll([newPlayer]);
+                            }}
+                            className="text-[11px] font-black bg-blue-600 text-white px-3 py-1.5 rounded-xl active:scale-95 transition-all"
+                          >
+                            {t('approve')}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => cancelApplication(activeRoom.id, app)}
+                          className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-full transition-all"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                   ))
                 }
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={handleShare} className="py-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black rounded-2xl text-xs">{t('shareRecruitLink')}</button>
-                <button onClick={() => {
+                <button onClick={async () => {
+                  // Firestore 상태 업데이트
+                  const updatedApplicants = activeRoom.applicants.map(a => ({ ...a, isApproved: true }));
+                  const roomRef = doc(db, 'rooms', activeRoom.id);
+                  await updateDoc(roomRef, { applicants: updatedApplicants });
+
                   const players: Player[] = activeRoom.applicants.map(a => {
                     const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
                     const s1 = (a as any).secondaryPositions || [];
@@ -1478,9 +1630,23 @@ const HostRoomModal: React.FC<{
                       forbiddenPositions: f1
                     };
                   });
-                  onApproveAll(players); onCloseRoom(); onClose();
+                  onApproveAll(players); onClose();
                 }} className="py-4 bg-blue-600 text-white font-black rounded-2xl text-xs">{t('approveAll')}</button>
               </div>
+              <button
+                onClick={() => {
+                  if (window.confirm(t('confirm_delete_room') || '이 모집 방을 완전히 삭제하시겠습니까? 신청자 정보가 모두 사라집니다.')) {
+                    onCloseRoom();
+                    onClose();
+                  }
+                }}
+                className="w-full py-3 text-slate-400 hover:text-rose-500 font-bold text-[10px] transition-all flex items-center justify-center gap-1 uppercase tracking-widest mt-2"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {t('delete_recruit_room') || '방 삭제'}
+              </button>
             </div>
           )}
         </div>
@@ -1588,13 +1754,22 @@ const App: React.FC = () => {
   const [userNickname, setUserNickname] = useState(() => {
     const saved = localStorage.getItem('app_user_nickname');
     if (saved) return saved;
-
-    // 만약 게스트 이름이 없다면 새로 생성
-    const rand = Math.floor(1000 + Math.random() * 9000); // 1000~9999
+    const rand = Math.floor(1000 + Math.random() * 9000);
     const newName = `${TRANSLATIONS[lang].guest}(${rand})`;
     localStorage.setItem('app_user_nickname', newName);
     return newName;
   });
+
+  const [guestId, setGuestId] = useState(() => {
+    const saved = localStorage.getItem('app_guest_id');
+    if (saved) return saved;
+    const newId = 'guest_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('app_guest_id', newId);
+    return newId;
+  });
+
+  // 최종 유저 식별자 (로그인 정보가 있으면 id, 없으면 guestId)
+  const currentUserId = user?.id || guestId;
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLater, setLoginLater] = useState(false); // 앱 실행 시마다 초기화 (localStorage 제거)
@@ -1612,18 +1787,58 @@ const App: React.FC = () => {
     return localStorage.getItem('app_onboarding_done_v3') !== 'true';
   });
   const [pendingJoinRoomId, setPendingJoinRoomId] = useState<string | null>(null);
-  const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
 
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
-  const [isUnlimitedPos, setIsUnlimitedPos] = useState(() => localStorage.getItem('app_is_unlimited_pos') === 'true');
-  const isPro = isAdFree && isUnlimitedPos;
+  const isUnlimitedPos = true; // 항목 4: 전면 무료화
+  const isPro = isAdFree;
 
-  const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'UNLIMITED_POS' | 'FULL' | null>(null);
+  const [showTier, setShowTier] = useState(true); // 항목 2: 티어 숨기기/보이기
+  const [activeRooms, setActiveRooms] = useState<RecruitmentRoom[]>([]); // 항목 7: 멀티 모임 관리
+  const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
+
+  const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'FULL' | null>(null);
+
+  // 섹션 펼치기/접기 상태
+  const [isPlayerRegistrationOpen, setIsPlayerRegistrationOpen] = useState(false);
+  const [isWaitingListOpen, setIsWaitingListOpen] = useState(false);
+  const [isParticipatingListOpen, setIsParticipatingListOpen] = useState(true);
+
+  // 참가자 목록 동기화 (앱 -> 웹)
+  useEffect(() => {
+    if (!currentActiveRoom) return;
+
+    const syncParticipants = async () => {
+      try {
+        const activeParticipants = players
+          .filter(p => p.isActive && p.sportType === currentActiveRoom.sport)
+          .map(p => ({
+            name: p.name,
+            tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === p.tier) || 'B',
+            isApproved: true // 앱에 있는 선수는 모두 승인된 것으로 간주
+          }));
+
+        const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+        await updateDoc(roomRef, { activeParticipants });
+      } catch (error) {
+        console.error('Failed to sync participants:', error);
+      }
+    };
+
+    const timer = setTimeout(syncParticipants, 1000); // Debounce 1s
+    return () => clearTimeout(timer);
+  }, [players, currentActiveRoom]);
 
   const [isProcessing, setIsProcessing] = useState(false); // 결제/로그인 중복 클릭 방지
 
   const [showHostRoomModal, setShowHostRoomModal] = useState(false);
   const [showApplyRoomModal, setShowApplyRoomModal] = useState(false);
+  const prevApplicantsCount = useRef<Record<string, number>>({});
+
+  const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
+    const translation = (TRANSLATIONS[lang] as any)[key];
+    if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
+    return String(translation || key);
+  };
 
   const showAlert = (message: string, title?: string) => {
     setAlertState({ isOpen: true, message, title });
@@ -1660,12 +1875,7 @@ const App: React.FC = () => {
         setIsAdFree(hasAdFree);
         localStorage.setItem('app_is_ad_free', hasAdFree ? 'true' : 'false');
 
-        // 무제한 포지션 상태 동기화
-        const hasUnlimited = restored.includes(PRODUCT_IDS.UNLIMITED_POS) || restored.includes(PRODUCT_IDS.FULL_PACK);
-        setIsUnlimitedPos(hasUnlimited);
-        localStorage.setItem('app_is_unlimited_pos', hasUnlimited ? 'true' : 'false');
-
-        console.log('IAP Sync completed:', { hasAdFree, hasUnlimited });
+        console.log('IAP Sync completed:', { hasAdFree });
       } catch (err) {
         console.error('IAP initialization failed', err);
       }
@@ -1744,6 +1954,38 @@ const App: React.FC = () => {
       localStorage.setItem('app_position_usage', JSON.stringify(freshUsage));
     }
   }, []);
+
+  // 모집 방 실시간 동기화 (인원수 등)
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const unsubscribe = subscribeToUserRooms(currentUserId, (rooms) => {
+      // 새 신청자 감지 및 인앱 알림
+      rooms.forEach(room => {
+        const prevCount = prevApplicantsCount.current[room.id];
+        // 최초 로드 시에는 prevCount가 undefined이므로 알림을 보내지 않음
+        // 이후 인원이 늘어난 경우에만 알림 발송
+        if (prevCount !== undefined && room.applicants.length > prevCount) {
+          const newPlayer = room.applicants[room.applicants.length - 1];
+          const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
+          showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+        }
+        prevApplicantsCount.current[room.id] = room.applicants.length;
+      });
+
+      setActiveRooms(rooms);
+
+      // 현재 열린 방이 있다면 해당 데이터도 최신화
+      if (currentActiveRoom) {
+        const updatedRoom = rooms.find(r => r.id === currentActiveRoom.id);
+        if (updatedRoom) {
+          setCurrentActiveRoom(updatedRoom);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUserId]); // currentActiveRoom?.id 의존성 제거 (불필요한 재구독 방지)
 
   // V3.0 푸시 알림 및 딥링크 초기화
   useEffect(() => {
@@ -1879,10 +2121,6 @@ const App: React.FC = () => {
           setIsAdFree(true);
           localStorage.setItem('app_is_ad_free', 'true');
         }
-        if (type === 'UNLIMITED_POS' || type === 'FULL') {
-          setIsUnlimitedPos(true);
-          localStorage.setItem('app_is_unlimited_pos', 'true');
-        }
 
         setShowLimitModal(false);
         setShowUpgradeModal(false);
@@ -1914,11 +2152,6 @@ const App: React.FC = () => {
       if (restored.includes(PRODUCT_IDS.AD_FREE) || restored.includes(PRODUCT_IDS.FULL_PACK)) {
         setIsAdFree(true);
         localStorage.setItem('app_is_ad_free', 'true');
-        restoredAny = true;
-      }
-      if (restored.includes(PRODUCT_IDS.UNLIMITED_POS) || restored.includes(PRODUCT_IDS.FULL_PACK)) {
-        setIsUnlimitedPos(true);
-        localStorage.setItem('app_is_unlimited_pos', 'true');
         restoredAny = true;
       }
 
@@ -2007,14 +2240,9 @@ const App: React.FC = () => {
     AnalyticsService.logEvent('change_language', { language: newLang });
   };
 
-  const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
-    const translation = (TRANSLATIONS[lang] as any)[key];
-    if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
-    return String(translation || key);
-  };
 
   useEffect(() => {
-    const SAMPLE_DATA_VERSION = 'v2';
+    const SAMPLE_DATA_VERSION = 'v3';
     const stored = localStorage.getItem(STORAGE_KEY);
     const storedVersion = localStorage.getItem('app_sample_version');
 
@@ -2183,11 +2411,7 @@ const App: React.FC = () => {
     // 포지션 인원 설정이 하나라도 있는지 확인 (있으면 고급 기능 사용)
     const isAdvanced = Object.values(quotas).some(v => v !== null);
 
-    // 광고 정책: 가입 후 최초 10회는 무조건 통과, 이후 일일 3회 제한
-    if (isAdvanced && !isUnlimitedPos && totalGenCount > 10 && positionUsage.count >= 3) {
-      setShowLimitModal(true);
-      return;
-    }
+    // 항목 4: 포지션 인원 설정 유료 제한 삭제 (X)
 
     setIsGenerating(true);
     // 광고 제거 전은 1.5초(연출), 광고 제거 후는 0.5초(빠름)
@@ -2517,24 +2741,24 @@ const App: React.FC = () => {
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isPro={isPro} />}
 
       <header className="w-full flex flex-col items-center mb-0">
-        <div className="w-full flex justify-between items-center mb-4 bg-white dark:bg-slate-950 p-1.5">
+        <div className="w-full flex justify-between items-center mb-1 bg-white dark:bg-slate-950 p-1.5">
           <div className="flex gap-2">
             <button
               onClick={() => setShowUpgradeModal(true)}
-              className={`p-2.5 rounded-xl transition-all flex items-center gap-2 group relative ${isPro
+              className={`px-3 py-1 rounded-xl transition-all flex items-center gap-1.5 group relative ${isPro
                 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                 : 'bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30'}`}
             >
               <div className="relative">
-                <span className={`text-lg block transition-transform group-active:scale-90 ${isPro ? 'animate-pulse' : ''}`}>
+                <span className={`text-sm block transition-transform group-active:scale-90 ${isPro ? 'animate-pulse' : ''}`}>
                   {isPro ? '✨' : '💎'}
                 </span>
                 {!isPro && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white dark:border-slate-950" />
                 )}
               </div>
-              <span className="text-[10px] font-black tracking-widest uppercase pt-0.5">
-                {isPro ? 'PRO' : 'SALE'}
+              <span className="text-[10px] font-black tracking-widest uppercase">
+                {isPro ? 'PRO' : t('removeAds' as any)}
               </span>
             </button>
           </div>
@@ -2560,11 +2784,9 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-2.5">
-          <div className="bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 w-9 h-9 rounded-xl flex items-center justify-center text-xl">⚽</div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t('appTitle')}</h1>
+        <div className="flex justify-center w-full px-4 mb-2">
+          <img src="/images/title_banner.png" alt="Team Mate" className="w-full max-w-[320px] object-contain rounded-2xl shadow-sm" />
         </div>
-        <p className="text-slate-400 dark:text-slate-500 font-medium text-xs mt-2 tracking-[0.2em]">{t('appTagline')}</p>
       </header>
 
       <nav className="flex gap-1.5 bg-white dark:bg-slate-950 p-1.5 mb-3 w-full">
@@ -2580,68 +2802,138 @@ const App: React.FC = () => {
         ))}
       </nav>
 
-      <main className="w-full space-y-3">
-        <section className="bg-slate-50 dark:bg-slate-900 p-6 w-full relative">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 flex items-center justify-center"><PlusIcon /></div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
-          </div>
-          <form onSubmit={addPlayer} className="space-y-3">
-            <div className="space-y-2">
-              <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
-              <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-white dark:bg-slate-950 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('skillTier')}</label>
-              <div className="grid grid-cols-5 gap-2">
-                {(Object.entries(Tier).filter(([k]) => isNaN(Number(k))) as [string, Tier][]).map(([key, val]) => (
-                  <button key={key} type="button" onClick={e => { e.preventDefault(); setNewTier(val); }} className={`py-2 rounded-xl text-[11px] font-semibold transition-all ${newTier === val ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500'}`}>
-                    {key}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {activeTab !== SportType.GENERAL && (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setShowNewPlayerFormation(!showNewPlayerFormation)}
-                  className={`w-full h-12 rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${showNewPlayerFormation
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 active:scale-95'
-                    : 'bg-white text-slate-400 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:hover:bg-slate-900'
-                    }`}
-                >
-                  <EditIcon /> {t('visualPositionEditor')}
-                </button>
-                {showNewPlayerFormation && (
-                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                    <FormationPicker
-                      sport={activeTab}
-                      primaryP={newP1s}
-                      secondaryP={newP2s}
-                      tertiaryP={newP3s}
-                      forbiddenP={newForbidden}
-                      lang={lang}
-                      onChange={(p, s, t, f) => { setNewP1s(p); setNewP2s(s); setNewP3s(t); setNewForbidden(f); }}
-                    />
+      <section className="w-full px-4 mb-3" data-capture-ignore="true">
+        <div className="flex justify-between items-center mb-2 px-1">
+          <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('recruitParticipants')}</h3>
+          <button
+            onClick={() => { setCurrentActiveRoom(null); setShowHostRoomModal(true); }}
+            className="text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center gap-1 hover:scale-105 active:scale-95 transition-all"
+          >
+            <PlusIcon /> {t('createRecruitRoom')}
+          </button>
+        </div>
+        <div className="space-y-2">
+          {(() => {
+            const filteredRooms = activeRooms.filter(r => {
+              if (r.sport !== activeTab) return false;
+              try {
+                const [y, m, d] = r.matchDate.split('-').map(Number);
+                const [hh, mm] = r.matchTime.split(':').map(Number);
+                const matchTime = new Date(y, m - 1, d, hh, mm);
+                const expiryLimit = new Date(matchTime.getTime() + 2 * 60 * 60 * 1000);
+                return expiryLimit > new Date();
+              } catch { return true; }
+            });
+
+            if (filteredRooms.length === 0) return null;
+
+            // 가장 최신 방 하나만 노출
+            const room = filteredRooms[0];
+
+            return (
+              <div
+                key={room.id}
+                onClick={() => { setCurrentActiveRoom(room); setShowHostRoomModal(true); }}
+                className={`w-full rounded-2xl p-4 shadow-md border transition-all active:scale-[0.98] text-left flex items-center justify-between cursor-pointer ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}
+              >
+                <div className="flex flex-col gap-0.5 overflow-hidden flex-1 mr-3">
+                  <p className={`text-[9px] font-black truncate ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
+                  <p className={`text-sm font-black truncate ${currentActiveRoom?.id === room.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{room.matchDate} {room.matchTime}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className={`text-lg font-black ${currentActiveRoom?.id === room.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                    {players.filter(p => p.isActive && p.sportType === activeTab).length}명
+                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg ${room.status === 'OPEN' ? (currentActiveRoom?.id === room.id ? 'bg-blue-400/30 text-white' : 'bg-emerald-500/10 text-emerald-500') : 'bg-rose-500/10 text-rose-500'}`}>
+                      {room.status === 'OPEN' ? 'ON' : 'OFF'}
+                    </span>
                   </div>
-                )}
+                </div>
               </div>
-            )}
-            <button type="submit" className="w-full bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-semibold h-12 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs mt-2">
-              <PlusIcon /> {t('addToList')}
-            </button>
-          </form>
+            );
+          })()}
+        </div>
+      </section>
+
+      <main className="w-full space-y-3">
+        <section className="bg-slate-50 dark:bg-slate-900 w-full relative">
+          <div
+            className="flex items-center justify-between p-4 cursor-pointer select-none"
+            onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
+            </div>
+            <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </div>
+          </div>
+          {isPlayerRegistrationOpen && (
+            <form onSubmit={addPlayer} className="px-6 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-200">
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
+                <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-white dark:bg-slate-950 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('skillTier')}</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {(Object.entries(Tier).filter(([k]) => isNaN(Number(k))) as [string, Tier][]).map(([key, val]) => (
+                    <button key={key} type="button" onClick={e => { e.preventDefault(); setNewTier(val); }} className={`py-2 rounded-xl text-[11px] font-semibold transition-all ${newTier === val ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500'}`}>
+                      {key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {activeTab !== SportType.GENERAL && (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPlayerFormation(!showNewPlayerFormation)}
+                    className={`w-full h-12 rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${showNewPlayerFormation
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 active:scale-95'
+                      : 'bg-white text-slate-400 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:hover:bg-slate-900'
+                      }`}
+                  >
+                    <EditIcon /> {t('visualPositionEditor')}
+                  </button>
+                  {showNewPlayerFormation && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <FormationPicker
+                        sport={activeTab}
+                        primaryP={newP1s}
+                        secondaryP={newP2s}
+                        tertiaryP={newP3s}
+                        forbiddenP={newForbidden}
+                        lang={lang}
+                        onChange={(p, s, t, f) => { setNewP1s(p); setNewP2s(s); setNewP3s(t); setNewForbidden(f); }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              <button type="submit" className="w-full bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-semibold h-12 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs mt-2">
+                <PlusIcon /> {t('addToList')}
+              </button>
+            </form>
+          )}
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start w-full">
-          <section className="bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-transparent flex justify-between items-center bg-transparent">
+          <section className="bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden w-full">
+            <div
+              className="p-4 border-b border-transparent flex justify-between items-center bg-transparent cursor-pointer select-none"
+              onClick={() => setIsWaitingListOpen(!isWaitingListOpen)}
+            >
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
                 <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('waitingList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({inactivePlayers.length})</span></h2>
+                <div className={`transition-transform duration-300 ${isWaitingListOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                 <div className="flex bg-slate-50 dark:bg-slate-950 p-0.5 rounded-lg border border-transparent">
                   <button onClick={() => setSortMode('name')} className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-all ${sortMode === 'name' ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white text-slate-400 hover:text-slate-900 dark:bg-transparent dark:hover:text-slate-300'}`}>
                     {t('sortByName')}
@@ -2666,33 +2958,42 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[120px]">
-              {inactivePlayers.length === 0 ? (<div className="col-span-full py-10 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>) :
-                inactivePlayers.map(p => (
-                  <PlayerItem
-                    key={p.id}
-                    player={p}
-                    isEditing={editingPlayerId === p.id}
-                    lang={lang}
-                    onToggle={toggleParticipation}
-                    onEditToggle={setEditingPlayerId}
-                    onUpdate={updatePlayer}
-                    onRemove={removePlayerFromSystem}
-                    isSelectionMode={!!selectionMode}
-                    isSelected={selectedPlayerIds.includes(p.id)}
-                    onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                  />
-                ))
-              }
-            </div>
+            {isWaitingListOpen && (
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[120px] animate-in slide-in-from-top-2 duration-200">
+                {inactivePlayers.length === 0 ? (<div className="col-span-full py-10 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>) :
+                  inactivePlayers.map(p => (
+                    <PlayerItem
+                      key={p.id}
+                      player={p}
+                      isEditing={editingPlayerId === p.id}
+                      lang={lang}
+                      onToggle={toggleParticipation}
+                      onEditToggle={setEditingPlayerId}
+                      onUpdate={updatePlayer}
+                      onRemove={removePlayerFromSystem}
+                      isSelectionMode={!!selectionMode}
+                      isSelected={selectedPlayerIds.includes(p.id)}
+                      onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                      showTier={showTier}
+                    />
+                  ))
+                }
+              </div>
+            )}
           </section>
-          <section id="participation-capture-section" className="bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-transparent flex justify-between items-center bg-transparent">
+          <section id="participation-capture-section" className="bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden w-full h-fit">
+            <div
+              className="p-4 border-b border-transparent flex justify-between items-center bg-transparent cursor-pointer select-none"
+              onClick={() => setIsParticipatingListOpen(!isParticipatingListOpen)}
+            >
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><UserCheckIcon /></div>
                 <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('participatingList')} <span className="text-slate-900 dark:text-slate-100 font-normal ml-1">({activePlayers.length})</span></h2>
+                <div className={`transition-transform duration-300 ${isParticipatingListOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </div>
               </div>
-              <div className="flex items-center gap-2" data-capture-ignore="true">
+              <div className="flex items-center gap-2" data-capture-ignore="true" onClick={e => e.stopPropagation()}>
                 <button
                   onClick={() => handleShare('participation-capture-section', 'participating-list')}
                   disabled={!!isSharing}
@@ -2716,98 +3017,112 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
+            {isParticipatingListOpen && (
+              <div className="animate-in slide-in-from-top-2 duration-200">
 
-            {/* 팀 묶기 / 나누기 버튼 추가 구역 */}
-            <div className="px-4 pb-2 flex gap-1.5" data-capture-ignore="true">
-              <button
-                onClick={() => {
-                  setPendingJoinRoomId(null); // 혹시 남은게 있다면 초기화
-                  setShowHostRoomModal(true);
-                }}
-                className={`py-3 px-4 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-2 group shadow-lg ${currentActiveRoom
-                  ? 'bg-emerald-500 text-white shadow-emerald-900/20'
-                  : 'bg-blue-600 text-white shadow-blue-900/20 ring-1 ring-blue-400/30'
-                  }`}
-              >
-                <div className="relative">
-                  <UserPlusIcon />
-                  {currentActiveRoom && (
-                    <div className="absolute -top-1.5 -right-1.5">
-                      <RecruitmentStatusBadge count={currentActiveRoom.applicants.length} darkMode={darkMode} />
+                {/* 팀 묶기 / 나누기 버튼 추가 구역 */}
+                {/* 팀 묶기 / 나누기 / 티어 토글 버튼 추가 구역 */}
+                <div className="px-4 pb-2 flex gap-1.5" data-capture-ignore="true">
+                  <button
+                    onClick={() => {
+                      setPendingJoinRoomId(null);
+                      setShowHostRoomModal(true);
+                    }}
+                    className={`py-1.5 px-3 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-2 group shadow-lg ${currentActiveRoom
+                      ? 'bg-blue-600 text-white shadow-blue-900/20'
+                      : 'bg-blue-600 text-white shadow-blue-900/20 ring-1 ring-blue-400/30'
+                      }`}
+                  >
+                    <div className="relative">
+                      <UserPlusIcon />
+                      {players.filter(p => p.isActive && p.sportType === activeTab).length > 0 && (
+                        <div className="absolute -top-1.5 -right-1.5">
+                          <RecruitmentStatusBadge count={players.filter(p => p.isActive && p.sportType === activeTab).length} darkMode={darkMode} />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* 티어 숨기기/보이기 토글 (텍스트로 변경) */}
+                  <button
+                    onClick={() => setShowTier(!showTier)}
+                    className={`px-3 py-1.5 rounded-xl border transition-all flex items-center justify-center text-[11px] font-black ${showTier ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400'}`}
+                  >
+                    {showTier ? t('hideTier' as any) : t('showTier' as any)}
+                  </button>
+
+                  <button
+                    onClick={() => { setSelectionMode('MATCH'); setSelectedPlayerIds([]); }}
+                    className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-1.5 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <div className="w-4 h-4 rounded bg-blue-500 text-white flex items-center justify-center text-[8px] font-black">M</div>
+                    {t('matchTeams' as any)}
+                  </button>
+                  <button
+                    onClick={() => { setSelectionMode('SPLIT'); setSelectedPlayerIds([]); }}
+                    className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-1.5 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <div className="w-4 h-4 rounded bg-rose-500 text-white flex items-center justify-center text-[8px] font-black">S</div>
+                    {t('splitTeams' as any)}
+                  </button>
+                </div>
+
+                {/* 설정된 제약 조건 리스트 표시 */}
+                {teamConstraints.filter(c => {
+                  const p = players.find(p => c.playerIds.includes(p.id));
+                  return p && p.sportType === activeTab;
+                }).length > 0 && (
+                    <div className="px-4 pb-4 space-y-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1 h-3 bg-slate-400 dark:bg-slate-600 rounded-full" />
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('activeConstraintsTitle' as any)}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {teamConstraints.filter(c => {
+                          const p = players.find(p => c.playerIds.includes(p.id));
+                          return p && p.sportType === activeTab;
+                        }).map(c => (
+                          <div key={c.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-95">
+                            <div className={`w-2 h-2 rounded-full ${c.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
+                            <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">
+                              {c.playerIds.map(id => players.find(p => p.id === id)?.name || id).join(', ')}
+                            </span>
+                            <button
+                              onClick={() => setTeamConstraints(prev => prev.filter(x => x.id !== c.id))}
+                              className="text-slate-300 hover:text-rose-500 dark:text-slate-600 dark:hover:text-rose-400 transition-colors"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[120px]">
+                  {activePlayers.length === 0 ? (<div className="col-span-full py-10 opacity-40 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('selectParticipating')}</div>) :
+                    activePlayers.map(p => (
+                      <PlayerItem
+                        key={p.id}
+                        player={p}
+                        isEditing={editingPlayerId === p.id}
+                        lang={lang}
+                        onToggle={toggleParticipation}
+                        onEditToggle={setEditingPlayerId}
+                        onUpdate={updatePlayer}
+                        onRemove={removePlayerFromSystem}
+                        isSelectionMode={!!selectionMode}
+                        isSelected={selectedPlayerIds.includes(p.id)}
+                        onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                        showTier={showTier}
+                      />
+                    ))
+                  }
                 </div>
-                {t('recruitParticipants')}
-              </button>
-              <button
-                onClick={() => { setSelectionMode('MATCH'); setSelectedPlayerIds([]); }}
-                className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-2 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5"
-              >
-                <div className="w-4 h-4 rounded bg-blue-500 text-white flex items-center justify-center text-[8px] font-black">M</div>
-                {t('matchTeams' as any)}
-              </button>
-              <button
-                onClick={() => { setSelectionMode('SPLIT'); setSelectedPlayerIds([]); }}
-                className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-2 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5"
-              >
-                <div className="w-4 h-4 rounded bg-rose-500 text-white flex items-center justify-center text-[8px] font-black">S</div>
-                {t('splitTeams' as any)}
-              </button>
-            </div>
-
-            {/* 설정된 제약 조건 리스트 표시 */}
-            {teamConstraints.filter(c => {
-              const p = players.find(p => c.playerIds.includes(p.id));
-              return p && p.sportType === activeTab;
-            }).length > 0 && (
-                <div className="px-4 pb-4 space-y-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-1 h-3 bg-slate-400 dark:bg-slate-600 rounded-full" />
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('activeConstraintsTitle' as any)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {teamConstraints.filter(c => {
-                      const p = players.find(p => c.playerIds.includes(p.id));
-                      return p && p.sportType === activeTab;
-                    }).map(c => (
-                      <div key={c.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-95">
-                        <div className={`w-2 h-2 rounded-full ${c.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
-                        <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">
-                          {c.playerIds.map(id => players.find(p => p.id === id)?.name || id).join(', ')}
-                        </span>
-                        <button
-                          onClick={() => setTeamConstraints(prev => prev.filter(x => x.id !== c.id))}
-                          className="text-slate-300 hover:text-rose-500 dark:text-slate-600 dark:hover:text-rose-400 transition-colors"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                <div className="hidden px-4 pb-6" data-promo-footer="true">
+                  <PromotionFooter lang={lang} darkMode={darkMode} />
                 </div>
-              )}
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[120px]">
-              {activePlayers.length === 0 ? (<div className="col-span-full py-10 opacity-40 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('selectParticipating')}</div>) :
-                activePlayers.map(p => (
-                  <PlayerItem
-                    key={p.id}
-                    player={p}
-                    isEditing={editingPlayerId === p.id}
-                    lang={lang}
-                    onToggle={toggleParticipation}
-                    onEditToggle={setEditingPlayerId}
-                    onUpdate={updatePlayer}
-                    onRemove={removePlayerFromSystem}
-                    isSelectionMode={!!selectionMode}
-                    isSelected={selectedPlayerIds.includes(p.id)}
-                    onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                  />
-                ))
-              }
-            </div>
-            <div className="hidden px-4 pb-6" data-promo-footer="true">
-              <PromotionFooter lang={lang} darkMode={darkMode} />
-            </div>
+              </div>
+            )}
           </section>
         </div>
 
@@ -2825,7 +3140,7 @@ const App: React.FC = () => {
               {activeTab !== SportType.GENERAL && (
                 <button
                   onClick={() => setShowQuotaSettings(!showQuotaSettings)}
-                  className={`w-full flex items-center justify-center gap-2 h-12 rounded-2xl transition-all font-semibold text-xs ${showQuotaSettings
+                  className={`w-full flex items-center justify-center gap-2 h-10 rounded-2xl transition-all font-semibold text-xs ${showQuotaSettings
                     ? 'bg-white text-slate-900'
                     : 'bg-slate-950 text-slate-100 hover:bg-black dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white'}`}
                 >
@@ -2834,7 +3149,7 @@ const App: React.FC = () => {
               )}
 
               <div className="flex items-center gap-3 w-full">
-                <div className="flex items-center gap-2 bg-slate-950 dark:bg-slate-100 h-12 px-4 rounded-2xl border border-transparent flex-1 md:none overflow-hidden transition-all group">
+                <div className="flex items-center gap-2 bg-slate-950 dark:bg-slate-100 h-10 px-4 rounded-2xl border border-transparent flex-1 md:none overflow-hidden transition-all group">
                   <span className="text-xs font-semibold text-slate-100 dark:text-slate-950 uppercase whitespace-nowrap">{t('teamCountLabel')}</span>
                   <select
                     value={teamCount}
@@ -2849,7 +3164,7 @@ const App: React.FC = () => {
                     ))}
                   </select>
                 </div>
-                <button onClick={handleGenerate} disabled={activePlayers.length < teamCount || isGenerating} className="px-6 h-12 bg-slate-950 text-slate-100 dark:bg-slate-100 dark:text-slate-950 font-semibold rounded-2xl transition-all active:scale-[0.98] text-xs whitespace-nowrap flex-1 md:none disabled:opacity-50 hover:bg-black dark:hover:bg-white">
+                <button onClick={handleGenerate} disabled={activePlayers.length < teamCount || isGenerating} className="px-6 h-10 bg-slate-950 text-slate-100 dark:bg-slate-100 dark:text-slate-950 font-semibold rounded-2xl transition-all active:scale-[0.98] text-xs whitespace-nowrap flex-1 md:none disabled:opacity-50 hover:bg-black dark:hover:bg-white">
                   {t('generateTeams')}
                 </button>
               </div>
@@ -3038,7 +3353,14 @@ const App: React.FC = () => {
                     {getSortedTeamPlayers(team.players).map(p => (
                       <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-950 hover:border-transparent transition-all">
                         <div className="flex flex-col gap-1 justify-center pt-0.5">
-                          <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm leading-tight">{p.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm leading-tight">{p.name}</span>
+                            {showTier && (
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${TIER_COLORS[p.tier]} pt-1`}>
+                                {Tier[p.tier]}
+                              </span>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 opacity-95">
                             {activeTab !== SportType.GENERAL && p.assignedPosition && p.assignedPosition !== 'NONE' && (
                               <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md pt-0.5 inline-flex items-center justify-center">{p.assignedPosition}</span>
@@ -3238,11 +3560,27 @@ const App: React.FC = () => {
         onClose={() => setShowHostRoomModal(false)}
         onRoomCreated={(room) => {
           setCurrentActiveRoom(room);
+          setActiveRooms(prev => {
+            const exists = prev.find(r => r.id === room.id);
+            if (exists) return prev.map(r => r.id === room.id ? room : r);
+            return [...prev, room];
+          });
           AnalyticsService.logEvent('recruit_room_created', { sport: room.sport });
         }}
         activeRoom={currentActiveRoom}
+        activeRooms={activeRooms}
+        activePlayerCount={players.filter(p => p.isActive && p.sportType === activeTab).length}
+        onSelectRoom={setCurrentActiveRoom}
+        onAddNewRoom={() => {
+          setCurrentActiveRoom(null);
+        }}
         activeTab={activeTab}
-        onCloseRoom={() => setCurrentActiveRoom(null)}
+        onCloseRoom={() => {
+          if (currentActiveRoom) {
+            setActiveRooms(prev => prev.filter(r => r.id !== currentActiveRoom.id));
+          }
+          setCurrentActiveRoom(null);
+        }}
         onApproveAll={(approvedPlayers) => {
           setPlayers(prev => {
             const newList = [...prev];
@@ -3275,6 +3613,7 @@ const App: React.FC = () => {
         isPro={isPro}
         onUpgrade={() => { setShowHostRoomModal(false); setShowUpgradeModal(true); }}
         userNickname={userNickname}
+        currentUserId={currentUserId}
       />
       <ApplyRoomModal
         isOpen={showApplyRoomModal}
