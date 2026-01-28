@@ -1358,13 +1358,6 @@ const HostRoomModal: React.FC<{
     } catch (e) { console.error(e); }
   };
 
-  const handleToggleStatus = async () => {
-    if (!activeRoom) return;
-    const newStatus = activeRoom.status === 'OPEN' ? 'CLOSED' : 'OPEN';
-    try {
-      await updateDoc(doc(db, "rooms", activeRoom.id), { status: newStatus });
-    } catch (e) { console.error(e); }
-  };
 
   const handleShare = async () => {
     if (!activeRoom) return;
@@ -1383,26 +1376,21 @@ const HostRoomModal: React.FC<{
             dialogTitle: t('shareRecruitLink'),
           });
         } catch (shareError) {
-          // 공유 창이 취소되거나 에러가 나면 클립보드 복사로 대처
           await Clipboard.write({ string: webUrl });
-          alert(t('copySuccess'));
         }
       } else {
         await Clipboard.write({ string: webUrl });
-        alert(t('copySuccess'));
       }
     } catch (e) {
-      // 최후의 수단: navigator fallback (이미 Clipboard 플러그인이 처리하지만 한 번 더 안전장치)
       try {
         await Clipboard.write({ string: webUrl });
-        alert(t('copySuccess'));
       } catch (err) {
-        alert('Copy failed: ' + webUrl);
+        // Fail silently or log
       }
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || activeRoom) return null;
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
@@ -1479,137 +1467,7 @@ const HostRoomModal: React.FC<{
               <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="text-center py-2 border-b border-slate-50 dark:border-slate-800/50">
-                <h2 className="text-lg font-black text-slate-900 dark:text-white mb-0.5">{activeRoom.title}</h2>
-                <p className="text-xs font-bold text-blue-500">{activeRoom.matchDate} {activeRoom.matchTime}</p>
-              </div>
-              <div className="flex items-stretch gap-2.5">
-                <div className={`flex-1 py-3 px-4 rounded-2xl border transition-all ${activeRoom.status === 'OPEN' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
-                  <p className={`font-black text-[11px] uppercase tracking-widest mb-0.5 ${activeRoom.status === 'OPEN' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {activeRoom.status === 'OPEN' ? '모집 중' : '모집 마감'}
-                  </p>
-                  <p className="text-base font-black text-slate-900 dark:text-white tracking-tighter">
-                    {activePlayerCount}명 / {activeRoom.maxApplicants > 0 ? `${activeRoom.maxApplicants}명` : '무제한'}
-                  </p>
-                </div>
-                <button
-                  onClick={handleToggleStatus}
-                  className={`px-4 rounded-2xl font-black text-[11px] uppercase tracking-tighter transition-all shadow-md active:scale-95 ${activeRoom.status === 'OPEN' ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}`}
-                >
-                  {activeRoom.status === 'OPEN' ? '마감하기' : '모집재개'}
-                </button>
-              </div>
-              <div className="flex items-center gap-2 px-1 mt-2">
-                <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider">신청현황</h3>
-              </div>
-              <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
-                {activeRoom.applicants.length === 0 ? <p className="text-center py-10 text-slate-400 font-bold text-sm">{t('noApplicants')}</p> :
-                  activeRoom.applicants.filter(app => !app.isApproved).map(app => (
-                    <div key={app.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl">
-                      <div>
-                        <p className="font-black text-slate-900 dark:text-white">{app.name}</p>
-                        <p className="text-[10px] text-slate-400 font-bold">
-                          {app.position}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {app.isApproved ? (
-                          <span className="text-[10px] font-bold text-emerald-500 px-2 py-1 bg-emerald-500/10 rounded-lg">{t('approved')}</span>
-                        ) : (
-                          <button
-                            onClick={async () => {
-                              // 개별 승인 로직
-                              const updatedApplicants = activeRoom.applicants.map(a =>
-                                a.id === app.id ? { ...a, isApproved: true } : a
-                              );
-                              const roomRef = doc(db, 'rooms', activeRoom.id);
-                              await updateDoc(roomRef, { applicants: updatedApplicants });
-
-                              // Player 객체로 변환하여 메인 리스트에 추가
-                              const p1 = (app as any).primaryPositions || [app.position || 'NONE'];
-                              const s1 = (app as any).secondaryPositions || [];
-                              const t1 = (app as any).tertiaryPositions || [];
-                              const f1 = (app as any).forbiddenPositions || [];
-
-                              const newPlayer = {
-                                id: 'p_' + Math.random().toString(36).substr(2, 9),
-                                name: app.name,
-                                tier: (Tier as any)[app.tier] || Tier.B,
-                                isActive: true,
-                                sportType: activeRoom.sport as SportType,
-                                primaryPosition: p1[0] || 'NONE',
-                                primaryPositions: p1,
-                                secondaryPosition: s1[0] || 'NONE',
-                                secondaryPositions: s1,
-                                tertiaryPositions: t1,
-                                forbiddenPositions: f1
-                              };
-                              onApproveAll([newPlayer]);
-                            }}
-                            className="text-[11px] font-black bg-blue-600 text-white px-3 py-1.5 rounded-xl active:scale-95 transition-all"
-                          >
-                            {t('approve')}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => cancelApplication(activeRoom.id, app)}
-                          className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-full transition-all"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                }
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button onClick={handleShare} className="py-3.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black rounded-xl text-[11px] uppercase tracking-tight">{t('shareRecruitLink')}</button>
-                <button onClick={async () => {
-                  // Firestore 상태 업데이트
-                  const updatedApplicants = activeRoom.applicants.map(a => ({ ...a, isApproved: true }));
-                  const roomRef = doc(db, 'rooms', activeRoom.id);
-                  await updateDoc(roomRef, { applicants: updatedApplicants });
-
-                  const players: Player[] = activeRoom.applicants.map(a => {
-                    const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
-                    const s1 = (a as any).secondaryPositions || [];
-                    const t1 = (a as any).tertiaryPositions || [];
-                    const f1 = (a as any).forbiddenPositions || [];
-
-                    return {
-                      id: 'p_' + Math.random().toString(36).substr(2, 9),
-                      name: a.name,
-                      tier: (Tier as any)[a.tier] || Tier.B,
-                      isActive: true,
-                      sportType: activeRoom.sport as SportType,
-                      primaryPosition: p1[0] || 'NONE',
-                      primaryPositions: p1,
-                      secondaryPosition: s1[0] || 'NONE',
-                      secondaryPositions: s1,
-                      tertiaryPositions: t1,
-                      forbiddenPositions: f1
-                    };
-                  });
-                  onApproveAll(players); onClose();
-                }} className="py-3.5 bg-blue-600 text-white font-black rounded-xl text-[11px] uppercase tracking-tight">{t('approveAll')}</button>
-              </div>
-              <button
-                onClick={() => {
-                  if (window.confirm(t('confirm_delete_room') || '이 모집 방을 완전히 삭제하시겠습니까? 신청자 정보가 모두 사라집니다.')) {
-                    onCloseRoom();
-                    onClose();
-                  }
-                }}
-                className="w-full py-3 text-slate-400 hover:text-rose-500 font-bold text-[10px] transition-all flex items-center justify-center gap-1 uppercase tracking-widest mt-2"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                {t('delete_recruit_room') || '방 삭제'}
-              </button>
-            </div>
+            null
           )}
         </div>
       </div>
@@ -2413,6 +2271,107 @@ const App: React.FC = () => {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
   };
 
+  // --- 통합 모집 관리 로직 ---
+  const handleApproveApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
+    try {
+      const updatedApplicants = room.applicants.map(a =>
+        a.id === applicant.id ? { ...a, isApproved: true } : a
+      );
+      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+
+      const p1 = (applicant as any).primaryPositions || [applicant.position || 'NONE'];
+      const s1 = (applicant as any).secondaryPositions || [];
+      const t1 = (applicant as any).tertiaryPositions || [];
+      const f1 = (applicant as any).forbiddenPositions || [];
+
+      const newPlayer: Player = {
+        id: 'p_' + Math.random().toString(36).substr(2, 9),
+        name: applicant.name,
+        tier: (Tier as any)[applicant.tier] || Tier.B,
+        isActive: true,
+        sportType: room.sport as SportType,
+        primaryPosition: p1[0] || 'NONE',
+        primaryPositions: p1,
+        secondaryPosition: s1[0] || 'NONE',
+        secondaryPositions: s1,
+        tertiaryPositions: t1,
+        forbiddenPositions: f1
+      };
+      setPlayers(prev => [...prev, newPlayer]);
+    } catch (e) {
+      console.error("Approval Error:", e);
+    }
+  };
+
+  const handleApproveAllApplicants = async (room: RecruitmentRoom) => {
+    try {
+      const updatedApplicants = room.applicants.map(a => ({ ...a, isApproved: true }));
+      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+
+      const newPlayers: Player[] = room.applicants.filter(a => !a.isApproved).map(a => {
+        const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
+        const s1 = (a as any).secondaryPositions || [];
+        const t1 = (a as any).tertiaryPositions || [];
+        const f1 = (a as any).forbiddenPositions || [];
+
+        return {
+          id: 'p_' + Math.random().toString(36).substr(2, 9),
+          name: a.name,
+          tier: (Tier as any)[a.tier] || Tier.B,
+          isActive: true,
+          sportType: room.sport as SportType,
+          primaryPosition: p1[0] || 'NONE',
+          primaryPositions: p1,
+          secondaryPosition: s1[0] || 'NONE',
+          secondaryPositions: s1,
+          tertiaryPositions: t1,
+          forbiddenPositions: f1
+        };
+      });
+      setPlayers(prev => [...prev, ...newPlayers]);
+    } catch (e) {
+      console.error("Approve All Error:", e);
+    }
+  };
+
+  const handleShareRecruitLink = async (room: RecruitmentRoom) => {
+    const currentOrigin = window.location.origin;
+    const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':5000'))
+      ? 'http://localhost:5000'
+      : currentOrigin;
+    const webUrl = `${webOrigin}/hosting/index.html?room=${room.id}&lang=${lang}`;
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Share.share({
+            title: t('shareRecruitLink'),
+            text: `[${room.title}] ${room.matchDate} ${room.matchTime} ${t(room.sport.toLowerCase() as any)} 참여자를 모집합니다!\n\n👇 참가하기 👇\n${webUrl}`,
+            dialogTitle: t('shareRecruitLink'),
+          });
+        } catch (shareError) {
+          await Clipboard.write({ string: webUrl });
+        }
+      } else {
+        await Clipboard.write({ string: webUrl });
+      }
+    } catch (e) {
+      console.error("Share Link Error:", e);
+    }
+  };
+
+  const handleCloseRecruitRoom = async (room: RecruitmentRoom) => {
+    if (window.confirm(t('confirm_delete_room' as any) || '이 모집 방을 완전히 삭제하시겠습니까? 신청자 정보가 모두 사라집니다.')) {
+      try {
+        await updateDoc(doc(db, 'rooms', room.id), { status: 'DELETED' });
+        setActiveRooms(prev => prev.filter(r => r.id !== room.id));
+        setCurrentActiveRoom(null);
+      } catch (e) {
+        console.error("Delete Room Error:", e);
+      }
+    }
+  };
+
   const handleGenerate = async () => {
     const participating = players.filter(p => p.isActive && p.sportType === activeTab);
     if (participating.length < teamCount) {
@@ -2852,7 +2811,7 @@ const App: React.FC = () => {
                 const [hh, mm] = r.matchTime.split(':').map(Number);
                 const matchTime = new Date(y, m - 1, d, hh, mm);
                 const expiryLimit = new Date(matchTime.getTime() + 2 * 60 * 60 * 1000);
-                return expiryLimit > new Date();
+                return expiryLimit > new Date() && r.status !== 'DELETED';
               } catch { return true; }
             });
 
@@ -2860,25 +2819,71 @@ const App: React.FC = () => {
 
             // 가장 최신 방 하나만 노출
             const room = filteredRooms[0];
+            const pendingApplicants = room.applicants.filter(a => !a.isApproved);
 
             return (
-              <div
-                key={room.id}
-                onClick={() => { setCurrentActiveRoom(room); setShowHostRoomModal(true); }}
-                className={`w-full rounded-2xl p-4 shadow-md border transition-all active:scale-[0.98] text-left flex items-center justify-between cursor-pointer ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}
-              >
-                <div className="flex flex-col gap-0.5 overflow-hidden flex-1 mr-3">
-                  <p className={`text-[9px] font-black truncate ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
-                  <p className={`text-sm font-black truncate ${currentActiveRoom?.id === room.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{room.matchDate} {room.matchTime}</p>
+              <div key={room.id} className="space-y-2">
+                <div
+                  className={`w-full rounded-2xl p-4 shadow-md border transition-all text-left flex items-center justify-between ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
+                >
+                  <div className="flex flex-col gap-0.5 overflow-hidden flex-1 mr-3">
+                    <p className={`text-[9px] font-black uppercase tracking-widest ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
+                    <p className="text-sm font-black truncate">{room.matchDate} {room.matchTime}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex flex-col items-end">
+                      <span className="text-lg font-black leading-none">
+                        {players.filter(p => p.isActive && p.sportType === room.sport).length}명
+                      </span>
+                      <span className="text-[9px] font-bold opacity-60">
+                        / {room.maxApplicants > 0 ? `${room.maxApplicants}명` : '무제한'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className={`text-lg font-black ${currentActiveRoom?.id === room.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                    {players.filter(p => p.isActive && p.sportType === room.sport).length}명
-                  </span>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg ${room.status === 'OPEN' ? (currentActiveRoom?.id === room.id ? 'bg-blue-400/30 text-white' : 'bg-emerald-500/10 text-emerald-500') : 'bg-rose-500/10 text-rose-500'}`}>
-                      {room.status === 'OPEN' ? 'ON' : 'OFF'}
-                    </span>
+
+                {/* 통합 관리 관리 UI */}
+                <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                  {pendingApplicants.length > 0 ? (
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center gap-2 mb-1 px-1">
+                        <div className="w-1 h-3 bg-blue-600 rounded-full" />
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('waitingList' as any)} ({pendingApplicants.length})</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                        {pendingApplicants.map(app => (
+                          <div key={app.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-black text-slate-900 dark:text-white">{app.name}</span>
+                              <span className="text-[9px] font-bold text-slate-400">{app.position}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => cancelApplication(room.id, app)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><TrashIcon /></button>
+                              <button onClick={() => handleApproveApplicant(room, app)} className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg active:scale-95 transition-all">{t('approve' as any)}</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="flex grid grid-cols-3 gap-px bg-slate-100 dark:bg-slate-800">
+                    <button onClick={() => handleShareRecruitLink(room)} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-slate-600 dark:text-slate-400 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                      <ShareIcon />
+                      {t('shareRecruitLink' as any)}
+                    </button>
+                    <button
+                      onClick={() => handleApproveAllApplicants(room)}
+                      disabled={pendingApplicants.length === 0}
+                      className={`bg-white dark:bg-slate-950 py-3 text-[10px] font-black flex flex-col items-center gap-1 transition-all ${pendingApplicants.length > 0 ? 'text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-900' : 'text-slate-300 dark:text-slate-700 opacity-50'}`}
+                    >
+                      <UserCheckIcon />
+                      {t('approveAll' as any)}
+                    </button>
+                    <button onClick={() => handleCloseRecruitRoom(room)} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-rose-500 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                      <TrashIcon />
+                      {t('delete_recruit_room' as any)}
+                    </button>
                   </div>
                 </div>
               </div>

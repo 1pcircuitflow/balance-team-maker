@@ -3,251 +3,257 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>참가 신청 - Balance Team Maker Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTM Recruitment</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
         body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #020617;
-            color: white;
+            font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .tier-btn.active-S {
+            background-color: #f3e8ff;
+            color: #7e22ce;
+            border-color: #e9d5ff;
         }
 
-        .pitch-container {
-            position: relative;
-            width: 100%;
-            max-width: 280px;
-            aspect-ratio: 3/4;
-            margin: 0 auto;
+        .dark .tier-btn.active-S {
+            background-color: rgba(126, 34, 206, 0.3);
+            color: #d8b4fe;
+            border-color: #9333ea;
         }
 
-        .pitch-bg {
-            position: absolute;
-            inset: 0;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            /* overflow: hidden 제거 - 팝업 가려짐 방지 */
+        .tier-btn.active-A {
+            background-color: #fff1f2;
+            color: #be123c;
+            border-color: #ffe4e6;
         }
 
-        .node {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 900;
-            color: white;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 10;
+        .dark .tier-btn.active-A {
+            background-color: rgba(190, 18, 60, 0.3);
+            color: #fda4af;
+            border-color: #e11d48;
         }
 
-        .node:active {
-            scale: 0.9;
+        .tier-btn.active-B {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-color: #dbeafe;
         }
 
-        .node-label {
-            font-size: 8px;
-            line-height: 1;
-            margin-top: 1px;
+        .dark .tier-btn.active-B {
+            background-color: rgba(29, 78, 216, 0.3);
+            color: #93c5fd;
+            border-color: #2563eb;
+        }
+
+        .tier-btn.active-C {
+            background-color: #ecfdf5;
+            color: #047857;
+            border-color: #d1fae5;
+        }
+
+        .dark .tier-btn.active-C {
+            background-color: rgba(4, 120, 87, 0.3);
+            color: #6ee7b7;
+            border-color: #059669;
+        }
+
+        .tier-btn.active-D {
+            background-color: #f8fafc;
+            color: #64748b;
+            border-color: #f1f5f9;
+        }
+
+        .dark .tier-btn.active-D {
+            background-color: rgba(30, 41, 59, 0.5);
+            color: #94a3b8;
+            border-color: #475569;
         }
 
         .menu-popup {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-12px);
-            background: #1e293b;
-            border-radius: 9999px;
-            padding: 4px;
-            display: flex;
-            gap: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-            animation: pop 0.2s ease-out;
+            z-index: 1000;
         }
 
-        .menu-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 900;
-            color: white;
-            transition: all 0.2s;
-        }
-
-        .menu-btn:active {
-            scale: 0.8;
-        }
-
-        @keyframes pop {
-            from {
-                scale: 0.5;
-                opacity: 0;
-                transform: translateX(-50%) translateY(0);
-            }
-
-            to {
-                scale: 1;
-                opacity: 1;
-                transform: translateX(-50%) translateY(-12px);
-            }
-        }
-
-        /* Pitch Lines */
-        .line {
-            position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: none;
+        .node {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
-    <div id="loginSection" class="w-full hidden">
-        <button id="loginBtn"
-            class="w-full py-3 bg-white text-slate-900 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-slate-200">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
-            <span id="loginText">Google 로그인으로 정보 기억하기</span>
-        </button>
-        <div id="userInfo"
-            class="hidden flex items-center justify-between bg-slate-800 rounded-2xl p-3 px-4 border border-slate-700">
-            <div class="flex items-center gap-3">
-                <img id="userPhoto" src="" class="w-8 h-8 rounded-full bg-slate-700" alt="Profile">
-                <div class="flex flex-col text-left">
-                    <span id="userName" class="text-xs font-bold text-slate-200">User</span>
-                    <span class="text-[10px] text-slate-500">정보가 자동 저장됩니다</span>
-                </div>
-            </div>
-            <button id="logoutBtn" class="text-[10px] text-slate-400 font-bold underline px-2 py-1">로그아웃</button>
-        </div>
-    </div>
+<body
+    class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col items-center py-4 px-4 sm:px-6">
+    <button id="themeToggle"
+        class="fixed top-4 right-4 p-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm z-50 transition-all hover:scale-110 active:scale-95">
+        <span id="themeIcon" class="text-xl leading-none block">🌙</span>
+    </button>
 
-    <div id="app" class="w-full max-w-[350px] space-y-4">
-        <!-- 기존 내용 유지 -->
-        <div class="text-center">
-            <h1 class="text-3xl font-black tracking-tighter text-blue-500">Balance Team Maker</h1>
-            <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Smart Recruitment System v3.0</p>
+    <div class="max-w-md w-full space-y-3">
+        <header class="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-4 duration-700">
+            <img src="/logo.png" alt="Belo Logo" class="w-16 h-16">
+            <h1 class="text-4xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">Belo</h1>
+        </header>
+
+        <div id="loading" class="flex flex-col items-center justify-center py-20 space-y-4">
+            <div class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p class="text-slate-400 dark:text-slate-500 font-bold text-[13px]">운동장을 준비하고 있습니다...</p>
         </div>
 
-        <div id="loading" class="flex flex-col items-center gap-4 py-20">
-            <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-slate-500 font-bold text-sm">운동장을 준비하고 있습니다...</p>
-        </div>
-
-        <div id="roomInfo" class="glass rounded-[2rem] p-5 space-y-1 hidden text-center">
-            <h2 id="roomSport" class="text-xl font-black text-white">---</h2>
-            <p id="roomDateTime" class="text-blue-400 font-black text-xs">---</p>
-        </div>
-
-        <div id="participantsInfo" class="glass rounded-[2rem] p-5 space-y-3 hidden">
+        <div id="roomInfo"
+            class="hidden p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 animate-in fade-in zoom-in-95 duration-500">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">참가 현황</span>
-                <span id="participantCount" class="text-xs font-black text-blue-400">0명</span>
+                <span id="roomSport"
+                    class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider">---</span>
+                <span id="roomDateTime" class="text-[11px] font-bold text-slate-400 dark:text-slate-500">---</span>
             </div>
-            <div id="participantList" class="flex flex-wrap gap-1.5">
-                <!-- Participants injected here -->
-            </div>
+        </div>
 
-            <!-- Viral Banner for Belo (List view) -->
-            <div class="mt-4 pt-4 border-t border-white/5">
-                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
-                    class="block p-4 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 transition-all active:scale-[0.98] group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
-                    <div class="relative flex items-center justify-between">
-                        <div>
-                            <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Team Balance
-                                Solution</p>
-                            <h4 class="text-sm font-black text-white leading-tight">밸런스 팀 메이커 Belo로<br>오늘 경기도 공정하게!</h4>
-                        </div>
-                        <div
-                            class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-900/40 group-hover:translate-x-1 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                        </div>
+        <div id="participantsInfo"
+            class="hidden p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 animate-in fade-in zoom-in-95 duration-500 delay-75">
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">인원 현황
+                </h3>
+                <span id="participantCount" class="text-xs font-black text-blue-600 dark:text-blue-400">0명</span>
+            </div>
+            <div id="participantList" class="flex flex-wrap gap-1.5"></div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <a href="https://play.google.com/store/apps/details?id=com.pcircuitflow.btm" target="_blank"
+                    class="group relative flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <div class="relative z-10 flex flex-col text-left">
+                        <span class="text-[10px] font-black text-blue-100/70 uppercase tracking-tight mb-0.5">오늘 경기도
+                            공정하게!</span>
+                        <span class="text-[12px] font-black text-white">Belo 앱으로 팀 나누기</span>
                     </div>
-                    <span class="block mt-2 text-[10px] font-bold text-slate-400">명단 확인부터 팀 나누기까지 한 번에 [앱 다운로드]</span>
+                    <div
+                        class="relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black group-hover:bg-white/30 transition-colors">
+                        앱 다운로드
+                    </div>
                 </a>
             </div>
         </div>
 
-        <form id="applyForm" class="glass rounded-[2rem] p-5 space-y-5 hidden">
-            <div>
-                <label
-                    class="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest ml-1">이름</label>
-                <input type="text" id="name" required placeholder="본인의 이름을 입력하세요"
-                    class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-600 font-black text-white transition-all">
-            </div>
-
-            <div class="space-y-2">
-                <label class="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">실력
-                    티어</label>
-                <div class="grid grid-cols-5 gap-1.5" id="tierGroup">
-                    <button type="button" data-tier="S"
-                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">S</button>
-                    <button type="button" data-tier="A"
-                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">A</button>
-                    <button type="button" data-tier="B"
-                        class="tier-btn py-3 rounded-xl font-black text-xs bg-blue-600 text-white shadow-lg shadow-blue-900/40 transition-all">B</button>
-                    <button type="button" data-tier="C"
-                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">C</button>
-                    <button type="button" data-tier="D"
-                        class="tier-btn py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 transition-all">D</button>
+        <form id="applyForm" class="hidden space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+            <div
+                class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div id="loginSection" class="hidden space-y-2">
+                    <button type="button" id="loginBtn"
+                        class="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span class="text-[13px] font-bold text-slate-600 dark:text-slate-400">Google 로그인으로 정보
+                            기억하기</span>
+                    </button>
+                    <div id="userInfo"
+                        class="hidden flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-3 text-left">
+                            <img id="userPhoto" src=""
+                                class="w-8 h-8 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                                alt="P">
+                            <div class="flex flex-col">
+                                <span id="userName"
+                                    class="text-xs font-black text-slate-800 dark:text-slate-100">User</span>
+                                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Auto
+                                    Sync Active</span>
+                            </div>
+                        </div>
+                        <button type="button" id="logoutBtn"
+                            class="text-[10px] font-black text-slate-400 hover:text-rose-500 transition-colors uppercase px-2">Logout</button>
+                    </div>
                 </div>
-            </div>
 
-            <div id="posSection" class="space-y-3">
-                <label class="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">포지션 선호도
-                    (터치하여 선택)</label>
-                <div class="pitch-container" id="pitch">
-                    <div class="pitch-bg" id="pitchLines"></div>
-                    <!-- Nodes will be injected here -->
+                <div class="space-y-1 text-left">
+                    <label
+                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">이름</label>
+                    <input type="text" id="name" required maxlength="10" placeholder="본인의 이름을 입력하세요"
+                        class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-[13px]">
                 </div>
-                <p class="text-center text-[10px] text-slate-500 italic font-bold">노드를 터치하여 100 / 75 / 50 / X 를 선택하세요
-                </p>
+
+                <div class="space-y-2 text-left">
+                    <label
+                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">실력
+                        티어</label>
+                    <div id="tierGroup" class="grid grid-cols-5 gap-2">
+                        <button type="button" data-tier="S"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">S</button>
+                        <button type="button" data-tier="A"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">A</button>
+                        <button type="button" data-tier="B"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">B</button>
+                        <button type="button" data-tier="C"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">C</button>
+                        <button type="button" data-tier="D"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">D</button>
+                    </div>
+                </div>
+
+                <div id="posSection" class="space-y-2 text-left">
+                    <label
+                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">주
+                        포지션</label>
+                    <div class="relative aspect-[1.1/1] w-[85%] mx-auto bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900"
+                        id="pitch">
+                        <div id="pitchLines" class="absolute inset-0 opacity-10 pointer-events-none"></div>
+                    </div>
+                </div>
             </div>
 
             <button type="submit" id="submitBtn"
-                class="w-full py-5 bg-blue-600 text-white font-black rounded-3xl transition-all active:scale-95 shadow-xl shadow-blue-900/40 text-lg">
-                참가 신청 완료
+                class="w-full p-4 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-900/20 hover:bg-blue-500 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                참가 신청하기
             </button>
         </form>
 
-        <div id="success" class="glass rounded-[2.5rem] p-10 text-center space-y-6 hidden">
-            <div class="text-6xl animate-bounce">✅</div>
-            <h3 class="text-2xl font-black">신청 완료!</h3>
-            <p class="text-slate-400 text-sm font-medium">방장님이 승인하면 팀 편성에 포함됩니다.<br>조금만 기다려주세요!</p>
-
-            <div class="pt-4 border-t border-white/5 space-y-3">
-                <p class="text-[10px] font-black text-blue-500 uppercase tracking-wider">Smart Viral Promotion</p>
-                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
-                    class="block w-full py-5 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black rounded-3xl shadow-xl shadow-blue-900/40 transition-all active:scale-95 leading-snug">
-                    오늘 경기도 공정하게!<br>
-                    <span class="text-xs opacity-90 font-bold">Belo로 팀 나누기 [앱 다운로드]</span>
+        <div id="success"
+            class="hidden p-8 rounded-[40px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6 animate-in zoom-in-95 duration-500">
+            <div
+                class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white">신청 완료!</h3>
+                <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">팀 편성이 완료되면 알려드릴게요.<br>방장의 승인을
+                    기다려주세요.</p>
+            </div>
+            <div class="pt-4">
+                <a href="https://play.google.com/store/apps/details?id=com.pcircuitflow.btm" target="_blank"
+                    class="inline-block px-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 transition-all">
+                    Belo 앱 다운로드 하기
                 </a>
-                <p class="text-[10px] text-slate-500 font-bold">방장님이 되시면 더 많은 기능을 쓸 수 있어요!</p>
             </div>
         </div>
+
+        <footer class="text-center pt-8 pb-4">
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">Powered by
+                Belo System</p>
+        </footer>
     </div>
 
     <script type="module">
@@ -264,6 +270,10 @@
             appId: "1:834065889708:web:0fb72121f685619d406209"
         };
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         const POS_CONFIG = {
             'Soccer': [
                 { id: 'GK', x: 50, y: 85 }, { id: 'LB', x: 15, y: 65 }, { id: 'DF', x: 50, y: 65 }, { id: 'RB', x: 85, y: 65 },
@@ -276,187 +286,159 @@
                 { id: 'PG', x: 35, y: 72 }, { id: 'SG', x: 65, y: 72 }, { id: 'SF', x: 25, y: 45 }, { id: 'PF', x: 75, y: 45 }, { id: 'C', x: 50, y: 28 }
             ]
         };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // 로컬 스토리지 키
         const KEY_NAME = 'btm_user_name';
         const KEY_TIER = 'btm_user_tier';
+        let selections = {};
+        let selectedTier = 'B';
+        let currentRoomData = null;
+        let currentSport = 'Soccer';
 
-        // Auth Logic
+        const themeBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const userInfo = document.getElementById('userInfo');
         const loginSection = document.getElementById('loginSection');
+        const nameInput = document.getElementById('name');
 
-        // 초기 로컬 데이터 로드
-        const localName = localStorage.getItem(KEY_NAME);
-        const localTier = localStorage.getItem(KEY_TIER);
-        if (localName) document.getElementById('name').value = localName;
-
-        loginBtn.onclick = async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("Login failed", error);
-            }
-        };
-
-        logoutBtn.onclick = () => signOut(auth);
-
-        onAuthStateChanged(auth, async (user) => {
-            if (loginSection) loginSection.classList.remove('hidden');
-            if (user) {
-                if (loginBtn) loginBtn.classList.add('hidden');
-                if (userInfo) userInfo.classList.remove('hidden');
-                const photoEl = document.getElementById('userPhoto');
-                const nameEl = document.getElementById('userName');
-                if (photoEl) photoEl.src = user.photoURL || '';
-                if (nameEl) nameEl.textContent = user.displayName;
-
-                try {
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) {
-                        const data = userDoc.data();
-                        if (data.nickname) document.getElementById('name').value = data.nickname;
-                        if (data.tier) selectTier(data.tier);
-                    } else if (!document.getElementById('name').value && user.displayName) {
-                        document.getElementById('name').value = user.displayName;
-                    }
-                } catch (e) {
-                    console.error("User data fetch failed", e);
-                }
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('btm_theme', 'dark');
             } else {
-                if (loginBtn) loginBtn.classList.remove('hidden');
-                if (userInfo) userInfo.classList.add('hidden');
+                document.documentElement.classList.remove('dark');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('btm_theme', 'light');
             }
-        });
+            if (currentRoomData) renderPitch();
+        }
 
         function selectTier(tier) {
             selectedTier = tier;
             document.querySelectorAll('.tier-btn').forEach(b => {
-                b.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
-                b.classList.add('bg-slate-800', 'text-slate-400');
-                if (b.dataset.tier === tier) {
-                    b.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
-                    b.classList.remove('bg-slate-800', 'text-slate-400');
-                }
+                b.className = 'tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all';
+                if (b.dataset.tier === tier) b.classList.add('active-' + tier, 'shadow-lg', 'shadow-blue-500/10');
             });
         }
 
-        const L = {
-            en: {
-                title: "Balance Team Maker",
-                tagline: "Smart Matchmaking System",
-                host: "Host",
-                participants: "Status",
-                name: "Name",
-                namePlaceholder: "Enter your name",
-                tier: "Skill Tier",
-                position: "Primary Position",
-                submit: "Apply Now",
-                waiting: "Join Waiting List",
-                successTitle: "Success!",
-                successMsg: "Your application is submitted. Please wait for the host's approval.",
-                loading: "Loading information...",
-                invalid: "Invalid link.",
-                expired: "Room not found or expired.",
-                full: "Recruitment Closed (Join Waiting List)",
-                closed: "Finished",
-                recruiting: "Recruiting",
-                list: "Applicant List",
-                noList: "No applicants yet.",
-                pos_fw: "Forward (FW)", pos_mf: "Midfielder (MF)", pos_df: "Defender (DF)", pos_gk: "Goalkeeper (GK)",
-                pos_pg: "Point Guard (PG)", pos_sg: "Shooting Guard (SG)", pos_sf: "Small Forward (SF)", pos_pf: "Power Forward (PF)", pos_c: "Center (C)",
-                loginText: "Remember Info with Google",
-                logout: "Sign Out",
-                autoSave: "Info auto-saved"
-            },
-            ko: {
-                title: "Balance Team Maker",
-                tagline: "스마트 참가 신청 시스템",
-                host: "방장",
-                participants: "인원 현황",
-                name: "이름",
-                namePlaceholder: "본인의 이름을 입력하세요",
-                tier: "실력 티어",
-                position: "주 포지션",
-                submit: "참가 신청하기",
-                waiting: "대기자 신청하기",
-                successTitle: "신청 완료!",
-                successMsg: "팀 편성이 완료되면 알려드릴게요. 방장의 승인을 기다려주세요.",
-                loading: "정보를 불러오고 있습니다...",
-                invalid: "유효하지 않은 링크입니다.",
-                expired: "만료되었거나 존재하지 않는 방입니다.",
-                full: "모집 마감 (대기자 신청)",
-                closed: "마감됨",
-                recruiting: "모집중",
-                list: "참가자 목록",
-                noList: "아직 신청자가 없습니다.",
-                pos_fw: "포워드 (FW)", pos_mf: "미드필더 (MF)", pos_df: "수비수 (DF)", pos_gk: "골키퍼 (GK)",
-                pos_pg: "포인트 가드 (PG)", pos_sg: "슈팅 가드 (SG)", pos_sf: "스몰 포워드 (SF)", pos_pf: "파워 포워드 (PF)", pos_c: "센터 (C)",
-                loginText: "Google 로그인으로 정보 기억하기",
-                logout: "로그아웃",
-                autoSave: "정보가 자동 저장됩니다"
+        function renderParticipants(participants) {
+            const countEl = document.getElementById('participantCount');
+            const listEl = document.getElementById('participantList');
+            const approved = participants[0]?.isApproved !== undefined ? participants.filter(a => a.isApproved) : participants;
+            countEl.textContent = `${approved.length}명`;
+            if (approved.length === 0) {
+                listEl.innerHTML = '<p class="text-[10px] text-slate-400 font-bold ml-1">아직 참가자가 없습니다.</p>';
+            } else {
+                listEl.innerHTML = approved.map(a => `<span class="px-2 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[11px] font-black text-slate-600 dark:text-slate-300 animate-in fade-in zoom-in-50 duration-300">${a.name}</span>`).join('');
             }
-        };
+        }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const langParam = urlParams.get('lang');
-        const userLang = langParam && L[langParam] ? langParam : (navigator.language.startsWith('ko') ? 'ko' : 'en');
-        const t = L[userLang];
+        function renderPitch() {
+            const container = document.getElementById('pitch');
+            const lines = document.getElementById('pitchLines');
+            const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
+            const isDark = document.documentElement.classList.contains('dark');
+            const lineColor = isDark ? 'white' : 'slate-300';
+            container.querySelectorAll('.node').forEach(n => n.remove());
+            if (currentSport === 'Basketball') {
+                lines.innerHTML = `<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1/4 border-2 border-${lineColor} opacity-10 rounded-b-3xl"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-${lineColor} opacity-10 rounded-full"></div>`;
+            } else if (currentSport === 'Futsal') {
+                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-${lineColor} opacity-10"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-${lineColor} opacity-10 rounded-full"></div><div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-b border-${lineColor} opacity-10"></div><div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-t border-${lineColor} opacity-10"></div>`;
+            } else {
+                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-${lineColor} opacity-10"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border border-${lineColor} opacity-10 rounded-full"></div><div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-b border-${lineColor} opacity-10"></div><div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-t border-${lineColor} opacity-10"></div>`;
+            }
+            config.forEach(pos => {
+                const node = document.createElement('div');
+                node.className = 'node absolute -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:scale-110 active:scale-95 z-10';
+                node.style.left = pos.x + '%'; node.style.top = pos.y + '%';
+                node.id = 'node-' + pos.id;
+                node.innerHTML = `<span class="text-[12px] font-black text-slate-400 dark:text-slate-500 leading-none">${pos.id}</span><span class="text-[11px] font-black text-white leading-none mt-0.5" id="label-${pos.id}"></span>`;
+                node.onpointerdown = (e) => { e.preventDefault(); showMenu(pos.id, node); };
+                container.appendChild(node);
+            });
+        }
 
-        const roomId = urlParams.get('room');
-        let currentSport = 'Soccer';
-        let selections = {}; // { posId: 1 | 2 | 3 | 'X' }
-        let selectedTier = 'B';
-        let currentRoomData = null;
+        function showMenu(posId, anchor) {
+            document.querySelectorAll('.menu-popup').forEach(m => m.remove());
+            const menu = document.createElement('div');
+            // 노드 부모인 피치 컨테이너에 직접 추가하여 레이어 간섭 차단
+            const container = document.getElementById('pitch');
+            menu.className = 'menu-popup absolute p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-1.5 min-w-max animate-in zoom-in-50 fade-in duration-200 origin-bottom z-50';
 
-        if (localTier) selectTier(localTier);
+            // 클릭된 노드의 위치 정보를 가져와서 메뉴 위치 설정
+            menu.style.left = anchor.style.left;
+            menu.style.top = anchor.style.top;
+            menu.style.transform = 'translate(-50%, -100%) translateY(-24px)'; // 노드 위로 띄움
 
-        // 텍스트 일괄 적용
-        document.querySelector('h1').textContent = t.title;
-        document.querySelector('p.text-slate-400').textContent = t.tagline;
-        if (document.getElementById('loading')) document.getElementById('loading').querySelector('p').textContent = t.loading;
-        document.getElementById('name').placeholder = t.namePlaceholder;
-        document.getElementById('tierGroup').previousElementSibling.textContent = t.tier;
-        document.getElementById('submitBtn').textContent = t.submit;
-        document.getElementById('success').querySelector('h3').textContent = t.successTitle;
-        document.getElementById('success').querySelector('p').innerHTML = t.successMsg;
-        document.getElementById('pitch').previousElementSibling.textContent = t.position;
-        document.getElementById('loginText').textContent = t.loginText;
-        document.getElementById('logoutBtn').textContent = t.logout;
-        document.querySelector('#userInfo span.text-slate-500').textContent = t.autoSave;
+            menu.onpointerdown = (e) => e.stopPropagation();
+            [{ l: 1, v: '100', c: 'bg-emerald-500' }, { l: 2, v: '75', c: 'bg-yellow-400' }, { l: 3, v: '50', c: 'bg-orange-400' }, { l: 'X', v: 'X', c: 'bg-rose-500' }].forEach(opt => {
+                const b = document.createElement('button'); b.type = 'button';
+                b.className = `w-10 h-10 rounded-full ${opt.c} text-white text-xs font-black transition-all active:scale-95`;
+                b.innerHTML = `<span>${opt.v}</span>`;
+                b.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); selectPos(posId, opt); menu.remove(); };
+                menu.appendChild(b);
+            });
+            container.appendChild(menu);
+        }
 
-        // 티어 선택 로직
-        document.querySelectorAll('.tier-btn').forEach(btn => {
-            btn.onclick = () => {
-                selectTier(btn.dataset.tier);
-            };
-        });
+        function selectPos(posId, opt) {
+            selections[posId] = opt.l;
+            if (opt.l === 1 || opt.l === 2 || opt.l === 3) {
+                const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
+                config.forEach(pos => {
+                    if (pos.id !== posId && ![1, 2, 3].includes(selections[pos.id])) {
+                        selections[pos.id] = 'X'; updateNodeUI(pos.id, { l: 'X', v: 'X', c: 'bg-rose-500' });
+                    }
+                });
+            }
+            updateNodeUI(posId, opt);
+        }
+
+        function updateNodeUI(p, o) {
+            const n = document.getElementById('node-' + p);
+            const l = document.getElementById('label-' + p);
+            if (!n || !l) return;
+            n.className = `node absolute -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full ${o.c} flex flex-col items-center justify-center shadow-lg border-0 scale-110 z-10`;
+            n.querySelector('span').className = 'text-[12px] font-black text-white/80 leading-none';
+            l.className = 'text-[11px] font-black text-white leading-none mt-0.5';
+            l.textContent = o.v;
+        }
 
         async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+
+            if (!roomId) {
+                document.getElementById('loading').innerHTML = `
+                    <div class="text-center p-8 space-y-4">
+                        <div class="text-4xl text-rose-500 font-black">!</div>
+                        <p class="text-slate-500 font-bold">방 정보를 불러올 수 없습니다.<br>올바른 신청 링크로 접속해주세요.</p>
+                    </div>
+                `;
+                return;
+            }
+
             try {
-                if (!roomId) return;
-                const docSnap = await getDoc(doc(db, "rooms", roomId));
-                if (!docSnap.exists()) return;
+                const docRef = doc(db, "rooms", roomId);
+                const docSnap = await getDoc(docRef);
 
-                const data = docSnap.data();
-                currentRoomData = data;
+                if (!docSnap.exists()) {
+                    console.error("Room missing:", roomId);
+                    return;
+                }
 
-                const rawSport = data.sport || 'Soccer';
+                currentRoomData = docSnap.data();
+                const rawSport = currentRoomData.sport || 'Soccer';
                 currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
                 if (rawSport.toUpperCase() === 'SOCCER') currentSport = 'Soccer';
                 if (rawSport.toUpperCase() === 'FUTSAL') currentSport = 'Futsal';
                 if (rawSport.toUpperCase() === 'BASKETBALL') currentSport = 'Basketball';
 
                 document.getElementById('roomSport').textContent = currentSport;
-                document.getElementById('roomDateTime').textContent = `${data.matchDate} ${data.matchTime}`;
+                document.getElementById('roomDateTime').textContent = `${currentRoomData.matchDate || ''} ${currentRoomData.matchTime || ''}`;
 
-                if (data.sport === 'GENERAL' || data.sport === '일반' || data.sport === 'General') {
+                if (currentRoomData.sport?.toUpperCase() === 'GENERAL' || currentRoomData.sport?.toUpperCase() === '일반') {
                     document.getElementById('posSection').classList.add('hidden');
                 } else {
                     document.getElementById('posSection').classList.remove('hidden');
@@ -467,188 +449,79 @@
                 document.getElementById('roomInfo').classList.remove('hidden');
                 document.getElementById('participantsInfo').classList.remove('hidden');
                 document.getElementById('applyForm').classList.remove('hidden');
-
-                renderParticipants(data.activeParticipants || data.applicants || []);
+                renderParticipants(currentRoomData.activeParticipants || currentRoomData.applicants || []);
             } catch (err) {
-                console.error("Init failed", err);
+                console.error("Init Error:", err);
             }
         }
 
-        function renderParticipants(participants) {
-            const container = document.getElementById('participantList');
-            const countEl = document.getElementById('participantCount');
+        themeBtn.onclick = () => setTheme(!document.documentElement.classList.contains('dark'));
+        const savedTheme = localStorage.getItem('btm_theme');
+        setTheme(savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches));
 
-            const approved = participants[0]?.isApproved !== undefined
-                ? participants.filter(a => a.isApproved)
-                : participants;
+        const localName = localStorage.getItem(KEY_NAME);
+        const localTier = localStorage.getItem(KEY_TIER);
+        if (localName) nameInput.value = localName;
+        if (localTier) selectTier(localTier);
 
-            countEl.textContent = `${approved.length}명`;
+        document.querySelectorAll('.tier-btn').forEach(btn => btn.onclick = () => selectTier(btn.dataset.tier));
 
-            if (approved.length === 0) {
-                container.innerHTML = '<p class="text-[10px] text-slate-500 font-bold ml-1">아직 참가자가 없습니다.</p>';
-                return;
-            }
+        loginBtn.onclick = async () => {
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { console.error("Login Error:", e); }
+        };
+        logoutBtn.onclick = () => signOut(auth);
 
-            container.innerHTML = approved.map(a => `
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-300">
-                    ${a.name}
-                </span>
-            `).join('');
-        }
-
-        function renderPitch() {
-            const container = document.getElementById('pitch');
-            const lines = document.getElementById('pitchLines');
-            const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
-
-            const existingNodes = container.querySelectorAll('.node');
-            existingNodes.forEach(n => n.remove());
-
-            if (currentSport === 'Basketball') {
-                lines.innerHTML = `<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1/4 border-2 border-white/10"></div>
-                                   <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white/10 rounded-full"></div>`;
-            } else if (currentSport === 'Futsal') {
-                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-white/20"></div>
-                                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/20 rounded-full"></div>
-                                   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-b border-white/10"></div>
-                                   <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-t border-white/10"></div>`;
-            } else {
-                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-white/10"></div>
-                                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border border-white/10 rounded-full"></div>
-                                   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-b border-white/10"></div>
-                                   <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-t border-white/10"></div>`;
-            }
-
-            config.forEach(pos => {
-                const node = document.createElement('div');
-                node.className = 'node bg-slate-700';
-                node.style.left = pos.x + '%';
-                node.style.top = pos.y + '%';
-                node.id = 'node-' + pos.id;
-                node.innerHTML = `<span>${pos.id}</span><span class="node-label" id="label-${pos.id}"></span>`;
-
-                node.onpointerdown = (e) => {
-                    e.preventDefault();
-                    showMenu(pos.id, node);
-                };
-                container.appendChild(node);
-            });
-        }
-
-        function showMenu(posId, anchor) {
-            document.querySelectorAll('.menu-popup').forEach(m => m.remove());
-            document.querySelectorAll('.node').forEach(n => n.style.zIndex = "10");
-            anchor.style.zIndex = "1000";
-
-            const menu = document.createElement('div');
-            menu.className = 'menu-popup';
-            menu.onpointerdown = (e) => e.stopPropagation();
-            menu.onmousedown = (e) => e.stopPropagation();
-
-            const options = [
-                { l: 1, v: '100', c: 'bg-emerald-500' },
-                { l: 2, v: '75', c: 'bg-yellow-400' },
-                { l: 3, v: '50', c: 'bg-orange-400' },
-                { l: 'X', v: 'X', c: 'bg-rose-500' }
-            ];
-
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = `menu-btn ${opt.c}`;
-                btn.style.userSelect = 'none';
-                btn.innerHTML = `<span style="pointer-events: none;">${opt.v}</span>`;
-                btn.onpointerdown = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    selectPos(posId, opt);
-                    menu.remove();
-                };
-                menu.appendChild(btn);
-            });
-            anchor.appendChild(menu);
-        }
-
-        function selectPos(posId, opt) {
-            selections[posId] = opt.l;
-            if (opt.l === 1 || opt.l === 2 || opt.l === 3) {
-                const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
-                config.forEach(pos => {
-                    const currentLevel = selections[pos.id];
-                    if (pos.id !== posId && currentLevel !== 1 && currentLevel !== 2 && currentLevel !== 3) {
-                        selections[pos.id] = 'X';
-                        updateNodeUI(pos.id, { l: 'X', v: 'X', c: 'bg-rose-500' });
+        onAuthStateChanged(auth, async (user) => {
+            if (loginSection) loginSection.classList.remove('hidden');
+            if (user) {
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (userInfo) userInfo.classList.remove('hidden');
+                document.getElementById('userPhoto').src = user.photoURL || '';
+                document.getElementById('userName').textContent = user.displayName;
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const d = userDoc.data();
+                        if (d.nickname) nameInput.value = d.nickname;
+                        if (d.tier) selectTier(d.tier);
+                    } else if (!nameInput.value) {
+                        nameInput.value = user.displayName;
                     }
-                });
+                } catch (e) { }
+            } else {
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (userInfo) userInfo.classList.add('hidden');
             }
-            updateNodeUI(posId, opt);
-        }
-
-        function updateNodeUI(posId, opt) {
-            const node = document.getElementById('node-' + posId);
-            const label = document.getElementById('label-' + posId);
-            if (!node || !label) return;
-            node.className = `node ${opt.c}`;
-            label.textContent = opt.v;
-        }
+        });
 
         document.getElementById('applyForm').onsubmit = async (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const isGeneral = currentRoomData && (currentRoomData.sport === 'GENERAL' || currentRoomData.sport === '일반' || currentRoomData.sport === 'General');
-
-            if (Object.keys(selections).length === 0 && !isGeneral) return alert('최소 하나 이상의 포지션 선호도를 선택해주세요.');
-
-            localStorage.setItem(KEY_NAME, name);
+            const n = nameInput.value;
+            const urlParams = new URLSearchParams(window.location.search);
+            const rid = urlParams.get('room');
+            if (!rid) return;
+            localStorage.setItem(KEY_NAME, n);
             localStorage.setItem(KEY_TIER, selectedTier);
-
-            const currentUser = auth.currentUser;
-            if (currentUser) {
-                try {
-                    await setDoc(doc(db, "users", currentUser.uid), {
-                        nickname: name,
-                        tier: selectedTier
-                    }, { merge: true });
-                } catch (err) {
-                    console.error("Failed to save user info to cloud", err);
-                }
+            if (auth.currentUser) {
+                try { await setDoc(doc(db, "users", auth.currentUser.uid), { nickname: n, tier: selectedTier }, { merge: true }); } catch (e) { }
             }
-
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = '신청 중...';
-
             const p = [], s = [], t = [], f = [];
             Object.entries(selections).forEach(([pos, level]) => {
-                if (level === 1) p.push(pos);
-                else if (level === 2) s.push(pos);
-                else if (level === 3) t.push(pos);
-                else if (level === 'X') f.push(pos);
+                if (level === 1) p.push(pos); else if (level === 2) s.push(pos); else if (level === 3) t.push(pos); else if (level === 'X') f.push(pos);
             });
-
             try {
-                await updateDoc(doc(db, "rooms", roomId), {
-                    applicants: arrayUnion({
-                        id: Math.random().toString(36).substr(2, 9),
-                        name,
-                        tier: selectedTier,
-                        position: p[0] || 'NONE',
-                        primaryPositions: p,
-                        secondaryPositions: s,
-                        tertiaryPositions: t,
-                        forbiddenPositions: f,
-                        timestamp: new Date().toISOString()
-                    })
+                await updateDoc(doc(db, "rooms", rid), {
+                    applicants: arrayUnion({ id: Math.random().toString(36).substr(2, 9), name: n, tier: selectedTier, position: p[0] || 'NONE', primaryPositions: p, secondaryPositions: s, tertiaryPositions: t, forbiddenPositions: f, timestamp: new Date().toISOString() })
                 });
                 document.getElementById('applyForm').classList.add('hidden');
                 document.getElementById('success').classList.remove('hidden');
-            } catch (err) {
-                alert('신청 실패: ' + err.message);
-                submitBtn.disabled = false;
-            }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) { alert('오류가 발생했습니다: ' + e.message); submitBtn.disabled = false; }
         };
 
-        // 초기화 실행
         init();
     </script>
 </body>
