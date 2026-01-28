@@ -56,7 +56,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({ items, selected, onSelect, wi
     return (
         <div className={`relative h-[200px] overflow-hidden ${width} touch-none select-none`}>
             {/* Selection Indicator */}
-            <div className="absolute top-[80px] left-0 right-0 h-[40px] bg-slate-100 dark:bg-slate-700 rounded-lg pointer-events-none opacity-50 z-0" />
+            <div className="absolute top-[80px] left-0 right-0 h-[40px] bg-slate-100 dark:bg-transparent rounded-lg pointer-events-none opacity-50 z-0" />
 
             {/* Scroll Container */}
             <div
@@ -79,8 +79,8 @@ const WheelPicker: React.FC<WheelPickerProps> = ({ items, selected, onSelect, wi
                         key={i}
                         className={`h-[40px] flex items-center justify-center snap-center z-10 relative cursor-pointer
               ${item === selected
-                                ? 'font-bold text-slate-900 dark:text-white text-lg scale-110 transition-transform'
-                                : 'text-slate-400 dark:text-slate-500 text-sm scale-95 opacity-60'
+                                ? 'font-bold text-slate-900 dark:text-white text-sm transition-transform'
+                                : 'text-slate-400 dark:text-slate-500 text-sm opacity-60'
                             }`}
                         onClick={() => {
                             onSelect(item);
