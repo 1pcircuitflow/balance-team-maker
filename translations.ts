@@ -795,7 +795,7 @@ export const TRANSLATIONS = {
     recruitParticipants: '참가 현황',
     matchDate: '경기 날짜',
     matchTime: '경기 시간',
-    createRecruitRoom: '+ 경기생성 및 참가신청 링크 공유',
+    createRecruitRoom: '경기생성 및 참가신청 링크 공유',
     shareRecruitLink: '모집 링크 공유',
     copyLink: '링크 복사',
     copySuccess: '링크가 복사되었습니다!',
