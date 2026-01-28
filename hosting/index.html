@@ -122,7 +122,27 @@
 </head>
 
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="loginSection" class="w-full hidden">
+        <button id="loginBtn"
+            class="w-full py-3 bg-white text-slate-900 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border border-slate-200">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
+            <span id="loginText">Google 로그인으로 정보 기억하기</span>
+        </button>
+        <div id="userInfo"
+            class="hidden flex items-center justify-between bg-slate-800 rounded-2xl p-3 px-4 border border-slate-700">
+            <div class="flex items-center gap-3">
+                <img id="userPhoto" src="" class="w-8 h-8 rounded-full bg-slate-700" alt="Profile">
+                <div class="flex flex-col text-left">
+                    <span id="userName" class="text-xs font-bold text-slate-200">User</span>
+                    <span class="text-[10px] text-slate-500">정보가 자동 저장됩니다</span>
+                </div>
+            </div>
+            <button id="logoutBtn" class="text-[10px] text-slate-400 font-bold underline px-2 py-1">로그아웃</button>
+        </div>
+    </div>
+
     <div id="app" class="w-full max-w-[350px] space-y-4">
+        <!-- 기존 내용 유지 -->
         <div class="text-center">
             <h1 class="text-3xl font-black tracking-tighter text-blue-500">Balance Team Maker</h1>
             <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Smart Recruitment System v3.0</p>
@@ -146,6 +166,29 @@
             <div id="participantList" class="flex flex-wrap gap-1.5">
                 <!-- Participants injected here -->
             </div>
+
+            <!-- Viral Banner for Belo (List view) -->
+            <div class="mt-4 pt-4 border-t border-white/5">
+                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
+                    class="block p-4 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 transition-all active:scale-[0.98] group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                    <div class="relative flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Team Balance
+                                Solution</p>
+                            <h4 class="text-sm font-black text-white leading-tight">밸런스 팀 메이커 Belo로<br>오늘 경기도 공정하게!</h4>
+                        </div>
+                        <div
+                            class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-900/40 group-hover:translate-x-1 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="block mt-2 text-[10px] font-bold text-slate-400">명단 확인부터 팀 나누기까지 한 번에 [앱 다운로드]</span>
+                </a>
+            </div>
         </div>
 
         <form id="applyForm" class="glass rounded-[2rem] p-5 space-y-5 hidden">
@@ -153,7 +196,7 @@
                 <label
                     class="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest ml-1">이름</label>
                 <input type="text" id="name" required placeholder="본인의 이름을 입력하세요"
-                    class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-600 font-black text-white">
+                    class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-600 font-black text-white transition-all">
             </div>
 
             <div class="space-y-2">
@@ -191,17 +234,26 @@
         </form>
 
         <div id="success" class="glass rounded-[2.5rem] p-10 text-center space-y-6 hidden">
-            <div class="text-6xl">✅</div>
+            <div class="text-6xl animate-bounce">✅</div>
             <h3 class="text-2xl font-black">신청 완료!</h3>
             <p class="text-slate-400 text-sm font-medium">방장님이 승인하면 팀 편성에 포함됩니다.<br>조금만 기다려주세요!</p>
-            <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
-                class="block w-full py-4 bg-white text-slate-950 font-black rounded-2xl">앱으로 결과 확인하기</a>
+
+            <div class="pt-4 border-t border-white/5 space-y-3">
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-wider">Smart Viral Promotion</p>
+                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker"
+                    class="block w-full py-5 px-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black rounded-3xl shadow-xl shadow-blue-900/40 transition-all active:scale-95 leading-snug">
+                    오늘 경기도 공정하게!<br>
+                    <span class="text-xs opacity-90 font-bold">Belo로 팀 나누기 [앱 다운로드]</span>
+                </a>
+                <p class="text-[10px] text-slate-500 font-bold">방장님이 되시면 더 많은 기능을 쓸 수 있어요!</p>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCX43ePWFhdIbCUZUtoMePqMdTXiAowlx0",
@@ -226,7 +278,74 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // 로컬 스토리지 키
+        const KEY_NAME = 'btm_user_name';
+        const KEY_TIER = 'btm_user_tier';
+
+        // Auth Logic
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const loginSection = document.getElementById('loginSection');
+
+        // 초기 로컬 데이터 로드
+        const localName = localStorage.getItem(KEY_NAME);
+        const localTier = localStorage.getItem(KEY_TIER);
+        if (localName) document.getElementById('name').value = localName;
+
+        loginBtn.onclick = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Login failed", error);
+            }
+        };
+
+        logoutBtn.onclick = () => signOut(auth);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (loginSection) loginSection.classList.remove('hidden');
+            if (user) {
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (userInfo) userInfo.classList.remove('hidden');
+                const photoEl = document.getElementById('userPhoto');
+                const nameEl = document.getElementById('userName');
+                if (photoEl) photoEl.src = user.photoURL || '';
+                if (nameEl) nameEl.textContent = user.displayName;
+
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        if (data.nickname) document.getElementById('name').value = data.nickname;
+                        if (data.tier) selectTier(data.tier);
+                    } else if (!document.getElementById('name').value && user.displayName) {
+                        document.getElementById('name').value = user.displayName;
+                    }
+                } catch (e) {
+                    console.error("User data fetch failed", e);
+                }
+            } else {
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (userInfo) userInfo.classList.add('hidden');
+            }
+        });
+
+        function selectTier(tier) {
+            selectedTier = tier;
+            document.querySelectorAll('.tier-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
+                b.classList.add('bg-slate-800', 'text-slate-400');
+                if (b.dataset.tier === tier) {
+                    b.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
+                    b.classList.remove('bg-slate-800', 'text-slate-400');
+                }
+            });
+        }
 
         const L = {
             en: {
@@ -251,7 +370,10 @@
                 list: "Applicant List",
                 noList: "No applicants yet.",
                 pos_fw: "Forward (FW)", pos_mf: "Midfielder (MF)", pos_df: "Defender (DF)", pos_gk: "Goalkeeper (GK)",
-                pos_pg: "Point Guard (PG)", pos_sg: "Shooting Guard (SG)", pos_sf: "Small Forward (SF)", pos_pf: "Power Forward (PF)", pos_c: "Center (C)"
+                pos_pg: "Point Guard (PG)", pos_sg: "Shooting Guard (SG)", pos_sf: "Small Forward (SF)", pos_pf: "Power Forward (PF)", pos_c: "Center (C)",
+                loginText: "Remember Info with Google",
+                logout: "Sign Out",
+                autoSave: "Info auto-saved"
             },
             ko: {
                 title: "Balance Team Maker",
@@ -275,7 +397,10 @@
                 list: "참가자 목록",
                 noList: "아직 신청자가 없습니다.",
                 pos_fw: "포워드 (FW)", pos_mf: "미드필더 (MF)", pos_df: "수비수 (DF)", pos_gk: "골키퍼 (GK)",
-                pos_pg: "포인트 가드 (PG)", pos_sg: "슈팅 가드 (SG)", pos_sf: "스몰 포워드 (SF)", pos_pf: "파워 포워드 (PF)", pos_c: "센터 (C)"
+                pos_pg: "포인트 가드 (PG)", pos_sg: "슈팅 가드 (SG)", pos_sf: "스몰 포워드 (SF)", pos_pf: "파워 포워드 (PF)", pos_c: "센터 (C)",
+                loginText: "Google 로그인으로 정보 기억하기",
+                logout: "로그아웃",
+                autoSave: "정보가 자동 저장됩니다"
             }
         };
 
@@ -290,68 +415,69 @@
         let selectedTier = 'B';
         let currentRoomData = null;
 
+        if (localTier) selectTier(localTier);
+
         // 텍스트 일괄 적용
         document.querySelector('h1').textContent = t.title;
         document.querySelector('p.text-slate-400').textContent = t.tagline;
-        document.getElementById('loading').querySelector('p').textContent = t.loading;
+        if (document.getElementById('loading')) document.getElementById('loading').querySelector('p').textContent = t.loading;
         document.getElementById('name').placeholder = t.namePlaceholder;
         document.getElementById('tierGroup').previousElementSibling.textContent = t.tier;
         document.getElementById('submitBtn').textContent = t.submit;
         document.getElementById('success').querySelector('h3').textContent = t.successTitle;
         document.getElementById('success').querySelector('p').innerHTML = t.successMsg;
         document.getElementById('pitch').previousElementSibling.textContent = t.position;
+        document.getElementById('loginText').textContent = t.loginText;
+        document.getElementById('logoutBtn').textContent = t.logout;
+        document.querySelector('#userInfo span.text-slate-500').textContent = t.autoSave;
 
         // 티어 선택 로직
         document.querySelectorAll('.tier-btn').forEach(btn => {
             btn.onclick = () => {
-                selectedTier = btn.dataset.tier;
-                document.querySelectorAll('.tier-btn').forEach(b => {
-                    b.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
-                    b.classList.add('bg-slate-800', 'text-slate-400');
-                });
-                btn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-900/40');
-                btn.classList.remove('bg-slate-800', 'text-slate-400');
+                selectTier(btn.dataset.tier);
             };
         });
 
         async function init() {
-            if (!roomId) return alert('유효하지 않은 링크입니다.');
-            const docSnap = await getDoc(doc(db, "rooms", roomId));
-            if (!docSnap.exists()) return alert('방을 찾을 수 없습니다.');
+            try {
+                if (!roomId) return;
+                const docSnap = await getDoc(doc(db, "rooms", roomId));
+                if (!docSnap.exists()) return;
 
-            const data = docSnap.data();
-            currentRoomData = data;
-            // 대소문자 무관하게 매칭되도록 보정 (SOCCER -> Soccer 등)
-            const rawSport = data.sport || 'Soccer';
-            currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
-            if (rawSport.toUpperCase() === 'SOCCER') currentSport = 'Soccer';
-            if (rawSport.toUpperCase() === 'FUTSAL') currentSport = 'Futsal';
-            if (rawSport.toUpperCase() === 'BASKETBALL') currentSport = 'Basketball';
+                const data = docSnap.data();
+                currentRoomData = data;
 
-            document.getElementById('roomSport').textContent = currentSport;
-            document.getElementById('roomDateTime').textContent = `${data.matchDate} ${data.matchTime}`;
+                const rawSport = data.sport || 'Soccer';
+                currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
+                if (rawSport.toUpperCase() === 'SOCCER') currentSport = 'Soccer';
+                if (rawSport.toUpperCase() === 'FUTSAL') currentSport = 'Futsal';
+                if (rawSport.toUpperCase() === 'BASKETBALL') currentSport = 'Basketball';
 
-            if (data.sport === 'GENERAL' || data.sport === '일반' || data.sport === 'General') {
-                document.getElementById('posSection').classList.add('hidden');
-            } else {
-                document.getElementById('posSection').classList.remove('hidden');
-                renderPitch();
+                document.getElementById('roomSport').textContent = currentSport;
+                document.getElementById('roomDateTime').textContent = `${data.matchDate} ${data.matchTime}`;
+
+                if (data.sport === 'GENERAL' || data.sport === '일반' || data.sport === 'General') {
+                    document.getElementById('posSection').classList.add('hidden');
+                } else {
+                    document.getElementById('posSection').classList.remove('hidden');
+                    renderPitch();
+                }
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('roomInfo').classList.remove('hidden');
+                document.getElementById('participantsInfo').classList.remove('hidden');
+                document.getElementById('applyForm').classList.remove('hidden');
+
+                renderParticipants(data.activeParticipants || data.applicants || []);
+            } catch (err) {
+                console.error("Init failed", err);
             }
-
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('roomInfo').classList.remove('hidden');
-            document.getElementById('participantsInfo').classList.remove('hidden');
-            document.getElementById('applyForm').classList.remove('hidden');
-
-            renderParticipants(data.activeParticipants || data.applicants || []);
         }
 
         function renderParticipants(participants) {
             const container = document.getElementById('participantList');
             const countEl = document.getElementById('participantCount');
 
-            // activeParticipants 필드가 있으면 이미 필터링된 데이터이므로 바로 사용
-            // applicants 필드(구버전)라면 isApproved 필터링 수행
             const approved = participants[0]?.isApproved !== undefined
                 ? participants.filter(a => a.isApproved)
                 : participants;
@@ -370,32 +496,18 @@
             `).join('');
         }
 
-        function getTierColor(tier) {
-            switch (tier) {
-                case 'S': return 'bg-purple-400';
-                case 'A': return 'bg-rose-400';
-                case 'B': return 'bg-blue-400';
-                case 'C': return 'bg-emerald-400';
-                case 'D': return 'bg-slate-400';
-                default: return 'bg-slate-200';
-            }
-        }
-
         function renderPitch() {
             const container = document.getElementById('pitch');
             const lines = document.getElementById('pitchLines');
             const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
 
-            // 렌더링 전 기존 노드 제거 (중복 방지)
             const existingNodes = container.querySelectorAll('.node');
             existingNodes.forEach(n => n.remove());
 
-            // Render Lines
             if (currentSport === 'Basketball') {
                 lines.innerHTML = `<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1/4 border-2 border-white/10"></div>
                                    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white/10 rounded-full"></div>`;
             } else if (currentSport === 'Futsal') {
-                // 풋살은 중앙 라인과 노란색 느낌의 라인으로 차별화 가능
                 lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-white/20"></div>
                                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/20 rounded-full"></div>
                                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-b border-white/10"></div>
@@ -415,7 +527,6 @@
                 node.id = 'node-' + pos.id;
                 node.innerHTML = `<span>${pos.id}</span><span class="node-label" id="label-${pos.id}"></span>`;
 
-                // 클릭 반응성 개선: pointerdown 사용
                 node.onpointerdown = (e) => {
                     e.preventDefault();
                     showMenu(pos.id, node);
@@ -427,11 +538,10 @@
         function showMenu(posId, anchor) {
             document.querySelectorAll('.menu-popup').forEach(m => m.remove());
             document.querySelectorAll('.node').forEach(n => n.style.zIndex = "10");
-            anchor.style.zIndex = "1000"; // 클릭된 노드를 최상위로
+            anchor.style.zIndex = "1000";
 
             const menu = document.createElement('div');
             menu.className = 'menu-popup';
-            // 메뉴 클릭 및 터치 시 부모 노드(anchor)의 onpointerdown이 다시 실행되지 않도록 방지
             menu.onpointerdown = (e) => e.stopPropagation();
             menu.onmousedown = (e) => e.stopPropagation();
 
@@ -446,11 +556,8 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = `menu-btn ${opt.c}`;
-                // 버튼 내부 텍스트가 클릭 이벤트를 방해하지 않도록 처리
                 btn.style.userSelect = 'none';
                 btn.innerHTML = `<span style="pointer-events: none;">${opt.v}</span>`;
-
-                // onclick 대신 onpointerdown을 사용하여 즉각적인 반응 보장
                 btn.onpointerdown = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -463,14 +570,10 @@
         }
 
         function selectPos(posId, opt) {
-            // 먼저 현재 선택을 기록
             selections[posId] = opt.l;
-
-            // 지망(1, 2, 3)을 선택한 경우에만 나머지 자동 불가능 처리 (기존 지망은 유지)
             if (opt.l === 1 || opt.l === 2 || opt.l === 3) {
                 const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
                 config.forEach(pos => {
-                    // 현재 선택한 포지션이 아니고, 아직 아무 지망도 선택되지 않은(또는 이미 X인) 포지션만 X로 설정
                     const currentLevel = selections[pos.id];
                     if (pos.id !== posId && currentLevel !== 1 && currentLevel !== 2 && currentLevel !== 3) {
                         selections[pos.id] = 'X';
@@ -478,7 +581,6 @@
                     }
                 });
             }
-
             updateNodeUI(posId, opt);
         }
 
@@ -486,8 +588,6 @@
             const node = document.getElementById('node-' + posId);
             const label = document.getElementById('label-' + posId);
             if (!node || !label) return;
-
-            // 배경색 적용 (클래스 교체)
             node.className = `node ${opt.c}`;
             label.textContent = opt.v;
         }
@@ -498,6 +598,21 @@
             const isGeneral = currentRoomData && (currentRoomData.sport === 'GENERAL' || currentRoomData.sport === '일반' || currentRoomData.sport === 'General');
 
             if (Object.keys(selections).length === 0 && !isGeneral) return alert('최소 하나 이상의 포지션 선호도를 선택해주세요.');
+
+            localStorage.setItem(KEY_NAME, name);
+            localStorage.setItem(KEY_TIER, selectedTier);
+
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                try {
+                    await setDoc(doc(db, "users", currentUser.uid), {
+                        nickname: name,
+                        tier: selectedTier
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("Failed to save user info to cloud", err);
+                }
+            }
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
@@ -517,7 +632,7 @@
                         id: Math.random().toString(36).substr(2, 9),
                         name,
                         tier: selectedTier,
-                        position: p[0] || 'NONE', // 하위 호환성용
+                        position: p[0] || 'NONE',
                         primaryPositions: p,
                         secondaryPositions: s,
                         tertiaryPositions: t,
@@ -533,6 +648,7 @@
             }
         };
 
+        // 초기화 실행
         init();
     </script>
 </body>

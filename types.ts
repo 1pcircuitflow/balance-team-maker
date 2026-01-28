@@ -57,6 +57,7 @@ export interface BalanceResult {
   teams: Team[];
   standardDeviation: number;
   imbalanceScore?: number;
+  hash?: string;
   maxDiff?: number;
   isValid?: boolean;
   isConstraintViolated?: boolean;

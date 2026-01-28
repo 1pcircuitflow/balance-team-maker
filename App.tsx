@@ -87,6 +87,46 @@ const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean 
 };
 
 
+const GuideModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  content: string;
+  darkMode: boolean;
+}> = ({ isOpen, onClose, title, content, darkMode }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div
+        className={`w-full h-full md:w-[600px] md:h-[80%] flex flex-col relative overflow-hidden transition-colors duration-300 md:rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900'
+          }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className={`flex items-center justify-end px-6 py-4 border-b ${darkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Content (Scrollable) */}
+        <div className="flex-1 overflow-y-auto p-6 pb-24">
+          <div className="prose dark:prose-invert max-w-none">
+            <div className="text-sm text-left whitespace-pre-wrap leading-relaxed pl-1 md:pl-2">
+              {content}
+            </div>
+            {/* 여기에 나중에 긴 가이드 내용을 넣으면 됩니다. */}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TIER_COLORS: Record<Tier, string> = {
   [Tier.S]: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
   [Tier.A]: 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
@@ -1187,9 +1227,7 @@ const HostRoomModal: React.FC<{
   onClose: () => void;
   onRoomCreated: (room: RecruitmentRoom) => void;
   activeRoom: RecruitmentRoom | null;
-  activeRooms: RecruitmentRoom[]; // 항목 7: 멀티 모임
-  onSelectRoom: (room: RecruitmentRoom) => void;
-  onAddNewRoom: () => void;
+  activeRooms: RecruitmentRoom[];
   activeTab: SportType;
   onCloseRoom: () => void;
   onApproveAll: (players: Player[]) => void;
@@ -1200,7 +1238,7 @@ const HostRoomModal: React.FC<{
   userNickname: string;
   currentUserId: string;
   activePlayerCount: number;
-}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, onSelectRoom, onAddNewRoom, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount }) => {
+}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount }) => {
   /* 날짜/시간 초기값 및 상태 관리 */
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -1231,10 +1269,29 @@ const HostRoomModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
-  const [showHostTiers, setShowHostTiers] = useState(true);
   const t = (key: any) => (TRANSLATIONS[lang] as any)[key] || key;
 
   useEffect(() => {
+    if (isOpen && !activeRoom) {
+      // 모달이 열릴 때(새 방 생성 모드인 경우) 날짜와 시간을 현재 기준으로 리셋
+      const d = new Date();
+      d.setHours(d.getHours() + 1, 0, 0, 0);
+
+      const newStartDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const newStartTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+      setStartDate(newStartDate);
+      setStartTime(newStartTime);
+
+      // 종료 시간은 시작 + 1시간
+      const endD = new Date(d.getTime() + 60 * 60 * 1000);
+      setEndDate(`${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`);
+      setEndTime(`${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}`);
+
+      // 제목도 현재 탭에 맞춰 초기화
+      setTitle(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} 모임`);
+    }
+
     if (activeRoom?.id && isOpen) {
       // 실시간 방 정보 구독
       const unsub = subscribeToRoom(activeRoom.id, (room) => {
@@ -1312,8 +1369,8 @@ const HostRoomModal: React.FC<{
   const handleShare = async () => {
     if (!activeRoom) return;
     const currentOrigin = window.location.origin;
-    const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':3000'))
-      ? 'http://localhost:3000'
+    const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':5000'))
+      ? 'http://localhost:5000'
       : currentOrigin;
     const webUrl = `${webOrigin}/hosting/index.html?room=${activeRoom.id}&lang=${lang}`;
 
@@ -1350,40 +1407,13 @@ const HostRoomModal: React.FC<{
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-8 space-y-6">
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => setShowHostTiers(!showHostTiers)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black text-slate-600 dark:text-slate-400 active:scale-95 transition-all"
-            >
-              {showHostTiers ? t('hideTier') : t('showTier')}
-            </button>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200"><CloseIcon /></button>
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-6 space-y-4">
+          <div className="flex justify-end items-center">
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200 transition-colors"><CloseIcon /></button>
           </div>
 
-          {/* 멀티 모임 탭 */}
-          {activeRooms.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4" data-capture-ignore="true">
-              {activeRooms.map((room, idx) => (
-                <button
-                  key={room.id}
-                  onClick={() => onSelectRoom(room)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${activeRoom?.id === room.id ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
-                >
-                  {room.title || `모임 ${idx + 1}`}
-                </button>
-              ))}
-              {activeRooms.length < 2 && (
-                <button
-                  onClick={onAddNewRoom}
-                  className="px-4 py-2 rounded-xl text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700"
-                >
-                  + 새 모임
-                </button>
-              )}
-            </div>
-          )}
+
 
           {!activeRoom ? (
             <div className="space-y-4">
@@ -1449,22 +1479,30 @@ const HostRoomModal: React.FC<{
               <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className={`flex-1 p-5 rounded-3xl border transition-all ${activeRoom.status === 'OPEN' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
-                  <p className={`font-black text-[10px] uppercase tracking-widest mb-1 ${activeRoom.status === 'OPEN' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {activeRoom.status === 'OPEN' ? 'RECRUITING ACTIVE' : 'RECRUITMENT CLOSED'}
+            <div className="space-y-4">
+              <div className="text-center py-2 border-b border-slate-50 dark:border-slate-800/50">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white mb-0.5">{activeRoom.title}</h2>
+                <p className="text-xs font-bold text-blue-500">{activeRoom.matchDate} {activeRoom.matchTime}</p>
+              </div>
+              <div className="flex items-stretch gap-2.5">
+                <div className={`flex-1 py-3 px-4 rounded-2xl border transition-all ${activeRoom.status === 'OPEN' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
+                  <p className={`font-black text-[11px] uppercase tracking-widest mb-0.5 ${activeRoom.status === 'OPEN' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {activeRoom.status === 'OPEN' ? '모집 중' : '모집 마감'}
                   </p>
-                  <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">
-                    {activePlayerCount} / {activeRoom.maxApplicants > 0 ? `${activeRoom.maxApplicants}명` : '무제한'}
+                  <p className="text-base font-black text-slate-900 dark:text-white tracking-tighter">
+                    {activePlayerCount}명 / {activeRoom.maxApplicants > 0 ? `${activeRoom.maxApplicants}명` : '무제한'}
                   </p>
                 </div>
                 <button
                   onClick={handleToggleStatus}
-                  className={`px-4 py-8 rounded-3xl font-black text-[10px] uppercase tracking-tighter transition-all shadow-lg active:scale-95 ${activeRoom.status === 'OPEN' ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}`}
+                  className={`px-4 rounded-2xl font-black text-[11px] uppercase tracking-tighter transition-all shadow-md active:scale-95 ${activeRoom.status === 'OPEN' ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}`}
                 >
                   {activeRoom.status === 'OPEN' ? '마감하기' : '모집재개'}
                 </button>
+              </div>
+              <div className="flex items-center gap-2 px-1 mt-2">
+                <div className="w-1 h-3 bg-blue-600 rounded-full" />
+                <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider">신청현황</h3>
               </div>
               <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
                 {activeRoom.applicants.length === 0 ? <p className="text-center py-10 text-slate-400 font-bold text-sm">{t('noApplicants')}</p> :
@@ -1473,7 +1511,7 @@ const HostRoomModal: React.FC<{
                       <div>
                         <p className="font-black text-slate-900 dark:text-white">{app.name}</p>
                         <p className="text-[10px] text-slate-400 font-bold">
-                          {showHostTiers && `${app.tier} 티어 • `}{app.position}
+                          {app.position}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1526,8 +1564,8 @@ const HostRoomModal: React.FC<{
                   ))
                 }
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={handleShare} className="py-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black rounded-2xl text-xs">{t('shareRecruitLink')}</button>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button onClick={handleShare} className="py-3.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black rounded-xl text-[11px] uppercase tracking-tight">{t('shareRecruitLink')}</button>
                 <button onClick={async () => {
                   // Firestore 상태 업데이트
                   const updatedApplicants = activeRoom.applicants.map(a => ({ ...a, isApproved: true }));
@@ -1555,7 +1593,7 @@ const HostRoomModal: React.FC<{
                     };
                   });
                   onApproveAll(players); onClose();
-                }} className="py-4 bg-blue-600 text-white font-black rounded-2xl text-xs">{t('approveAll')}</button>
+                }} className="py-3.5 bg-blue-600 text-white font-black rounded-xl text-[11px] uppercase tracking-tight">{t('approveAll')}</button>
               </div>
               <button
                 onClick={() => {
@@ -1575,7 +1613,7 @@ const HostRoomModal: React.FC<{
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -1636,6 +1674,7 @@ const App: React.FC = () => {
   const [newForbidden, setNewForbidden] = useState<Position[]>([]);
   const [teamCount, setTeamCount] = useState(2);
   const [result, setResult] = useState<BalanceResult | null>(null);
+  const [pastResults, setPastResults] = useState<Set<string>>(new Set()); // 이력 관리
   const [isSharing, setIsSharing] = useState<string | null>(null);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<'name' | 'tier'>('name');
@@ -1650,6 +1689,7 @@ const App: React.FC = () => {
   const [showNewPlayerFormation, setShowNewPlayerFormation] = useState(false);
   const [selectAllConfirm, setSelectAllConfirm] = useState(false);
   const [unselectAllConfirm, setUnselectAllConfirm] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   const [selectionMode, setSelectionMode] = useState<'MATCH' | 'SPLIT' | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
@@ -1885,8 +1925,6 @@ const App: React.FC = () => {
       // 새 신청자 감지 및 인앱 알림
       rooms.forEach(room => {
         const prevCount = prevApplicantsCount.current[room.id];
-        // 최초 로드 시에는 prevCount가 undefined이므로 알림을 보내지 않음
-        // 이후 인원이 늘어난 경우에만 알림 발송
         if (prevCount !== undefined && room.applicants.length > prevCount) {
           const newPlayer = room.applicants[room.applicants.length - 1];
           const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
@@ -1897,12 +1935,11 @@ const App: React.FC = () => {
 
       setActiveRooms(rooms);
 
-      // 현재 열린 방이 있다면 해당 데이터도 최신화
-      if (currentActiveRoom) {
-        const updatedRoom = rooms.find(r => r.id === currentActiveRoom.id);
-        if (updatedRoom) {
-          setCurrentActiveRoom(updatedRoom);
-        }
+      // 1계정 1방 정책: 어떤 종목에서든 생성된 방이 하나라도 있으면 그것을 자동 선택
+      if (rooms.length > 0) {
+        setCurrentActiveRoom(rooms[0]);
+      } else {
+        setCurrentActiveRoom(null);
       }
     });
 
@@ -2324,6 +2361,11 @@ const App: React.FC = () => {
     });
   }, [teamCount]);
 
+  // 참가자 구성이 바뀌면 이력 초기화 (새로운 조합 가능)
+  useEffect(() => {
+    setPastResults(new Set());
+  }, [players]);
+
   const handleReviewLater = () => {
     const nextPromptDate = new Date();
     nextPromptDate.setDate(nextPromptDate.getDate() + 14);
@@ -2418,8 +2460,22 @@ const App: React.FC = () => {
       return p && p.sportType === activeTab;
     });
 
+
+
     setTimeout(() => {
-      const res = generateBalancedTeams(participating, teamCount, quotas, activeConstraints, useRandomMix);
+      const res = generateBalancedTeams(participating, teamCount, quotas, activeConstraints, useRandomMix, Array.from(pastResults));
+
+      setResult(res);
+
+      // 개별 팀 해시 저장 (중복 방지용)
+      setPastResults(prev => {
+        const next = new Set(prev);
+        res.teams.forEach(t => {
+          const teamHash = t.players.map(p => p.id).sort().join(',');
+          next.add(teamHash);
+        });
+        return next;
+      });
 
       // 팀 색상 할당
       if (useTeamColors) {
@@ -2514,35 +2570,35 @@ const App: React.FC = () => {
 
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
-                        * {
-                          transition: none !important;
-                        animation: none !important;
-                        -webkit-print-color-adjust: exact;
-                        font-family: "Pretendard Variable", Pretendard, sans-serif !important;
+                            * {
+                              transition: none !important;
+                            animation: none !important;
+                            -webkit-print-color-adjust: exact;
+                            font-family: "Pretendard Variable", Pretendard, sans-serif !important;
             }
-                        .truncate {
-                          overflow: visible !important;
-                        white-space: normal !important;
-                        text-overflow: clip !important; 
+                            .truncate {
+                              overflow: visible !important;
+                            white-space: normal !important;
+                            text-overflow: clip !important; 
             }
-                        .overflow-hidden {
-                          overflow: visible !important; 
+                            .overflow-hidden {
+                              overflow: visible !important; 
             }
-                        span, p, h1, h2, h3, h4 {
-                          -webkit - print - color - adjust: exact;
-                        font-family: inherit !important;
+                            span, p, h1, h2, h3, h4 {
+                              -webkit - print - color - adjust: exact;
+                            font-family: inherit !important;
             }
-                        .animate-in {opacity: 1 !important; transform: none !important; animation: none !important; visibility: visible !important; }
-                        [data-capture-ignore] {display: none !important; visibility: hidden !important; }
-                        .bg-slate-950 {background - color: #020617 !important; }
-                        .bg-\\[\\#fdfcf9\\] {background - color: #fdfcf9 !important; }
-                        .flex {display: flex !important; }
-                        .items-center {align - items: center !important; }
-                        .justify-between {justify - content: space-between !important; }
-                        .flex-col {flex - direction: column !important; }
-                        .text-sm {font - size: 14px !important; }
-                        .font-semibold {font - weight: 600 !important; }
-                        `;
+                            .animate-in {opacity: 1 !important; transform: none !important; animation: none !important; visibility: visible !important; }
+                            [data-capture-ignore] {display: none !important; visibility: hidden !important; }
+                            .bg-slate-950 {background - color: #020617 !important; }
+                            .bg-\\[\\#fdfcf9\\] {background - color: #fdfcf9 !important; }
+                            .flex {display: flex !important; }
+                            .items-center {align - items: center !important; }
+                            .justify-between {justify - content: space-between !important; }
+                            .flex-col {flex - direction: column !important; }
+                            .text-sm {font - size: 14px !important; }
+                            .font-semibold {font - weight: 600 !important; }
+                            `;
           clonedDoc.head.appendChild(style);
 
           clonedElement.style.opacity = '1';
@@ -2754,7 +2810,10 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="flex justify-center w-full px-4 mb-2">
+        <div
+          className="flex justify-center w-full px-4 mb-2 cursor-pointer transition-all active:scale-95 hover:opacity-90"
+          onClick={() => setShowGuideModal(true)}
+        >
           <img src="/images/title_banner.png" alt="Team Mate" className="w-full max-w-[320px] object-contain rounded-2xl shadow-sm" />
         </div>
       </header>
@@ -2775,17 +2834,19 @@ const App: React.FC = () => {
       <section className="w-full px-4 mb-3" data-capture-ignore="true">
         <div className="flex justify-between items-center mb-2 px-1">
           <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('recruitParticipants')}</h3>
-          <button
-            onClick={() => { setCurrentActiveRoom(null); setShowHostRoomModal(true); }}
-            className="text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center gap-1 hover:scale-105 active:scale-95 transition-all"
-          >
-            <PlusIcon /> {t('createRecruitRoom')}
-          </button>
+          {activeRooms.length === 0 && (
+            <button
+              onClick={() => { setCurrentActiveRoom(null); setShowHostRoomModal(true); }}
+              className="text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center gap-1 hover:scale-105 active:scale-95 transition-all"
+            >
+              <PlusIcon /> {t('createRecruitRoom')}
+            </button>
+          )}
         </div>
         <div className="space-y-2">
           {(() => {
             const filteredRooms = activeRooms.filter(r => {
-              if (r.sport !== activeTab) return false;
+              // 종목 필터 제거 (계정당 1개 방이므로 어떤 탭에서든 보여야 함)
               try {
                 const [y, m, d] = r.matchDate.split('-').map(Number);
                 const [hh, mm] = r.matchTime.split(':').map(Number);
@@ -2812,7 +2873,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className={`text-lg font-black ${currentActiveRoom?.id === room.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                    {players.filter(p => p.isActive && p.sportType === activeTab).length}명
+                    {players.filter(p => p.isActive && p.sportType === room.sport).length}명
                   </span>
                   <div className="flex flex-col items-end gap-1">
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg ${room.status === 'OPEN' ? (currentActiveRoom?.id === room.id ? 'bg-blue-400/30 text-white' : 'bg-emerald-500/10 text-emerald-500') : 'bg-rose-500/10 text-rose-500'}`}>
@@ -3529,11 +3590,7 @@ const App: React.FC = () => {
         }}
         activeRoom={currentActiveRoom}
         activeRooms={activeRooms}
-        activePlayerCount={players.filter(p => p.isActive && p.sportType === activeTab).length}
-        onSelectRoom={setCurrentActiveRoom}
-        onAddNewRoom={() => {
-          setCurrentActiveRoom(null);
-        }}
+        activePlayerCount={players.filter(p => p.isActive && p.sportType === (currentActiveRoom?.sport || activeTab)).length}
         activeTab={activeTab}
         onCloseRoom={() => {
           if (currentActiveRoom) {
@@ -3588,6 +3645,13 @@ const App: React.FC = () => {
           // 팝업 알림 (t 함수 접근 문제 처리 필요시 showAlert 등 활용)
         }}
         lang={lang}
+        darkMode={darkMode}
+      />
+      <GuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        title={t('guideTitle')}
+        content={t('guideContent') || t('comingSoon')}
         darkMode={darkMode}
       />
       <div className="h-[calc(10px+env(safe-area-inset-bottom))]" />

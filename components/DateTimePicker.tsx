@@ -108,7 +108,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const [hour, minute] = time.split(':').map(Number);
 
     const years = Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() + i)); // Current + 5 years
-    const months = Array.from({ length: 12 }, (_, i) => String(i + 1));
+    const months = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
 
     // Days generator considering leap year and month
     const getDaysInMonth = (y: number, m: number) => new Date(y, m, 0).getDate();
@@ -136,17 +136,12 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
 
     // Handlers
     const handleYearChange = (val: string) => {
-        const newDate = `${val}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        // Validate day if month/year changes (e.g. Feb 29)
-        // Simple fix: if day exceeds new max, clamp it.
-        // BUT here we just pass simple string. Logic refinement needed.
-        onChange(newDate, time); // Simple update, parent handles or we rely on useEffects?
-        // Better: Calculate full new string here
-        updateDateTime(Number(val), month, day, hour, minute);
+        const y = parseInt(val);
+        updateDateTime(y, month, day, hour, minute);
     };
 
     const handleMonthChange = (val: string) => {
-        const m = Number(val);
+        const m = parseInt(val);
         updateDateTime(year, m, day, hour, minute);
     };
 
@@ -189,7 +184,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     return (
         <div className="flex justify-center items-center gap-0 w-full bg-white dark:bg-slate-900 rounded-xl p-4">
             <WheelPicker items={years} selected={String(year)} onSelect={handleYearChange} width="w-16" />
-            <WheelPicker items={months} selected={String(month)} onSelect={handleMonthChange} width="w-12" />
+            <WheelPicker items={months} selected={`${month}월`} onSelect={handleMonthChange} width="w-16" />
             <WheelPicker items={days} selected={currentDayStr} onSelect={handleDayChange} width="w-24" />
 
             <div className="w-4" /> {/* Spacer */}

@@ -8,7 +8,8 @@ export const generateBalancedTeams = (
     teamCount: number,
     customQuotas?: Partial<Record<Position, number | null>>,
     constraints: TeamConstraint[] = [],
-    ignoreTier: boolean = false
+    ignoreTier: boolean = false,
+    previousHashes: string[] = []
 ): BalanceResult => {
     const activePlayers = [...players.filter(p => p.isActive)];
     if (activePlayers.length === 0) return { teams: [], standardDeviation: 0 };
@@ -58,7 +59,20 @@ export const generateBalancedTeams = (
             return priority;
         };
 
-        const pool = shuffle(activePlayers).sort((a, b) => getPlayerPriority(b) - getPlayerPriority(a));
+        const pool = shuffle(activePlayers).map(p => ({
+            ...p,
+            // 정렬을 위한 임의 점수 부여 (티어 + 랜덤 노이즈)
+            // 노이즈 범위가 1.5면, A급(4점)이 운 좋으면 S급(5점)보다 먼저 배정될 수 있음 -> 구조적 다양성 확보
+            sortScore: p.tier + (Math.random() * 1.5)
+        })).sort((a, b) => {
+            const priorityDiff = getPlayerPriority(b) - getPlayerPriority(a);
+            if (priorityDiff !== 0) return priorityDiff;
+
+            // 일반 모드: 점수 높은 순 (실력 위주지만 랜덤성 포함)
+            if (sport === SportType.GENERAL) return b.sortScore - a.sortScore;
+            // 포지션 모드: 점수 낮은 순 (랜덤성 포함)
+            return a.sortScore - b.sortScore;
+        });
         let hardRuleViolationPenalty = 0;
 
         for (const player of pool) {
@@ -111,9 +125,14 @@ export const generateBalancedTeams = (
                     });
 
                     // 5. 배정 점수 계산
+                    // 5. 배정 점수 계산
                     const playerCountWeight = team.players.length * 100000000; // 팀원 수 균등화 (1억 점 단위 - 최우선)
-                    const positionPenaltyWeight = preferencePenalty * 1000;
-                    const skillWeight = ignoreTier ? 0 : team.totalSkill * 1; // 티어 무시 시 실력 점수 배제
+
+                    // 사용자 요청: "표준편차가 선호 포지션보다 우선시 되어야 함"
+                    // 포지션 페널티 비중을 대폭 낮추고, 스킬(밸런스) 비중을 높임
+                    const positionPenaltyWeight = preferencePenalty * 1; // 기존 1000 -> 1로 축소
+                    const skillWeight = ignoreTier ? 0 : team.totalSkill * 10; // 기존 1 -> 10으로 확대
+
                     const evaluationScore = playerCountWeight + quotaPenalty + positionPenaltyWeight + skillWeight + constraintWeight;
 
                     if (!bestEvaluation || evaluationScore < bestEvaluation.score) {
@@ -188,16 +207,32 @@ export const generateBalancedTeams = (
     let bestScore = bestResult.imbalanceScore || 999999999;
     let attempts = 0;
 
+    // 팀 Hash 생성 헬퍼
+    const getTeamHash = (team: Team): string => {
+        return team.players.map(p => p.id).sort().join(',');
+    };
+
     while (attempts < 700) {
         const nextResult = calculateOneAttempt();
-        const nextScore = nextResult.imbalanceScore || 999999999;
+        let nextScore = nextResult.imbalanceScore || 999999999;
+
+        // 개별 팀 중복 체크 (이전에 등장했던 팀 조합이 하나라도 포함되면 페널티)
+        const currentTeamHashes = nextResult.teams.map(getTeamHash);
+        const duplicateCount = currentTeamHashes.filter(h => previousHashes.includes(h)).length;
+
+        if (duplicateCount > 0) {
+            nextScore += (duplicateCount * 100000); // 겹치는 팀 하나당 큰 페널티
+        }
+
         if (nextScore < bestScore) {
             bestResult = nextResult;
             bestScore = nextScore;
         }
-        // 티어 무시 옵션 활성화 시, 첫 번째로 유효한(포지션 규칙 만족) 결과를 찾으면 즉시 종료
-        if (ignoreTier && bestResult.isValid) break;
-        if (bestScore < 1.0) break;
+
+        // 종료 조건: 유효하면서 중복팀이 없는 경우 조기 종료
+        if (ignoreTier && bestResult.isValid && duplicateCount === 0) break;
+        if (bestScore < 1.0 && duplicateCount === 0) break;
+
         attempts++;
     }
 
