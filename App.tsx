@@ -1322,7 +1322,7 @@ const HostRoomModal: React.FC<{
         try {
           await Share.share({
             title: t('shareRecruitLink'),
-            text: `[${activeRoom.title}] 모임에 ${activeRoom.hostName}님이 참여자를 모집합니다!`,
+            text: `[${activeRoom.title}] ${activeRoom.matchDate} ${activeRoom.matchTime} ${t(activeRoom.sport.toLowerCase())} 참여자를 모집합니다!\n\n👇 참가하기 👇\n${webUrl}`,
             url: webUrl,
             dialogTitle: t('shareRecruitLink'),
           });
