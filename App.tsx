@@ -38,6 +38,7 @@ const {
   SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon,
   SettingsIcon, HeartIcon, RotateCcwIcon
 } = Icons;
+import { DateTimePicker } from './components/DateTimePicker';
 
 const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean }> = ({ lang, darkMode, isAdFree }) => {
   useEffect(() => {
@@ -1344,8 +1345,32 @@ const HostRoomModal: React.FC<{
   currentUserId: string;
   activePlayerCount: number;
 }> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, onSelectRoom, onAddNewRoom, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount }) => {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState('20:00');
+  /* 날짜/시간 초기값 및 상태 관리 */
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [startTime, setStartTime] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
+  // 종료 시간은 시작 시간 + 1시간 기본값
+  const [endDate, setEndDate] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2, 0, 0, 0); // Start + 1 hour
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [endTime, setEndTime] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2, 0, 0, 0);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
+  const [activePicker, setActivePicker] = useState<'START' | 'END'>('START');
+
   const [title, setTitle] = useState(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} 모임`);
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
@@ -1370,6 +1395,25 @@ const HostRoomModal: React.FC<{
     }
   }, [activeRoom?.id, isOpen]);
 
+  const handleStartTimeChange = (newDate: string, newTime: string) => {
+    setStartDate(newDate);
+    setStartTime(newTime);
+
+    // 종료 시간 자동 계산 (시작 시간 + 1시간)
+    const start = new Date(`${newDate}T${newTime}`);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    // 날짜 포맷팅
+    const eYear = end.getFullYear();
+    const eMonth = String(end.getMonth() + 1).padStart(2, '0');
+    const eDay = String(end.getDate()).padStart(2, '0');
+    const eHours = String(end.getHours()).padStart(2, '0');
+    const eMinutes = String(end.getMinutes()).padStart(2, '0');
+
+    setEndDate(`${eYear}-${eMonth}-${eDay}`);
+    setEndTime(`${eHours}:${eMinutes}`);
+  };
+
   const handleCreate = async () => {
     setLoading(true);
     try {
@@ -1378,8 +1422,10 @@ const HostRoomModal: React.FC<{
         hostName: userNickname,
         title: title,
         sport: activeTab,
-        matchDate: date,
-        matchTime: time,
+        matchDate: startDate,
+        matchTime: startTime,
+        matchEndDate: endDate,
+        matchEndTime: endTime,
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
         fcmToken: localStorage.getItem('fcm_token') || undefined
       });
@@ -1490,14 +1536,37 @@ const HostRoomModal: React.FC<{
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">모임명</label>
                 <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="모임 이름을 입력하세요" className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchDate')}</label>
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold text-sm" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <div
+                    onClick={() => setActivePicker('START')}
+                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-50'}`}
+                  >
+                    <span className="text-[10px] font-black uppercase text-blue-500 mb-1">시작</span>
+                    <span className={`text-base font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
+                      {startDate.split('-').slice(1).join('.')} ({['일', '월', '화', '수', '목', '금', '토'][new Date(startDate).getDay()]}) {startTime}
+                    </span>
+                  </div>
+                  <div className="text-slate-300 dark:text-slate-600 pb-4">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </div>
+                  <div
+                    onClick={() => setActivePicker('END')}
+                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-50'}`}
+                  >
+                    <span className="text-[10px] font-black uppercase text-rose-500 mb-1">종료</span>
+                    <span className={`text-base font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                      {endDate.split('-').slice(1).join('.')} ({['일', '월', '화', '수', '목', '금', '토'][new Date(endDate).getDay()]}) {endTime}
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('matchTime')}</label>
-                  <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold text-sm" />
+
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-2 transition-colors duration-300 border border-slate-100 dark:border-slate-800">
+                  {activePicker === 'START' ? (
+                    <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} />
+                  ) : (
+                    <DateTimePicker date={endDate} time={endTime} onChange={(d, t) => { setEndDate(d); setEndTime(t); }} />
+                  )}
                 </div>
               </div>
               <div className="space-y-4">

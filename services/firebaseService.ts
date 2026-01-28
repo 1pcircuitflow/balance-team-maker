@@ -51,6 +51,8 @@ export interface RecruitmentRoom {
     sport: string;
     matchDate: string;
     matchTime: string;
+    matchEndDate?: string;
+    matchEndTime?: string;
     status: 'OPEN' | 'CLOSED';
     maxApplicants: number; // 항목 9: 모집 인원 제한
     applicants: Applicant[];
