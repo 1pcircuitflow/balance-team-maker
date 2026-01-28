@@ -2367,6 +2367,7 @@ const App: React.FC = () => {
   const handleCloseRecruitRoom = async (room: RecruitmentRoom) => {
     if (window.confirm(t('confirm_delete_room' as any) || '이 모집 방을 완전히 삭제하시겠습니까? 신청자 정보가 모두 사라집니다.')) {
       try {
+        setShowHostRoomModal(false); // 강제로 모달 닫기
         await updateDoc(doc(db, 'rooms', room.id), { status: 'DELETED' });
         setActiveRooms(prev => prev.filter(r => r.id !== room.id));
         setCurrentActiveRoom(null);
@@ -2884,7 +2885,7 @@ const App: React.FC = () => {
                       <UserCheckIcon />
                       {t('approveAll' as any)}
                     </button>
-                    <button onClick={() => handleCloseRecruitRoom(room)} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-rose-500 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); handleCloseRecruitRoom(room); }} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-rose-500 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
                       <TrashIcon />
                       {t('delete_recruit_room' as any)}
                     </button>
