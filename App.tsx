@@ -1129,153 +1129,9 @@ const RewardAdModal: React.FC<{
   );
 };
 
-const OnboardingIllust: React.FC<{ step: number; darkMode: boolean; lang: Language }> = ({ step, darkMode, lang }) => {
-  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
 
-  const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div className={`w-full max-w-[150px] aspect-square rounded-3xl flex flex-col items-center justify-center gap-2 p-3 shadow-lg border-x border-t ${darkMode ? 'bg-slate-800/50 border-slate-700/50' : 'bg-slate-50 border-white'} ${className}`}>
-      {children}
-    </div>
-  );
 
-  switch (step) {
-    case 1:
-      return (
-        <Card className="animate-in fade-in zoom-in duration-500">
-          <div className="w-full h-6 bg-blue-500/20 rounded-lg border border-blue-500/30 flex items-center px-2 gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            <div className={`w-10 h-1.5 rounded-full ${darkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
-          </div>
-          <div className="flex gap-1.5 w-full mt-1">
-            <div className="flex-1 h-5 bg-amber-500/20 rounded-md border border-amber-500/30 flex items-center justify-center text-[8px] font-bold text-amber-500">S</div>
-            <div className="flex-1 h-5 bg-emerald-500/20 rounded-md border border-emerald-500/30 flex items-center justify-center text-[8px] font-bold text-emerald-500">FW</div>
-          </div>
-          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-lg shadow-lg mt-1">💾</div>
-        </Card>
-      );
-    case 2:
-      return (
-        <Card className="animate-in slide-in-from-bottom-4 duration-500">
-          <div className="space-y-1.5 w-full">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={`h-8 w-full rounded-xl flex items-center justify-between px-2 ${darkMode ? 'bg-slate-700/50' : 'bg-white shadow-sm'}`}>
-                <div className={`w-10 h-1.5 rounded-full ${darkMode ? 'bg-slate-600' : 'bg-slate-200'}`} />
-                <div className={`w-5 h-5 rounded-md ${i === 1 ? 'bg-blue-600 animate-bounce' : 'bg-slate-500/30'} flex items-center justify-center text-white text-[10px]`}>+</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      );
-    case 3:
-      return (
-        <Card className="animate-in fade-in duration-700">
-          <div className="relative">
-            <div className="w-12 h-12 rounded-full bg-slate-500/10 flex items-center justify-center text-3xl">👥</div>
-            <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-rose-500 rounded-full border-2 border-slate-900 flex items-center justify-center text-[7px] text-white font-black">X</div>
-            <div className="absolute -bottom-0.5 -left-0.5 w-5 h-5 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center text-[7px] text-white font-black">✔</div>
-          </div>
-          <div className="flex gap-1 mt-3">
-            <div className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 text-[7px] font-bold border border-emerald-500/30">Same</div>
-            <div className="px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-500 text-[7px] font-bold border border-rose-500/30">Diff</div>
-          </div>
-        </Card>
-      );
-    case 4:
-      return (
-        <Card className="animate-in zoom-in-50 duration-500">
-          <div className="w-full space-y-2">
-            <div className="flex justify-between items-center bg-blue-600/10 p-1.5 rounded-xl">
-              <span className="text-[8px] font-bold text-blue-500 uppercase tracking-tighter">Teams</span>
-              <div className="flex gap-1">
-                <div className="w-5 h-5 bg-blue-600 rounded-md flex items-center justify-center text-white text-[8px]">2</div>
-                <div className="w-5 h-5 bg-slate-500/20 rounded-md" />
-              </div>
-            </div>
-            <button className="w-full py-2 bg-blue-600 rounded-xl text-white text-[9px] font-black shadow-lg shadow-blue-600/30 uppercase tracking-tight">
-              GENERATE
-            </button>
-          </div>
-        </Card>
-      );
-    case 5:
-      return (
-        <Card className="animate-in slide-in-from-top-4 duration-500 overflow-hidden !p-0">
-          <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 flex flex-col justify-between">
-            <div className="space-y-1">
-              <div className="w-6 h-0.5 bg-white/30 rounded-full" />
-              <div className="w-9 h-0.5 bg-white/30 rounded-full opacity-50" />
-            </div>
-            <div className="flex justify-center text-3xl">✨</div>
-            <div className="w-full h-7 bg-white/10 rounded-lg flex items-center justify-center text-white text-[9px] font-bold">
-              📤 Share
-            </div>
-          </div>
-        </Card>
-      );
-    default:
-      return null;
-  }
-};
 
-const OnboardingModal: React.FC<{
-  isOpen: boolean; onClose: () => void; lang: Language; darkMode: boolean;
-}> = ({ isOpen, onClose, lang, darkMode }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
-  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
-
-  if (!isOpen) return null;
-
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      onClose();
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-500">
-      <div className={`w-full max-w-xs rounded-[2rem] overflow-hidden flex flex-col ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'}`}>
-        {/* Top Progress bar */}
-        <div className="flex gap-1 px-8 pt-8">
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className={`flex-1 h-1 rounded-full transition-all duration-300 ${i <= currentStep ? 'bg-blue-600' : 'bg-slate-700'}`} />
-          ))}
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6 min-h-[16rem]">
-          <OnboardingIllust step={currentStep} darkMode={darkMode} lang={lang} />
-
-          <div className="text-center space-y-2.5">
-            <h3 className={`text-lg font-black ${darkMode ? 'text-white' : 'text-slate-900'} leading-snug tracking-tight px-2`}>
-              {t(`onboardingStep${currentStep}` as any)}
-            </h3>
-            {/* Step Counter */}
-            <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-600/10 text-blue-500 text-[9px] font-black tracking-widest uppercase">
-              Step {currentStep} / {totalSteps}
-            </span>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <div className="p-6 pt-0">
-          <button
-            onClick={handleNext}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl transition-all active:scale-95 shadow-xl shadow-blue-900/20 text-base"
-          >
-            {currentStep === totalSteps ? t('now') : t('matchTeams')}
-          </button>
-
-          <button onClick={onClose} className="w-full mt-3 text-slate-500 font-bold text-xs tracking-tight opacity-50 hover:opacity-100 transition-opacity">
-            {t('later')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const LoginRecommendModal: React.FC<{
   isOpen: boolean; onLater: () => void; onLogin: () => void; lang: Language; darkMode: boolean;
@@ -1852,9 +1708,7 @@ const App: React.FC = () => {
   const [showRewardAd, setShowRewardAd] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showLoginRecommendModal, setShowLoginRecommendModal] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    return localStorage.getItem('app_onboarding_done_v3') !== 'true';
-  });
+
   const [pendingJoinRoomId, setPendingJoinRoomId] = useState<string | null>(null);
 
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
@@ -3589,15 +3443,7 @@ const App: React.FC = () => {
         lang={lang}
         darkMode={darkMode}
       />
-      <OnboardingModal
-        isOpen={showOnboarding}
-        onClose={() => {
-          setShowOnboarding(false);
-          localStorage.setItem('app_onboarding_done_v3', 'true');
-        }}
-        lang={lang}
-        darkMode={darkMode}
-      />
+
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
