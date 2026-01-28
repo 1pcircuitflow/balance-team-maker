@@ -1270,7 +1270,11 @@ const HostRoomModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
-  const t = (key: any) => (TRANSLATIONS[lang] as any)[key] || key;
+  const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
+    const translation = (TRANSLATIONS[lang] as any)[key];
+    if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
+    return String(translation || key);
+  };
 
   useEffect(() => {
     if (isOpen && !activeRoom) {
@@ -1364,7 +1368,7 @@ const HostRoomModal: React.FC<{
     if (!activeRoom) return;
     const currentOrigin = window.location.origin;
     const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':5000'))
-      ? 'http://localhost:5000'
+      ? (Capacitor.getPlatform() === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000')
       : currentOrigin;
     const webUrl = `${webOrigin}/hosting/index.html?room=${activeRoom.id}&lang=${lang}`;
 
@@ -1407,8 +1411,8 @@ const HostRoomModal: React.FC<{
           {!activeRoom ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">모임명</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="모임 이름을 입력하세요" className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
@@ -1416,9 +1420,9 @@ const HostRoomModal: React.FC<{
                     onClick={() => setActivePicker('START')}
                     className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-50'}`}
                   >
-                    <span className="text-[10px] font-black uppercase text-blue-500 mb-1">시작</span>
+                    <span className="text-[10px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
                     <span className={`text-base font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
-                      {startDate.split('-').slice(1).join('.')} ({['일', '월', '화', '수', '목', '금', '토'][new Date(startDate).getDay()]}) {startTime}
+                      {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
                     </span>
                   </div>
                   <div className="text-slate-300 dark:text-slate-600 pb-4">
@@ -1428,9 +1432,9 @@ const HostRoomModal: React.FC<{
                     onClick={() => setActivePicker('END')}
                     className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-50'}`}
                   >
-                    <span className="text-[10px] font-black uppercase text-rose-500 mb-1">종료</span>
+                    <span className="text-[10px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
                     <span className={`text-base font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
-                      {endDate.split('-').slice(1).join('.')} ({['일', '월', '화', '수', '목', '금', '토'][new Date(endDate).getDay()]}) {endTime}
+                      {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
                     </span>
                   </div>
                 </div>
@@ -1445,7 +1449,7 @@ const HostRoomModal: React.FC<{
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">모집 인원 제한</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('limitApplicants')}</label>
                   <button
                     onClick={() => setUseLimit(!useLimit)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
@@ -1456,10 +1460,10 @@ const HostRoomModal: React.FC<{
 
                 {useLimit && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">모집 인원 (정원)</label>
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('maxApplicants')}</label>
                     <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-3">
                       <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
-                      <span className="flex-1 text-center font-black dark:text-white">{maxApplicants}명</span>
+                      <span className="flex-1 text-center font-black dark:text-white">{t('peopleCount', maxApplicants)}</span>
                       <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
                     </div>
                   </div>
@@ -1490,7 +1494,11 @@ const ApplyRoomModal: React.FC<{
   const [pos, setPos] = useState<string>('MF');
   const [room, setRoom] = useState<RecruitmentRoom | null>(null);
   const [loading, setLoading] = useState(false);
-  const t = (key: any) => (TRANSLATIONS[lang] as any)[key] || key;
+  const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
+    const translation = (TRANSLATIONS[lang] as any)[key];
+    if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
+    return String(translation || key);
+  };
   useEffect(() => { if (roomId && isOpen) getRoomInfo(roomId).then(setRoom); }, [roomId, isOpen]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!roomId || !name) return;
@@ -1502,14 +1510,14 @@ const ApplyRoomModal: React.FC<{
     <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 space-y-6">
-        <div className="text-center space-y-2"><h3 className="text-xl font-black text-slate-900 dark:text-white">{room.sport} 참가 신청</h3><p className="text-blue-500 font-bold text-sm">{room.matchDate} {room.matchTime}</p></div>
+        <div className="text-center space-y-2"><h3 className="text-xl font-black text-slate-900 dark:text-white">{t('applyTitle', room.sport)}</h3><p className="text-blue-500 font-bold text-sm">{room.matchDate} {room.matchTime}</p></div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="성함을 입력하세요" className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 dark:text-white font-bold" />
+          <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder={t('inputNamePlaceholder')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 dark:text-white font-bold" />
           <div className="grid grid-cols-5 gap-1.5">
             {['S', 'A', 'B', 'C', 'D'].map(v => <button key={v} type="button" onClick={() => setTier(v)} className={`py-3 rounded-xl font-black text-xs ${tier === v ? 'bg-slate-900 text-white dark:bg-slate-200' : 'bg-slate-50 dark:bg-slate-950 text-slate-400'}`}>{v}</button>)}
           </div>
-          <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 text-white font-black rounded-3xl mt-4 shadow-xl shadow-blue-500/20">{loading ? '...' : '참가 신청 완료'}</button>
-          <button type="button" onClick={onClose} className="w-full py-3 text-slate-400 font-bold text-sm">닫기</button>
+          <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 text-white font-black rounded-3xl mt-4 shadow-xl shadow-blue-500/20">{loading ? '...' : t('completeApplication')}</button>
+          <button type="button" onClick={onClose} className="w-full py-3 text-slate-400 font-bold text-sm">{t('cancel')}</button>
         </form>
       </div>
     </div>
@@ -2053,7 +2061,7 @@ const App: React.FC = () => {
       }
 
       setShowLoginModal(false);
-      showAlert(`${googleUser.givenName}님, 환영합니다!`, 'Login Success');
+      showAlert(t('welcomeMsg', googleUser.givenName), t('loginSuccessMsg'));
 
       // 클라우드에서 데이터 가져오기
       setIsDataLoaded(false); // 로드 시작 전 플래그 리셋
@@ -2094,7 +2102,7 @@ const App: React.FC = () => {
     localStorage.removeItem(STORAGE_KEY);
     setIsDataLoaded(true);
 
-    showAlert('로그아웃되었습니다. 명단이 초기화되었습니다.', 'Logout');
+    showAlert(t('logoutMsg'), t('logoutTitle'));
   };
 
   const handleLoginLater = () => {
@@ -2341,7 +2349,7 @@ const App: React.FC = () => {
   const handleShareRecruitLink = async (room: RecruitmentRoom) => {
     const currentOrigin = window.location.origin;
     const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':5000'))
-      ? 'http://localhost:5000'
+      ? (Capacitor.getPlatform() === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000')
       : currentOrigin;
     const webUrl = `${webOrigin}/hosting/index.html?room=${room.id}&lang=${lang}`;
 
@@ -2365,7 +2373,7 @@ const App: React.FC = () => {
   };
 
   const handleCloseRecruitRoom = async (room: RecruitmentRoom) => {
-    if (window.confirm(t('confirm_delete_room' as any) || '이 모집 방을 완전히 삭제하시겠습니까? 신청자 정보가 모두 사라집니다.')) {
+    if (window.confirm(t('confirm_delete_room' as any))) {
       try {
         setShowHostRoomModal(false); // 강제로 모달 닫기
         await updateDoc(doc(db, 'rooms', room.id), { status: 'DELETED' });
