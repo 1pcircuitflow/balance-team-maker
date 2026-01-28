@@ -1266,15 +1266,16 @@ const HostRoomModal: React.FC<{
 
   const [activePicker, setActivePicker] = useState<'START' | 'END'>('START');
 
-  const [title, setTitle] = useState(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} 모임`);
-  const [loading, setLoading] = useState(false);
-  const [useLimit, setUseLimit] = useState(false);
-  const [maxApplicants, setMaxApplicants] = useState(12);
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
     if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
     return String(translation || key);
   };
+
+  const [title, setTitle] = useState(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} ${t('meeting')}`);
+  const [loading, setLoading] = useState(false);
+  const [useLimit, setUseLimit] = useState(false);
+  const [maxApplicants, setMaxApplicants] = useState(12);
 
   useEffect(() => {
     if (isOpen && !activeRoom) {
@@ -1294,7 +1295,7 @@ const HostRoomModal: React.FC<{
       setEndTime(`${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}`);
 
       // 제목도 현재 탭에 맞춰 초기화
-      setTitle(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} 모임`);
+      setTitle(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} ${t('meeting')}`);
     }
 
     if (activeRoom?.id && isOpen) {
@@ -1441,9 +1442,9 @@ const HostRoomModal: React.FC<{
 
                 <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-2 transition-colors duration-300 border border-slate-100 dark:border-slate-800">
                   {activePicker === 'START' ? (
-                    <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} />
+                    <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} lang={lang} />
                   ) : (
-                    <DateTimePicker date={endDate} time={endTime} onChange={(d, t) => { setEndDate(d); setEndTime(t); }} />
+                    <DateTimePicker date={endDate} time={endTime} onChange={(d, t) => { setEndDate(d); setEndTime(t); }} lang={lang} />
                   )}
                 </div>
               </div>
@@ -2849,7 +2850,7 @@ const App: React.FC = () => {
                         {players.filter(p => p.isActive && p.sportType === room.sport).length}명
                       </span>
                       <span className="text-[9px] font-bold opacity-60">
-                        / {room.maxApplicants > 0 ? `${room.maxApplicants}명` : '무제한'}
+                        / {room.maxApplicants > 0 ? `${room.maxApplicants}${t('peopleSuffix')}` : t('unlimited')}
                       </span>
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 
 import React, { useRef, useEffect, useState } from 'react';
+import { TRANSLATIONS, Language } from '../translations';
 
 interface WheelPickerProps {
     items: string[];
@@ -101,14 +102,15 @@ interface DateTimePickerProps {
     date: string; // YYYY-MM-DD
     time: string; // HH:mm
     onChange: (date: string, time: string) => void;
+    lang: Language;
 }
 
-export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange }) => {
+export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange, lang }) => {
     const [year, month, day] = date.split('-').map(Number);
     const [hour, minute] = time.split(':').map(Number);
 
     const years = Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() + i)); // Current + 5 years
-    const months = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
+    const months = (TRANSLATIONS[lang] as any).months.map((m: string, i: number) => m);
 
     // Days generator considering leap year and month
     const getDaysInMonth = (y: number, m: number) => new Date(y, m, 0).getDate();
@@ -118,13 +120,13 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const days = Array.from({ length: daysInMonth }, (_, i) => {
         const d = i + 1;
         const dateObj = new Date(year, month - 1, d);
-        const weekDay = ['일', '월', '화', '수', '목', '금', '토'][dateObj.getDay()];
-        return `${d}일 ${weekDay}`;
+        const weekDay = (TRANSLATIONS[lang] as any).days[dateObj.getDay()];
+        return `${d} ${weekDay}`;
     });
 
     // AM/PM Logic
     const isPM = hour >= 12;
-    const ampm = isPM ? '오후' : '오전';
+    const ampm = isPM ? (TRANSLATIONS[lang] as any).pm : (TRANSLATIONS[lang] as any).am;
     const displayHour = hour % 12 === 0 ? 12 : hour % 12;
 
     // Hours 1-12
@@ -132,7 +134,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     // Minutes 00-59
     const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
-    const ampms = ['오전', '오후'];
+    const ampms = [(TRANSLATIONS[lang] as any).am, (TRANSLATIONS[lang] as any).pm];
 
     // Handlers
     const handleYearChange = (val: string) => {
@@ -141,7 +143,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     };
 
     const handleMonthChange = (val: string) => {
-        const m = parseInt(val);
+        const m = months.indexOf(val) + 1;
         updateDateTime(year, m, day, hour, minute);
     };
 
@@ -153,8 +155,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
 
     const handleAmPmChange = (val: string) => {
         let h = hour;
-        if (val === '오전' && isPM) h -= 12;
-        if (val === '오후' && !isPM) h += 12;
+        if (val === (TRANSLATIONS[lang] as any).am && isPM) h -= 12;
+        if (val === (TRANSLATIONS[lang] as any).pm && !isPM) h += 12;
         updateDateTime(year, month, day, h, minute);
     };
 
@@ -179,12 +181,12 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         onChange(dateStr, timeStr);
     };
 
-    const currentDayStr = `${day}일 ${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, day).getDay()]}`;
+    const currentDayStr = `${day} ${(TRANSLATIONS[lang] as any).days[new Date(year, month - 1, day).getDay()]}`;
 
     return (
         <div className="flex justify-center items-center gap-0 w-full bg-white dark:bg-slate-900 rounded-xl p-4">
             <WheelPicker items={years} selected={String(year)} onSelect={handleYearChange} width="w-16" />
-            <WheelPicker items={months} selected={`${month}월`} onSelect={handleMonthChange} width="w-16" />
+            <WheelPicker items={months} selected={months[month - 1]} onSelect={handleMonthChange} width="w-16" />
             <WheelPicker items={days} selected={currentDayStr} onSelect={handleDayChange} width="w-24" />
 
             <div className="w-4" /> {/* Spacer */}
