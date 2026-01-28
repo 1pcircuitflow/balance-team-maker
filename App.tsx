@@ -36,7 +36,7 @@ const {
   PlusIcon, MinusIcon, TrashIcon, EditIcon, CheckIcon, ShuffleIcon,
   UserPlusIcon, UserCheckIcon, ShareIcon, SunIcon, MoonIcon,
   SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon,
-  SettingsIcon, HeartIcon, RotateCcwIcon
+  SettingsIcon, HeartIcon, RotateCcwIcon, CloseIcon
 } = Icons;
 import { DateTimePicker } from './components/DateTimePicker';
 
@@ -1360,7 +1360,7 @@ const HostRoomModal: React.FC<{
             >
               {showHostTiers ? t('hideTier') : t('showTier')}
             </button>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200"><PlusIcon className="rotate-45" /></button>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200"><CloseIcon /></button>
           </div>
 
           {/* 멀티 모임 탭 */}
