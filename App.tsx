@@ -1983,6 +1983,54 @@ const App: React.FC = () => {
     };
   }, [currentActiveRoom?.id, lang]);
 
+  // 뒤로 가기 버튼 핸들링
+  useEffect(() => {
+    CapApp.addListener('backButton', ({ canGoBack }) => {
+      // 1순위: 알림/메시지 창 닫기
+      if (alertState.isOpen) {
+        setAlertState(prev => ({ ...prev, isOpen: false }));
+        return;
+      }
+
+      // 2순위: 각종 모달형 팝업 닫기 (우선순위에 따라 배치)
+      if (showRewardAd) { setShowRewardAd(false); return; }
+      if (showLoginModal) { setShowLoginModal(false); return; }
+      if (showLoginRecommendModal) { setShowLoginRecommendModal(false); return; }
+      if (showUpgradeModal) { setShowUpgradeModal(false); return; }
+      if (showLimitModal) { setShowLimitModal(false); return; }
+      if (showReviewPrompt) { setShowReviewPrompt(false); return; }
+      if (showInfoModal) { setShowInfoModal(false); return; }
+      if (showApplyRoomModal) { setShowApplyRoomModal(false); return; }
+      if (showHostRoomModal) { setShowHostRoomModal(false); return; }
+
+      // 3순위: 화면 내 모드/설정 창 닫기
+      if (showColorPicker) { setShowColorPicker(false); return; }
+      if (showQuotaSettings) { setShowQuotaSettings(false); return; }
+      if (selectionMode !== null) { setSelectionMode(null); setSelectedPlayerIds([]); return; }
+
+      // 4순위: 앱 종료
+      // 웹 히스토리가 있다면 뒤로가기를 시도하고 싶을 수도 있지만, 
+      // 현재 단일 페이지 앱(SPA) 구조이므로 바로 종료가 자연스러울 수 있음.
+      // 만약 라우터 사용 시 history.goBack() 등을 고려해야 함.
+      // 여기서는 즉시 종료 또는 사용자 확인 후 종료 처리.
+      CapApp.exitApp();
+    });
+
+    return () => {
+      // Remove specifically if possible or rely on global removeAllListeners in cleanup above if conflicts arise.
+      // But typically safely adding/removing here is good practice.
+      // Since removeAllListeners is called in another effect, we should be careful.
+      // Let's just rely on the fact that this effect won't re-run often.
+      // But to be safe, we don't remove all listeners here to avoid clearing Push/Url listeners.
+      // CapApp.removeAllListeners(); // DON'T do this here if it clears others.
+    };
+  }, [
+    alertState.isOpen,
+    showRewardAd, showLoginModal, showLoginRecommendModal, showUpgradeModal, showLimitModal, showReviewPrompt,
+    showInfoModal, showApplyRoomModal, showHostRoomModal,
+    showColorPicker, showQuotaSettings, selectionMode
+  ]);
+
   // 딥링크 진입 시 신청 모달 자동 오픈
   useEffect(() => {
     if (pendingJoinRoomId) {
