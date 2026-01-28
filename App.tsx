@@ -1633,6 +1633,15 @@ const App: React.FC = () => {
   const [isWaitingListOpen, setIsWaitingListOpen] = useState(false);
   const [isParticipatingListOpen, setIsParticipatingListOpen] = useState(true);
 
+  // 일본어 폰트 적용
+  useEffect(() => {
+    if (lang === 'ja') {
+      document.body.style.fontFamily = '"Pretendard JP Variable", "Pretendard JP", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+    } else {
+      document.body.style.fontFamily = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif';
+    }
+  }, [lang]);
+
   // 참가자 목록 동기화 (앱 -> 웹)
   useEffect(() => {
     if (!currentActiveRoom) return;
@@ -2547,7 +2556,7 @@ const App: React.FC = () => {
                               transition: none !important;
                             animation: none !important;
                             -webkit-print-color-adjust: exact;
-                            font-family: "Pretendard Variable", Pretendard, sans-serif !important;
+                            font-family: ${lang === 'ja' ? '"Pretendard JP Variable", "Pretendard JP"' : '"Pretendard Variable", Pretendard'}, sans-serif !important;
             }
                             .truncate {
                               overflow: visible !important;
