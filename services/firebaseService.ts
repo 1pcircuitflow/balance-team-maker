@@ -16,6 +16,7 @@ import {
     deleteDoc
 } from "firebase/firestore";
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Player } from "../types";
 
 // Firebase 설정 (기존 설정 유지)
 const firebaseConfig = {
@@ -179,4 +180,31 @@ export const subscribeToUserRooms = (hostId: string, callback: (rooms: Recruitme
         const rooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecruitmentRoom));
         callback(rooms);
     });
+};
+
+/**
+ * 8. 플레이어 명단 클라우드 저장
+ */
+export const savePlayersToCloud = async (userId: string, players: Player[]) => {
+    try {
+        await setDoc(doc(db, "users", userId), { players }, { merge: true });
+    } catch (e) {
+        console.error("Save cloud error:", e);
+    }
+};
+
+/**
+ * 9. 플레이어 명단 클라우드 로드
+ */
+export const loadPlayersFromCloud = async (userId: string): Promise<Player[] | null> => {
+    try {
+        const snap = await getDoc(doc(db, "users", userId));
+        if (snap.exists() && snap.data().players) {
+            return snap.data().players as Player[];
+        }
+        return null;
+    } catch (e) {
+        console.error("Load cloud error:", e);
+        return null;
+    }
 };

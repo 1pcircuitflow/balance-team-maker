@@ -514,7 +514,7 @@
             });
             try {
                 await updateDoc(doc(db, "rooms", rid), {
-                    applicants: arrayUnion({ id: Math.random().toString(36).substr(2, 9), name: n, tier: selectedTier, position: p[0] || 'NONE', primaryPositions: p, secondaryPositions: s, tertiaryPositions: t, forbiddenPositions: f, timestamp: new Date().toISOString() })
+                    applicants: arrayUnion({ id: Math.random().toString(36).substr(2, 9), name: n, tier: selectedTier, position: p[0] || 'NONE', primaryPositions: p, secondaryPositions: s, tertiaryPositions: t, forbiddenPositions: f, isApproved: false, timestamp: new Date().toISOString() })
                 });
                 document.getElementById('applyForm').classList.add('hidden');
                 document.getElementById('success').classList.remove('hidden');

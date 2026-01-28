@@ -13,7 +13,6 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { AdMob, BannerAdSize, BannerAdPosition, RewardAdPluginEvents, RewardAdOptions, InterstitialAdPluginEvents, AdLoadInfo } from '@capacitor-community/admob';
 import { SAMPLE_PLAYERS_BY_LANG } from './sampleData';
 import { AnalyticsService } from './services/analyticsService';
-import { savePlayersToCloud, loadPlayersFromCloud } from './services/firebase.ts';
 import { paymentService, PRODUCT_IDS } from './services/paymentService';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { App as CapApp } from '@capacitor/app';
@@ -27,7 +26,9 @@ import {
   updateRoomFcmToken,
   RecruitmentRoom,
   Applicant,
-  db
+  db,
+  savePlayersToCloud,
+  loadPlayersFromCloud
 } from './services/firebaseService';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -1793,9 +1794,12 @@ const App: React.FC = () => {
 
       setActiveRooms(rooms);
 
-      // 1계정 1방 정책: 어떤 종목에서든 생성된 방이 하나라도 있으면 그것을 자동 선택
+      // 1계정 1방 정책: 현재 선택된 방이 목록에 있으면 유지, 없으면 첫 번째 방 자동 선택
       if (rooms.length > 0) {
-        setCurrentActiveRoom(rooms[0]);
+        setCurrentActiveRoom(prev => {
+          const stillExists = rooms.find(r => r.id === prev?.id);
+          return stillExists || rooms[0];
+        });
       } else {
         setCurrentActiveRoom(null);
       }
