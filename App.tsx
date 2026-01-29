@@ -998,6 +998,40 @@ const AlertModal: React.FC<{
   );
 };
 
+const ConfirmModal: React.FC<{
+  isOpen: boolean; title?: string; message: string; onConfirm: () => void; onCancel: () => void; lang: Language; darkMode: boolean; confirmText?: string; cancelText?: string;
+}> = ({ isOpen, title, message, onConfirm, onCancel, lang, darkMode, confirmText, cancelText }) => {
+  const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in duration-300">
+      <div className={`w-full max-w-sm rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'}`}>
+        <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>
+          {title || t('infoTitle')}
+        </h3>
+        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'} mb-8 px-2 leading-relaxed`}>
+          {message}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className={`flex-1 py-4 font-bold rounded-2xl transition-all active:scale-95 ${darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          >
+            {cancelText || t('cancel')}
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg"
+          >
+            {confirmText || 'OK'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PositionLimitModal: React.FC<{
   isOpen: boolean; onWatchAd: () => void; onUpgrade: () => void; onClose: () => void; lang: Language; darkMode: boolean;
 }> = ({ isOpen, onWatchAd, onUpgrade, onClose, lang, darkMode }) => {
@@ -1391,7 +1425,7 @@ const HostRoomModal: React.FC<{
 
       try {
         await Clipboard.write({ string: webUrl });
-        alert(t('linkCopied' as any));
+        showAlert(t('linkCopied' as any), t('shareRecruitLink'));
       } catch (err) {
         console.error('Clipboard copy failed', err);
       }
@@ -1642,6 +1676,16 @@ const App: React.FC = () => {
     isOpen: false,
     message: '',
   });
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; title?: string; message: string; onConfirm: () => void; confirmText?: string; cancelText?: string }>({
+    isOpen: false,
+    message: '',
+    onConfirm: () => { },
+  });
+
+  const showAlert = (message: string, title?: string) => {
+    setAlertState({ isOpen: true, message, title });
+  };
+
 
   const [isDataLoaded, setIsDataLoaded] = useState(false); // 초기 데이터 로드 완료 여부
 
@@ -1746,9 +1790,7 @@ const App: React.FC = () => {
     return String(translation || key);
   };
 
-  const showAlert = (message: string, title?: string) => {
-    setAlertState({ isOpen: true, message, title });
-  };
+
 
 
   useEffect(() => {
@@ -2510,17 +2552,24 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCloseRecruitRoom = async (room: RecruitmentRoom) => {
-    if (window.confirm(t('confirm_delete_room' as any))) {
-      try {
-        setShowHostRoomModal(false); // 강제로 모달 닫기
-        await updateDoc(doc(db, 'rooms', room.id), { status: 'DELETED' });
-        setActiveRooms(prev => prev.filter(r => r.id !== room.id));
-        setCurrentActiveRoom(null);
-      } catch (e) {
-        console.error("Delete Room Error:", e);
+  const handleCloseRecruitRoom = (room: RecruitmentRoom) => {
+    setConfirmState({
+      isOpen: true,
+      title: t('deleteRoomTitle' as any), // 번역 키 필요
+      message: t('confirm_delete_room' as any),
+      confirmText: t('delete' as any),
+      onConfirm: async () => {
+        try {
+          setShowHostRoomModal(false); // 강제로 모달 닫기
+          await updateDoc(doc(db, 'rooms', room.id), { status: 'DELETED' });
+          setActiveRooms(prev => prev.filter(r => r.id !== room.id));
+          setCurrentActiveRoom(null);
+        } catch (e) {
+          console.error("Delete Room Error:", e);
+        }
+        setConfirmState(prev => ({ ...prev, isOpen: false }));
       }
-    }
+    });
   };
 
   const handleGenerate = async () => {
@@ -3759,6 +3808,17 @@ const App: React.FC = () => {
         onConfirm={() => setAlertState({ ...alertState, isOpen: false })}
         lang={lang}
         darkMode={darkMode}
+      />
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+        lang={lang}
+        darkMode={darkMode}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
       />
       <LoginModal
         isOpen={showLoginModal}
