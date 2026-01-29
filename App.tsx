@@ -15,6 +15,7 @@ import { SAMPLE_PLAYERS_BY_LANG } from './sampleData';
 import { AnalyticsService } from './services/analyticsService';
 import { paymentService, PRODUCT_IDS } from './services/paymentService';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { App as CapApp } from '@capacitor/app';
 import {
   createRecruitmentRoom,
@@ -1284,7 +1285,8 @@ const HostRoomModal: React.FC<{
   userNickname: string;
   currentUserId: string;
   activePlayerCount: number;
-}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount }) => {
+  showAlert: (msg: string, title?: string) => void;
+}> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount, showAlert }) => {
   /* 날짜/시간 초기값 및 상태 관리 */
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -1888,6 +1890,17 @@ const App: React.FC = () => {
     };
     initAuth();
 
+    const initLocalNotifications = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await LocalNotifications.requestPermissions();
+        } catch (e) {
+          console.error('LocalNotifications permissions failed', e);
+        }
+      }
+    };
+    initLocalNotifications();
+
     // 일일 제한 초기화 체크
     const today = new Date().toISOString().split('T')[0];
     const savedUsage = localStorage.getItem('app_position_usage');
@@ -1916,7 +1929,23 @@ const App: React.FC = () => {
         if (prevCount !== undefined && room.applicants.length > prevCount) {
           const newPlayer = room.applicants[room.applicants.length - 1];
           const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
-          showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+          // showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`); 
+          // 상단바 알림으로 대체 (확인 버튼 필요 없게)
+          if (Capacitor.isNativePlatform()) {
+            LocalNotifications.schedule({
+              notifications: [
+                {
+                  title: `[${room.title}] ${t('recruitParticipants')}`,
+                  body: msg,
+                  id: Math.floor(Math.random() * 1000000),
+                  smallIcon: 'ic_stat_icon_config_sample', // 안드로이드 아이콘 설정 필요할 수 있음
+                  sound: 'default',
+                }
+              ]
+            }).catch(e => console.error('Local Notification failed', e));
+          } else {
+            showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+          }
         }
         prevApplicantsCount.current[room.id] = room.applicants.length;
       });
@@ -3818,6 +3847,7 @@ const App: React.FC = () => {
         isAdFree={isAdFree}
         isUnlimitedPos={isUnlimitedPos}
         user={user}
+        showAlert={showAlert}
       />
       <ReviewPrompt isOpen={showReviewPrompt} onLater={handleReviewLater} onRate={handleRateApp} lang={lang} darkMode={darkMode} />
       <AlertModal
