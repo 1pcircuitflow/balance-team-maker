@@ -625,7 +625,7 @@ const PlayerItem: React.FC<PlayerItemProps> = ({
                 </div>
               )}
               {player.forbiddenPositions && player.forbiddenPositions.length > 0 && (
-                <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500">
+                <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500 dark:text-rose-400">
                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                   <span>{player.forbiddenPositions.join(',')}</span>
                 </div>
@@ -3147,7 +3147,7 @@ const App: React.FC = () => {
                                       {(app.forbiddenPositions?.length > 0) && (
                                         <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500 dark:text-rose-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                          <span className="line-through">{app.forbiddenPositions.join(',')}</span>
+                                          <span>{app.forbiddenPositions.join(',')}</span>
                                         </div>
                                       )}
                                     </div>
