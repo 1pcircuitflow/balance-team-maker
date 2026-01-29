@@ -94,7 +94,8 @@ const GuideModal: React.FC<{
   title: string;
   content: string;
   darkMode: boolean;
-}> = ({ isOpen, onClose, title, content, darkMode }) => {
+  lang: Language;
+}> = ({ isOpen, onClose, title, content, darkMode, lang }) => {
   if (!isOpen) return null;
 
   return (
@@ -120,7 +121,17 @@ const GuideModal: React.FC<{
             <div className="text-sm text-left whitespace-pre-wrap leading-relaxed pl-1 md:pl-2">
               {content}
             </div>
-            {/* 여기에 나중에 긴 가이드 내용을 넣으면 됩니다. */}
+          </div>
+
+          {/* Bottom Close Button for easier accessibility */}
+          <div className="mt-10">
+            <button
+              onClick={onClose}
+              className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] ${darkMode ? 'bg-slate-800 text-slate-100 hover:bg-slate-700' : 'bg-slate-900 text-white hover:bg-black'
+                }`}
+            >
+              {lang === 'ko' ? '확인' : (lang === 'en' ? 'OK' : 'Close')}
+            </button>
           </div>
         </div>
       </div>
@@ -3749,6 +3760,7 @@ const App: React.FC = () => {
         title={t('guideTitle')}
         content={t('guideContent') || t('comingSoon')}
         darkMode={darkMode}
+        lang={lang}
       />
       <div className="h-[calc(10px+env(safe-area-inset-bottom))]" />
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} />
