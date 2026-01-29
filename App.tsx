@@ -3126,7 +3126,7 @@ const App: React.FC = () => {
                     <div className="p-3 space-y-2">
                       <div className="flex items-center gap-2 mb-1 px-1">
                         <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('waitingList' as any)} ({pendingApplicants.length})</h4>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('pendingApplicants' as any)} ({pendingApplicants.length})</h4>
                       </div>
                       <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto pr-1">
                         {pendingApplicants.map(app => {
@@ -3282,7 +3282,7 @@ const App: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('waitingList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({inactivePlayers.length})</span></h2>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList' as any)} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({inactivePlayers.length})</span></h2>
                 <div className={`transition-transform duration-300 ${isWaitingListOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                 </div>
@@ -3342,7 +3342,7 @@ const App: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><UserCheckIcon /></div>
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('participatingList')} <span className="text-slate-900 dark:text-slate-100 font-normal ml-1">({activePlayers.length})</span></h2>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('participantList' as any)} <span className="text-slate-900 dark:text-slate-100 font-normal ml-1">({activePlayers.length})</span></h2>
                 <div className={`transition-transform duration-300 ${isParticipatingListOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                 </div>
