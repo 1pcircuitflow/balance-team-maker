@@ -173,12 +173,14 @@ export const updateRoomFcmToken = async (roomId: string, token: string) => {
 export const subscribeToUserRooms = (hostId: string, callback: (rooms: RecruitmentRoom[]) => void) => {
     const q = query(
         collection(db, "rooms"),
-        where("hostId", "==", hostId),
-        orderBy("createdAt", "desc")
+        where("hostId", "==", hostId)
+        // orderBy("createdAt", "desc") // 인덱스 문제 방지를 위해 주석 처리하고 아래에서 정렬
     );
 
     return onSnapshot(q, (snap) => {
         const rooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecruitmentRoom));
+        // 클라이언트 사이드 정렬
+        rooms.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         callback(rooms);
     });
 };

@@ -1403,6 +1403,8 @@ const HostRoomModal: React.FC<{
     setEndTime(`${eHours}:${eMinutes}`);
   };
 
+
+
   const handleCreate = async () => {
     setLoading(true);
     try {
@@ -1921,11 +1923,20 @@ const App: React.FC = () => {
 
       setActiveRooms(rooms);
 
-      // 1계정 1방 정책: 현재 선택된 방이 목록에 있으면 유지, 없으면 첫 번째 방 자동 선택
+      // 1계정 1방 정책: 마지막으로 보던 방 기억
       if (rooms.length > 0) {
+        const savedRoomId = localStorage.getItem('last_active_room_id');
         setCurrentActiveRoom(prev => {
+          // 1. 현재 보고 있는 방이 목록에 여전히 있다면 유지
           const stillExists = rooms.find(r => r.id === prev?.id);
-          return stillExists || rooms[0];
+          if (stillExists) return stillExists;
+
+          // 2. 이전에 저장된 방이 목록에 있다면 복구 (앱 재실행 시)
+          const savedRoom = rooms.find(r => r.id === savedRoomId);
+          if (savedRoom) return savedRoom;
+
+          // 3. 없으면 가장 최신 방 선택
+          return rooms[0];
         });
       } else {
         setCurrentActiveRoom(null);
@@ -1934,6 +1945,13 @@ const App: React.FC = () => {
 
     return () => unsubscribe();
   }, [currentUserId]); // currentActiveRoom?.id 의존성 제거 (불필요한 재구독 방지)
+
+
+  useEffect(() => {
+    if (currentActiveRoom) {
+      localStorage.setItem('last_active_room_id', currentActiveRoom.id);
+    }
+  }, [currentActiveRoom]);
 
   // V3.0 푸시 알림 및 딥링크 초기화
   useEffect(() => {
@@ -3020,7 +3038,8 @@ const App: React.FC = () => {
                 const [y, m, d] = r.matchDate.split('-').map(Number);
                 const [hh, mm] = r.matchTime.split(':').map(Number);
                 const matchTime = new Date(y, m - 1, d, hh, mm);
-                const expiryLimit = new Date(matchTime.getTime() + 2 * 60 * 60 * 1000);
+                // 필터링 완화: 경기 종료 후 24시간까지 보임
+                const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
                 return expiryLimit > new Date() && r.status !== 'DELETED';
               } catch { return true; }
             });
