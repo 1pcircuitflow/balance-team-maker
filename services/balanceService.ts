@@ -658,8 +658,20 @@ export const generateBalancedTeams = (
         for (const player of sourceTeam.players) {
             // 임시 이동 팀 구성
             const tempTeams = cloneTeams(balancedTeams);
-            tempTeams[maxTeamIdx].players = tempTeams[maxTeamIdx].players.filter(p => p.id !== player.id);
-            tempTeams[minTeamIdx].players.push({ ...player });
+
+            // 1. 출발 팀에서 제거 (ID 비교 강화)
+            const initialLength = tempTeams[maxTeamIdx].players.length;
+            tempTeams[maxTeamIdx].players = tempTeams[maxTeamIdx].players.filter(p => String(p.id) !== String(player.id));
+
+            // 제거되지 않았다면 스킵 (오류 방지)
+            if (tempTeams[maxTeamIdx].players.length === initialLength) continue;
+
+            // 2. 도착 팀에 추가 (이미 있는지 체크)
+            if (!tempTeams[minTeamIdx].players.some(p => String(p.id) === String(player.id))) {
+                tempTeams[minTeamIdx].players.push({ ...player });
+            } else {
+                continue; // 이미 존재하면 스킵
+            }
 
             // 이동 후 포지션/스킬 재계산 (필수)
             recalculateTeamSkill(tempTeams[maxTeamIdx]);

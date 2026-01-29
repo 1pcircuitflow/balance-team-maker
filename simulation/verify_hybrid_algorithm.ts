@@ -51,7 +51,24 @@ async function runVerification() {
         });
     });
 
-    // 3. 제약 조건 테스트
+    // 3. 중복 및 누락 체크
+    const allPlayerIds = result.teams.flatMap(t => t.players.map(p => p.id));
+    const uniqueIds = new Set(allPlayerIds);
+
+    if (uniqueIds.size !== allPlayerIds.length) {
+        console.error(`❌ 중복된 선수가 발견되었습니다! (전체: ${allPlayerIds.length}, 고유: ${uniqueIds.size})`);
+        // 중복된 ID 찾기
+        const duplicates = allPlayerIds.filter((item, index) => allPlayerIds.indexOf(item) !== index);
+        console.error(`중복된 ID: ${duplicates.join(', ')}`);
+        process.exit(1);
+    } else if (uniqueIds.size !== players.length) {
+        console.error(`❌ 선수가 누락되었습니다! (입력: ${players.length}, 결과: ${uniqueIds.size})`);
+        process.exit(1);
+    } else {
+        console.log(`✅ 모든 선수가 중복 없이 배정되었습니다.`);
+    }
+
+    // 4. 제약 조건 테스트
     console.log('\n🔒 제약 조건 테스트 (MATCH/SPLIT)...');
     // 임의의 제약 조건 생성
     const constraints = [
