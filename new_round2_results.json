@@ -1,0 +1,133 @@
+{
+  "results": {
+    "A8": {
+      "name": "Tabu Search",
+      "avgSimilarity": 56.66666666666668,
+      "avgSD": 1.0077669097886612,
+      "avgTime": 0.0007785714285714289,
+      "diversityScore": 21.666666666666664,
+      "sdScore": 14.922330902113387,
+      "totalScore": 36.58899756878005
+    },
+    "A13": {
+      "name": "Hybrid",
+      "avgSimilarity": 47.662217278457554,
+      "avgSD": 1.0288241539216938,
+      "avgTime": 0.005551724137931038,
+      "diversityScore": 26.168891360771223,
+      "sdScore": 14.711758460783063,
+      "totalScore": 40.880649821554286
+    },
+    "A7": {
+      "name": "Diff Evolution",
+      "avgSimilarity": 45.04704301075269,
+      "avgSD": 1.1167863201954935,
+      "avgTime": 0.004942857142857145,
+      "diversityScore": 27.476478494623656,
+      "sdScore": 13.832136798045065,
+      "totalScore": 41.30861529266872
+    },
+    "A10": {
+      "name": "PSO",
+      "avgSimilarity": 52.44047619047619,
+      "avgSD": 0.9562777421760925,
+      "avgTime": 0.0005714285714285717,
+      "diversityScore": 23.779761904761905,
+      "sdScore": 15.437222578239073,
+      "totalScore": 39.21698448300098
+    },
+    "A9": {
+      "name": "Ant Colony",
+      "avgSimilarity": 47.43382961124897,
+      "avgSD": 0.9765017826667817,
+      "avgTime": 0.00016923076923076934,
+      "diversityScore": 26.283085194375516,
+      "sdScore": 15.234982173332183,
+      "totalScore": 41.5180673677077
+    }
+  },
+  "rankings": [
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSimilarity": 47.43382961124897,
+      "avgSD": 0.9765017826667817,
+      "avgTime": 0.00016923076923076934,
+      "diversityScore": 26.283085194375516,
+      "sdScore": 15.234982173332183,
+      "totalScore": 41.5180673677077
+    },
+    {
+      "id": "A7",
+      "name": "Diff Evolution",
+      "avgSimilarity": 45.04704301075269,
+      "avgSD": 1.1167863201954935,
+      "avgTime": 0.004942857142857145,
+      "diversityScore": 27.476478494623656,
+      "sdScore": 13.832136798045065,
+      "totalScore": 41.30861529266872
+    },
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSimilarity": 47.662217278457554,
+      "avgSD": 1.0288241539216938,
+      "avgTime": 0.005551724137931038,
+      "diversityScore": 26.168891360771223,
+      "sdScore": 14.711758460783063,
+      "totalScore": 40.880649821554286
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSimilarity": 52.44047619047619,
+      "avgSD": 0.9562777421760925,
+      "avgTime": 0.0005714285714285717,
+      "diversityScore": 23.779761904761905,
+      "sdScore": 15.437222578239073,
+      "totalScore": 39.21698448300098
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSimilarity": 56.66666666666668,
+      "avgSD": 1.0077669097886612,
+      "avgTime": 0.0007785714285714289,
+      "diversityScore": 21.666666666666664,
+      "sdScore": 14.922330902113387,
+      "totalScore": 36.58899756878005
+    }
+  ],
+  "top3": [
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSimilarity": 47.43382961124897,
+      "avgSD": 0.9765017826667817,
+      "avgTime": 0.00016923076923076934,
+      "diversityScore": 26.283085194375516,
+      "sdScore": 15.234982173332183,
+      "totalScore": 41.5180673677077
+    },
+    {
+      "id": "A7",
+      "name": "Diff Evolution",
+      "avgSimilarity": 45.04704301075269,
+      "avgSD": 1.1167863201954935,
+      "avgTime": 0.004942857142857145,
+      "diversityScore": 27.476478494623656,
+      "sdScore": 13.832136798045065,
+      "totalScore": 41.30861529266872
+    },
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSimilarity": 47.662217278457554,
+      "avgSD": 1.0288241539216938,
+      "avgTime": 0.005551724137931038,
+      "diversityScore": 26.168891360771223,
+      "sdScore": 14.711758460783063,
+      "totalScore": 40.880649821554286
+    }
+  ]
+}

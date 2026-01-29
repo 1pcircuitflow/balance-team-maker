@@ -1,0 +1,87 @@
+{
+  "results": {
+    "A9": {
+      "name": "Ant Colony",
+      "total": 61.10368569338406,
+      "posScore": 30,
+      "sdScore": 14.700260763077406,
+      "divScore": 16.40342493030665,
+      "avgPos": 100,
+      "avgSD": 1.0299739236922594,
+      "avgSimilarity": 50.78972520908005,
+      "constraintRate": 96
+    },
+    "A7": {
+      "name": "Diff Evolution",
+      "total": 63.48261252338421,
+      "posScore": 30,
+      "sdScore": 13.482612523384214,
+      "divScore": 20,
+      "avgPos": 100,
+      "avgSD": 1.1517387476615786,
+      "avgSimilarity": 39.434408602150555,
+      "constraintRate": 92
+    },
+    "A13": {
+      "name": "Hybrid",
+      "total": 64.27861079167701,
+      "posScore": 30,
+      "sdScore": 15.197527557905596,
+      "divScore": 19.08108323377141,
+      "avgPos": 100,
+      "avgSD": 0.9802472442094403,
+      "avgSimilarity": 42.75675029868577,
+      "constraintRate": 98
+    }
+  },
+  "rankings": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "total": 64.27861079167701,
+      "posScore": 30,
+      "sdScore": 15.197527557905596,
+      "divScore": 19.08108323377141,
+      "avgPos": 100,
+      "avgSD": 0.9802472442094403,
+      "avgSimilarity": 42.75675029868577,
+      "constraintRate": 98
+    },
+    {
+      "id": "A7",
+      "name": "Diff Evolution",
+      "total": 63.48261252338421,
+      "posScore": 30,
+      "sdScore": 13.482612523384214,
+      "divScore": 20,
+      "avgPos": 100,
+      "avgSD": 1.1517387476615786,
+      "avgSimilarity": 39.434408602150555,
+      "constraintRate": 92
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "total": 61.10368569338406,
+      "posScore": 30,
+      "sdScore": 14.700260763077406,
+      "divScore": 16.40342493030665,
+      "avgPos": 100,
+      "avgSD": 1.0299739236922594,
+      "avgSimilarity": 50.78972520908005,
+      "constraintRate": 96
+    }
+  ],
+  "winner": {
+    "id": "A13",
+    "name": "Hybrid",
+    "total": 64.27861079167701,
+    "posScore": 30,
+    "sdScore": 15.197527557905596,
+    "divScore": 19.08108323377141,
+    "avgPos": 100,
+    "avgSD": 0.9802472442094403,
+    "avgSimilarity": 42.75675029868577,
+    "constraintRate": 98
+  }
+}
