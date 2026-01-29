@@ -16,7 +16,7 @@ import {
     deleteDoc
 } from "firebase/firestore";
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Player } from "../types";
+import { Player, Position } from "../types";
 
 // Firebase 설정 (기존 설정 유지)
 const firebaseConfig = {
@@ -37,11 +37,15 @@ export interface Applicant {
     id: string;
     name: string;
     tier: string;
-    position: string;
+    position: Position;
     timestamp: string;
     fcmToken?: string;
     isWaiting?: boolean; // 항목 9: 대기자 여부
     isApproved?: boolean; // 개별 승인 여부
+    primaryPositions?: Position[];
+    secondaryPositions?: Position[];
+    tertiaryPositions?: Position[];
+    forbiddenPositions?: Position[];
 }
 
 export interface RecruitmentRoom {

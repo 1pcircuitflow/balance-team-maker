@@ -1596,7 +1596,7 @@ const ApplyRoomModal: React.FC<{
 }> = ({ isOpen, roomId, onClose, onSuccess, lang, darkMode }) => {
   const [name, setName] = useState('');
   const [tier, setTier] = useState<string>('B');
-  const [pos, setPos] = useState<string>('MF');
+  const [pos, setPos] = useState<Position>('MF');
   const [room, setRoom] = useState<RecruitmentRoom | null>(null);
   const [loading, setLoading] = useState(false);
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
@@ -2476,10 +2476,10 @@ const App: React.FC = () => {
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
 
-      const p1 = (applicant as any).primaryPositions || [applicant.position || 'NONE'];
-      const s1 = (applicant as any).secondaryPositions || [];
-      const t1 = (applicant as any).tertiaryPositions || [];
-      const f1 = (applicant as any).forbiddenPositions || [];
+      const p1 = applicant.primaryPositions || [applicant.position || 'NONE'];
+      const s1 = applicant.secondaryPositions || [];
+      const t1 = applicant.tertiaryPositions || [];
+      const f1 = applicant.forbiddenPositions || [];
 
       setPlayers(prev => {
         const existingIdx = prev.findIndex(p => p.name === applicant.name);
@@ -2531,10 +2531,10 @@ const App: React.FC = () => {
         const newList = [...prev];
         room.applicants.filter(a => !a.isApproved).forEach(a => {
           const existingIdx = newList.findIndex(p => p.name === a.name);
-          const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
-          const s1 = (a as any).secondaryPositions || [];
-          const t1 = (a as any).tertiaryPositions || [];
-          const f1 = (a as any).forbiddenPositions || [];
+          const p1 = a.primaryPositions || [a.position || 'NONE'];
+          const s1 = a.secondaryPositions || [];
+          const t1 = a.tertiaryPositions || [];
+          const f1 = a.forbiddenPositions || [];
 
           if (existingIdx > -1) {
             // 이름이 같은 선수가 있는 경우 최신 정보로 업데이트
@@ -3126,22 +3126,28 @@ const App: React.FC = () => {
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 opacity-95">
                                   {room.sport !== SportType.GENERAL && (
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                      {((app as any).primaryPositions?.length || (app.position ? 1 : 0)) > 0 && (
+                                      {(app.primaryPositions?.length || (app.position ? 1 : 0)) > 0 && (
                                         <div className="flex items-center gap-1 text-[8px] font-semibold text-emerald-600 dark:text-emerald-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                          <span>{((app as any).primaryPositions || [app.position]).join(',')}</span>
+                                          <span>{(app.primaryPositions || [app.position]).join(',')}</span>
                                         </div>
                                       )}
-                                      {((app as any).secondaryPositions?.length > 0) && (
+                                      {(app.secondaryPositions?.length > 0) && (
                                         <div className="flex items-center gap-1 text-[8px] font-extrabold text-yellow-600 dark:text-yellow-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                                          <span>{(app as any).secondaryPositions.join(',')}</span>
+                                          <span>{app.secondaryPositions.join(',')}</span>
                                         </div>
                                       )}
-                                      {((app as any).tertiaryPositions?.length > 0) && (
+                                      {(app.tertiaryPositions?.length > 0) && (
                                         <div className="flex items-center gap-1 text-[8px] font-semibold text-orange-500 dark:text-orange-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                                          <span>{(app as any).tertiaryPositions.join(',')}</span>
+                                          <span>{app.tertiaryPositions.join(',')}</span>
+                                        </div>
+                                      )}
+                                      {(app.forbiddenPositions?.length > 0) && (
+                                        <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500 dark:text-rose-400">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                          <span className="line-through">{app.forbiddenPositions.join(',')}</span>
                                         </div>
                                       )}
                                     </div>
