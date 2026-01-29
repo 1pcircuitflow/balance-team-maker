@@ -38,7 +38,7 @@ const {
   PlusIcon, MinusIcon, TrashIcon, EditIcon, CheckIcon, ShuffleIcon,
   UserPlusIcon, UserCheckIcon, ShareIcon, SunIcon, MoonIcon,
   SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon,
-  SettingsIcon, HeartIcon, RotateCcwIcon, CloseIcon
+  SettingsIcon, HeartIcon, RotateCcwIcon, CloseIcon, HelpCircleIcon
 } = Icons;
 import { DateTimePicker } from './components/DateTimePicker';
 
@@ -99,41 +99,87 @@ const GuideModal: React.FC<{
 }> = ({ isOpen, onClose, title, content, darkMode, lang }) => {
   if (!isOpen) return null;
 
+  const parts = content.split('|');
+  const steps = parts.slice(0, 4);
+  const features = parts.slice(4);
+
+  const stepIcons = [
+    <PlusIcon />,
+    <ShareIcon />,
+    <UserCheckIcon />,
+    <ShuffleIcon />
+  ];
+
+  const stepColors = [
+    'bg-blue-500',
+    'bg-emerald-500',
+    'bg-amber-500',
+    'bg-rose-500'
+  ];
+
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-300 p-4" onClick={onClose}>
       <div
-        className={`w-full h-full md:w-[600px] md:h-[80%] flex flex-col relative overflow-hidden transition-colors duration-300 md:rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900'
-          }`}
+        className={`w-full max-w-md max-h-[85vh] flex flex-col relative overflow-hidden transition-all duration-500 rounded-[2rem] shadow-2xl animate-in zoom-in-95 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center justify-end px-6 py-4 border-b ${darkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+        <div className="flex items-center justify-between px-6 py-4">
+          <h3 className={`text-xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            {title}
+          </h3>
           <button
             onClick={onClose}
-            className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+            className={`p-1.5 rounded-2xl transition-all active:scale-90 ${darkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'}`}
           >
             <CloseIcon />
           </button>
         </div>
 
-        {/* Content (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-6 pb-24">
-          <div className="prose dark:prose-invert max-w-none">
-            <div className="text-sm text-left whitespace-pre-wrap leading-relaxed pl-1 md:pl-2">
-              {content}
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4 custom-scrollbar">
+          {/* Steps Grid */}
+          <div className="grid grid-cols-1 gap-2.5">
+            {steps.map((step, idx) => (
+              <div key={idx} className={`group relative p-3 rounded-2xl border transition-all duration-300 ${darkMode ? 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600' : 'bg-slate-50 border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 hover:border-white'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${stepColors[idx]}`}>
+                    {stepIcons[idx]}
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="block text-[9px] font-black uppercase tracking-widest opacity-40">Step {idx + 1}</span>
+                    <p className={`text-[13px] font-bold leading-snug ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                      {step}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Features Section */}
+          <div className={`p-4 rounded-2xl ${darkMode ? 'bg-blue-600/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
+            <h4 className={`text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              <div className="w-1 h-1 rounded-full bg-current" />
+              추가 기능
+            </h4>
+            <div className="grid grid-cols-1 gap-2">
+              {features.map((feature, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className={`w-1 h-1 rounded-full ${darkMode ? 'bg-blue-500/40' : 'bg-blue-300'}`} />
+                  <p className={`text-[11px] font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{feature}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Bottom Close Button for easier accessibility */}
-          <div className="mt-10">
-            <button
-              onClick={onClose}
-              className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] ${darkMode ? 'bg-slate-800 text-slate-100 hover:bg-slate-700' : 'bg-slate-900 text-white hover:bg-black'
-                }`}
-            >
-              {lang === 'ko' ? '확인' : (lang === 'en' ? 'OK' : 'Close')}
-            </button>
-          </div>
+          {/* Bottom Button */}
+          <button
+            onClick={onClose}
+            className="w-full py-3.5 bg-slate-900 dark:bg-white hover:bg-black dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm rounded-2xl transition-all active:scale-95 shadow-2xl shadow-slate-900/20 dark:shadow-none"
+          >
+            {lang === 'ko' ? '확인했습니다' : (lang === 'en' ? 'Got it' : 'Close')}
+          </button>
         </div>
       </div>
     </div>
@@ -695,6 +741,7 @@ const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; darkMode:
 const UpgradeModal: React.FC<{
   isOpen: boolean; onClose: () => void; onUpgrade: (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => void; isAdFree: boolean; isUnlimitedPos: boolean; lang: Language; darkMode: boolean;
 }> = ({ isOpen, onClose, onUpgrade, isAdFree, isUnlimitedPos, lang, darkMode }) => {
+  /* 
   const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
   if (!isOpen) return null;
 
@@ -771,6 +818,8 @@ const UpgradeModal: React.FC<{
       </div>
     </div>
   );
+  */
+  return null;
 };
 
 const InfoModal: React.FC<{
@@ -845,6 +894,7 @@ const InfoModal: React.FC<{
           </div>
 
           {/* 프리미엄 섹션 */}
+          {/* 프리미엄 섹션 주석 처리
           <div className={`relative overflow-hidden p-6 rounded-3xl border ${isPro
             ? 'bg-gradient-to-br from-amber-400 to-amber-600 border-amber-300'
             : 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 shadow-lg shadow-blue-500/20'}`}>
@@ -872,16 +922,19 @@ const InfoModal: React.FC<{
             </div>
             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
           </div>
+          */}
 
           <div className="space-y-3">
             <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank" rel="noreferrer" className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}>
               <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('rateApp')}</span>
               <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
             </a>
+            {/* 구매 복구 버튼 주석 처리
             <button onClick={onRestore} className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}>
               <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('restorePurchases' as any)}</span>
               <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><RotateCcwIcon /></div>
             </button>
+            */}
           </div>
 
           <div className="pt-2 flex justify-center text-[10px] font-black text-slate-400 dark:text-slate-700 uppercase tracking-[0.3em]">
@@ -1061,6 +1114,7 @@ const PositionLimitModal: React.FC<{
             <span>📺</span>
             {t('watchAdUnlock')}
           </button>
+          {/* 업그레이드 버튼 주석 처리
           <button
             onClick={onUpgrade}
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
@@ -1068,6 +1122,7 @@ const PositionLimitModal: React.FC<{
             <span>💎</span>
             {t('unlimitedUnlock')}
           </button>
+          */}
           <button
             onClick={onClose}
             className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
@@ -2168,6 +2223,7 @@ const App: React.FC = () => {
   };
 
   const handleUpgradePro = async (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => {
+    /* 결제 로직 임시 중단
     if (isProcessing) return;
 
     // 로그인이 안 되어 있다면 권장 팝업 표시
@@ -2178,9 +2234,12 @@ const App: React.FC = () => {
     }
 
     await executePurchase(type);
+    */
+    console.log('Purchase disabled temporarily');
   };
 
   const executePurchase = async (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => {
+    /* 결제 실행 임시 중단
     setIsProcessing(true);
     try {
       let productId: string = '';
@@ -2213,11 +2272,13 @@ const App: React.FC = () => {
     } finally {
       setIsProcessing(false);
     }
+    */
   };
 
 
 
   const handleRestorePurchases = async () => {
+    /* 복구 로직 임시 중단
     if (isProcessing) return;
     setIsProcessing(true);
     try {
@@ -2241,6 +2302,7 @@ const App: React.FC = () => {
     } finally {
       setIsProcessing(false);
     }
+    */
   };
 
   const handleGoogleLogin = async () => {
@@ -3017,6 +3079,7 @@ const App: React.FC = () => {
       <header className="w-full flex flex-col items-center mb-0">
         <div className="w-full flex justify-between items-center mb-1 bg-white dark:bg-slate-950 p-1.5">
           <div className="flex gap-2">
+            {/* 광고 제거 버튼 주석 처리
             <button
               onClick={() => setShowUpgradeModal(true)}
               className={`px-3 py-1 rounded-xl transition-all flex items-center gap-1.5 group relative ${isPro
@@ -3035,6 +3098,7 @@ const App: React.FC = () => {
                 {isPro ? 'PRO' : t('removeAds' as any)}
               </span>
             </button>
+            */}
           </div>
           <div className="flex gap-1 items-center">
             <button
@@ -3050,6 +3114,13 @@ const App: React.FC = () => {
               t={t}
             />
             <button
+              onClick={() => setShowGuideModal(true)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+              aria-label="Show app Help"
+            >
+              <HelpCircleIcon />
+            </button>
+            <button
               onClick={() => setShowInfoModal(true)}
               className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
               aria-label="Show app Info"
@@ -3059,10 +3130,9 @@ const App: React.FC = () => {
           </div>
         </div>
         <div
-          className="flex justify-center w-full px-4 mb-2 cursor-pointer transition-all active:scale-95 hover:opacity-90"
-          onClick={() => setShowGuideModal(true)}
+          className="flex justify-center w-full px-4 mb-2"
         >
-          <img src="/images/title_banner.png" alt="Team Mate" className="w-full max-w-[320px] object-contain rounded-2xl shadow-sm" />
+          <img src="/images/title_banner.png" alt="Team Mate" className="w-full max-w-[320px] object-contain rounded-2xl" />
         </div>
       </header>
 
@@ -3102,7 +3172,7 @@ const App: React.FC = () => {
             return (
               <div key={room.id} className="space-y-2">
                 <div
-                  className={`w-full rounded-2xl p-4 shadow-md border transition-all text-left flex items-center justify-between ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
+                  className={`w-full rounded-2xl py-2.5 px-4 shadow-md border transition-all text-left flex items-center justify-between ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
                 >
                   <div className="flex flex-col gap-0.5 overflow-hidden flex-1 mr-3">
                     <p className={`text-[9px] font-black uppercase tracking-widest ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
@@ -3186,20 +3256,20 @@ const App: React.FC = () => {
                   ) : null}
 
                   <div className="flex grid grid-cols-3 gap-px bg-slate-100 dark:bg-slate-800">
-                    <button onClick={() => handleShareRecruitLink(room)} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-slate-600 dark:text-slate-400 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-                      <ShareIcon />
+                    <button onClick={() => handleShareRecruitLink(room)} className="bg-white dark:bg-slate-950 py-0.5 text-[8px] font-black text-slate-600 dark:text-slate-400 flex flex-col items-center gap-0 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                      <div className="scale-75 h-3 flex items-center justify-center"><ShareIcon /></div>
                       {t('shareRecruitLink' as any)}
                     </button>
                     <button
                       onClick={() => handleApproveAllApplicants(room)}
                       disabled={pendingApplicants.length === 0}
-                      className={`bg-white dark:bg-slate-950 py-3 text-[10px] font-black flex flex-col items-center gap-1 transition-all ${pendingApplicants.length > 0 ? 'text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-900' : 'text-slate-300 dark:text-slate-700 opacity-50'}`}
+                      className={`bg-white dark:bg-slate-950 py-0.5 text-[8px] font-black flex flex-col items-center gap-0 transition-all ${pendingApplicants.length > 0 ? 'text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-900' : 'text-slate-300 dark:text-slate-700 opacity-50'}`}
                     >
-                      <UserCheckIcon />
+                      <div className="scale-75 h-3 flex items-center justify-center"><UserCheckIcon /></div>
                       {t('approveAll' as any)}
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); handleCloseRecruitRoom(room); }} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-slate-600 dark:text-slate-400 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-                      <TrashIcon />
+                    <button onClick={(e) => { e.stopPropagation(); handleCloseRecruitRoom(room); }} className="bg-white dark:bg-slate-950 py-0.5 text-[8px] font-black text-slate-600 dark:text-slate-400 flex flex-col items-center gap-0 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                      <div className="scale-75 h-3 flex items-center justify-center"><TrashIcon /></div>
                       {t('delete_recruit_room' as any)}
                     </button>
                   </div>
@@ -3219,9 +3289,9 @@ const App: React.FC = () => {
             <div className="flex items-center gap-2">
               <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
-            </div>
-            <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+              <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+              </div>
             </div>
           </div>
           {isPlayerRegistrationOpen && (
@@ -3918,6 +3988,7 @@ const App: React.FC = () => {
         darkMode={darkMode}
       />
 
+      {/* 업그레이드 모달 주석 처리
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
@@ -3927,6 +3998,7 @@ const App: React.FC = () => {
         lang={lang}
         darkMode={darkMode}
       />
+      */}
       <LoginRecommendModal
         isOpen={showLoginRecommendModal}
         onLogin={() => {
