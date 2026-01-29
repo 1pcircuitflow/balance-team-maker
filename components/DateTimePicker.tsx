@@ -15,10 +15,11 @@ const WheelPicker: React.FC<{
     selected: string;
     onSelect: (value: string) => void;
     width?: string;
-    darkMode?: boolean;
-}> = ({ items, selected, onSelect, width = 'w-16' }) => {
+    itemHeight?: number; // Custom item height
+    height?: number; // Custom total height
+    fontSize?: string; // Custom font size
+}> = ({ items, selected, onSelect, width = 'w-16', itemHeight = 26, height = 78, fontSize = 'text-[10px]' }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const itemHeight = 26; // Ultra compact
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -27,7 +28,7 @@ const WheelPicker: React.FC<{
                 scrollRef.current.scrollTop = index * itemHeight;
             }
         }
-    }, [selected, items]);
+    }, [selected, items, itemHeight]);
 
     const handleScrollEnd = () => {
         if (scrollRef.current) {
@@ -40,12 +41,15 @@ const WheelPicker: React.FC<{
     };
 
     return (
-        <div className={`relative h-[78px] overflow-hidden ${width} touch-none select-none`}>
+        <div className={`relative overflow-hidden ${width} touch-none select-none`} style={{ height: `${height}px` }}>
             {/* 중앙 하이라이트 라인 */}
-            <div className="absolute top-[26px] left-0 right-0 h-[26px] border-t border-b border-slate-200 dark:border-slate-800 pointer-events-none z-0" />
+            <div className={`absolute left-0 right-0 border-t border-b border-slate-200 dark:border-slate-800 pointer-events-none z-0`}
+                style={{ top: `${itemHeight}px`, height: `${itemHeight}px` }}
+            />
             <div
                 ref={scrollRef}
-                className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide py-[26px]"
+                className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+                style={{ paddingBlock: `${itemHeight}px` }}
                 onScroll={(e) => {
                     clearTimeout((scrollRef.current as any)._timeout);
                     (scrollRef.current as any)._timeout = setTimeout(handleScrollEnd, 50);
@@ -54,11 +58,12 @@ const WheelPicker: React.FC<{
                 {items.map((item, i) => (
                     <div
                         key={i}
-                        className={`h-[26px] flex items-center justify-center snap-center z-10 relative cursor-pointer text-[10px]
+                        className={`flex items-center justify-center snap-center z-10 relative cursor-pointer ${fontSize}
               ${item === selected
                                 ? 'font-bold text-slate-900 dark:text-white scale-110'
                                 : 'text-slate-400 dark:text-slate-600'
                             }`}
+                        style={{ height: `${itemHeight}px` }}
                         onClick={() => onSelect(item)}
                     >
                         {item}
@@ -111,19 +116,21 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         update(newDate, time); // Keep current time
     };
 
-    const handleYearSelect = (y: number) => {
+    // Wheel Handlers (Directly updates state)
+    const handleYearChange = (val: string) => {
+        const y = parseInt(val);
         const lastDate = new Date(y, currentMonth, 0).getDate();
         const d = Math.min(currentDate, lastDate);
         const newDate = `${y}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         update(newDate, time);
     };
 
-    const handleMonthSelect = (m: number) => {
+    const handleMonthChange = (val: string) => {
+        const m = parseInt(val);
         const lastDate = new Date(currentYear, m, 0).getDate();
         const d = Math.min(currentDate, lastDate);
         const newDate = `${currentYear}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         update(newDate, time);
-        setViewMode('CALENDAR');
     };
 
     const handleTimeChange = (type: 'AMPM' | 'HOUR' | 'MINUTE', val: string) => {
@@ -159,106 +166,116 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const hourItems = Array.from({ length: 12 }, (_, i) => String(i + 1));
     const minuteItems = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 
+    // Year/Month Wheel Data
     const yearBase = new Date().getFullYear();
-    const selectYears = Array.from({ length: 12 }, (_, i) => yearBase - 5 + i);
-    const selectMonths = Array.from({ length: 12 }, (_, i) => i + 1);
+    const selectYears = Array.from({ length: 101 }, (_, i) => String(yearBase - 50 + i)); // +/- 50 years
+    const selectMonths = Array.from({ length: 12 }, (_, i) => String(i + 1));
 
     return (
-        <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
-            {/* Header */}
-            <div className="flex items-center justify-center py-1.5 relative">
+        <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300">
+            {/* Header (Refined) */}
+            <div className="flex items-center justify-center py-2 relative">
                 <button
                     onClick={() => setViewMode(prev => prev === 'CALENDAR' ? 'YEAR_MONTH_SELECT' : 'CALENDAR')}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95"
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 group 
+                        ${viewMode === 'YEAR_MONTH_SELECT' ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 >
-                    <span className="text-xs font-black text-slate-900 dark:text-white">
-                        {currentYear}{lang === 'ko' ? '.' : '/'}{String(currentMonth).padStart(2, '0')}
+                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                        {currentYear}{lang === 'ko' ? '년' : '.'} {String(currentMonth).padStart(2, '0')}{lang === 'ko' ? '월' : ''}
                     </span>
-                    <Icons.PlusIcon
-                        className={`w-2.5 h-2.5 text-slate-400 transition-transform ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`}
-                        style={{ transform: viewMode === 'YEAR_MONTH_SELECT' ? 'rotate(135deg)' : 'rotate(0deg)' }}
-                    />
+                    <div className={`transition-transform duration-300 ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`}>
+                        <Icons.ChevronDownIcon />
+                    </div>
                 </button>
             </div>
 
-            {viewMode === 'YEAR_MONTH_SELECT' ? (
-                <div className="flex flex-col h-[180px] animate-in fade-in zoom-in-95 duration-200 p-1 gap-1">
-                    <div className="flex-1 overflow-y-auto scrollbar-hide">
-                        <div className="grid grid-cols-4 gap-1 p-0.5">
-                            {selectYears.map(y => (
-                                <button
-                                    key={y}
-                                    onClick={() => handleYearSelect(y)}
-                                    className={`py-1 rounded-md text-[10px] font-bold transition-all ${y === currentYear
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
-                                >
-                                    {y}
-                                </button>
-                            ))}
+            {/* Content Area */}
+            <div className="relative overflow-hidden">
+                {viewMode === 'YEAR_MONTH_SELECT' ? (
+                    <div className="flex flex-col items-center justify-center h-[181px] animate-in fade-in zoom-in-95 duration-200">
+                        {/* Wheel Area */}
+                        <div className="flex items-center justify-center gap-4 mb-3 w-full px-8">
+                            {/* Year Wheel */}
+                            <div className="flex-1 flex justify-center">
+                                <WheelPicker
+                                    items={selectYears}
+                                    selected={String(currentYear)}
+                                    onSelect={handleYearChange}
+                                    width="w-full"
+                                    itemHeight={36}
+                                    height={108}
+                                    fontSize="text-lg"
+                                />
+                            </div>
+                            {/* Month Wheel */}
+                            <div className="flex-1 flex justify-center">
+                                <WheelPicker
+                                    items={selectMonths}
+                                    selected={String(currentMonth)}
+                                    onSelect={handleMonthChange}
+                                    width="w-full"
+                                    itemHeight={36}
+                                    height={108}
+                                    fontSize="text-lg"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Select Button */}
+                        <div className="flex justify-end w-full px-4">
+                            <button
+                                onClick={() => setViewMode('CALENDAR')}
+                                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-95"
+                            >
+                                {t('select') || 'Select'}
+                            </button>
                         </div>
                     </div>
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 shrink-0" />
-                    <div className="flex-1 overflow-y-auto scrollbar-hide">
-                        <div className="grid grid-cols-4 gap-1 p-0.5">
-                            {selectMonths.map(m => (
-                                <button
-                                    key={m}
-                                    onClick={() => handleMonthSelect(m)}
-                                    className={`py-1 rounded-md text-[10px] font-bold transition-all ${m === currentMonth
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
-                                >
-                                    {m}
-                                </button>
+                ) : (
+                    <div className="animate-in fade-in zoom-in-95 duration-200">
+                        {/* Days */}
+                        <div className="grid grid-cols-7 px-3 mb-0.5">
+                            {t('days').map((day: string, i: number) => (
+                                <div key={i} className="text-center text-[9px] font-bold text-slate-400 dark:text-slate-600">
+                                    {day}
+                                </div>
                             ))}
                         </div>
-                    </div>
-                </div>
-            ) : (
-                <>
-                    {/* Days */}
-                    <div className="grid grid-cols-7 px-3 mb-0.5">
-                        {t('days').map((day: string, i: number) => (
-                            <div key={i} className="text-center text-[9px] font-bold text-slate-400 dark:text-slate-600">
-                                {day}
-                            </div>
-                        ))}
-                    </div>
 
-                    {/* Dates */}
-                    <div className="grid grid-cols-7 px-3 gap-y-0.5 mb-1.5">
-                        {calendarDays.map((d, i) => (
-                            <div key={i} className="aspect-square flex items-center justify-center p-0.5">
-                                {d && (
-                                    <button
-                                        onClick={() => handleDateSelect(d)}
-                                        className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all
-                                            ${isSelected(d)
-                                                ? 'bg-blue-600 text-white shadow-sm'
-                                                : isToday(d)
-                                                    ? 'text-blue-600 dark:text-blue-400'
-                                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                                    >
-                                        {d}
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                        {/* Dates */}
+                        <div className="grid grid-cols-7 px-3 gap-y-0.5 mb-1.5">
+                            {calendarDays.map((d, i) => (
+                                <div key={i} className="aspect-square flex items-center justify-center p-0.5">
+                                    {d && (
+                                        <button
+                                            onClick={() => handleDateSelect(d)}
+                                            className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all
+                                                ${isSelected(d)
+                                                    ? 'bg-blue-600 text-white shadow-sm'
+                                                    : isToday(d)
+                                                        ? 'text-blue-600 dark:text-blue-400'
+                                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                        >
+                                            {d}
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
 
-                    {/* Divider */}
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 mx-3 mb-1" />
+                        {/* Divider */}
+                        <div className="h-px bg-slate-100 dark:bg-slate-800 mx-3 mb-1" />
 
-                    {/* Wheel */}
-                    <div className="flex justify-center items-center px-3 mb-1 gap-1.5">
-                        <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-12" />
-                        <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-9" />
-                        <div className="text-slate-300 dark:text-slate-700 font-bold text-[10px] pb-0.5">:</div>
-                        <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-9" />
+                        {/* Time Wheel (Ultra Compact) */}
+                        <div className="flex justify-center items-center px-3 mb-1 gap-1.5">
+                            <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-12" />
+                            <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-9" />
+                            <div className="text-slate-300 dark:text-slate-700 font-bold text-[10px] pb-0.5">:</div>
+                            <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-9" />
+                        </div>
                     </div>
-                </>
-            )}
+                )}
+            </div>
         </div>
     );
 };
