@@ -1636,7 +1636,10 @@ const App: React.FC = () => {
     if (saved !== null) return saved === 'true';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  const [activeTab, setActiveTab] = useState<SportType>(SportType.GENERAL);
+  const [activeTab, setActiveTab] = useState<SportType>(() => {
+    const saved = localStorage.getItem('last_active_tab');
+    return (saved as SportType) || SportType.GENERAL;
+  });
   const [players, setPlayers] = useState<Player[]>([]);
   const [newName, setNewName] = useState('');
   const [newTier, setNewTier] = useState<Tier>(Tier.B);
@@ -1769,6 +1772,11 @@ const App: React.FC = () => {
       document.body.style.fontFamily = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif';
     }
   }, [lang]);
+
+  // 마지막 탭 기억
+  useEffect(() => {
+    localStorage.setItem('last_active_tab', activeTab);
+  }, [activeTab]);
 
   // 참가자 목록 동기화 (앱 -> 웹)
   useEffect(() => {
@@ -1968,18 +1976,29 @@ const App: React.FC = () => {
       // 1계정 1방 정책: 마지막으로 보던 방 기억
       if (rooms.length > 0) {
         const savedRoomId = localStorage.getItem('last_active_room_id');
+        let targetRoom: RecruitmentRoom | null = null;
+
+        // 1. 현재 선택된 상태에서 목록 동기화 (기존 선택 유지)
         setCurrentActiveRoom(prev => {
-          // 1. 현재 보고 있는 방이 목록에 여전히 있다면 유지
           const stillExists = rooms.find(r => r.id === prev?.id);
-          if (stillExists) return stillExists;
-
-          // 2. 이전에 저장된 방이 목록에 있다면 복구 (앱 재실행 시)
+          if (stillExists) {
+            targetRoom = stillExists;
+            return stillExists;
+          }
           const savedRoom = rooms.find(r => r.id === savedRoomId);
-          if (savedRoom) return savedRoom;
-
-          // 3. 없으면 가장 최신 방 선택
+          if (savedRoom) {
+            targetRoom = savedRoom;
+            return savedRoom;
+          }
+          targetRoom = rooms[0];
           return rooms[0];
         });
+
+        // 활성 방이 결정되면 해당 종목 탭으로 자동 전환 (UX 개선)
+        if (targetRoom) {
+          const room = targetRoom as RecruitmentRoom;
+          setActiveTab(room.sport as SportType);
+        }
       } else {
         setCurrentActiveRoom(null);
       }
