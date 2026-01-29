@@ -625,7 +625,7 @@ const PlayerItem: React.FC<PlayerItemProps> = ({
                 </div>
               )}
               {player.forbiddenPositions && player.forbiddenPositions.length > 0 && (
-                <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500 dark:text-rose-400">
+                <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500">
                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                   <span>{player.forbiddenPositions.join(',')}</span>
                 </div>
@@ -1596,7 +1596,7 @@ const ApplyRoomModal: React.FC<{
 }> = ({ isOpen, roomId, onClose, onSuccess, lang, darkMode }) => {
   const [name, setName] = useState('');
   const [tier, setTier] = useState<string>('B');
-  const [pos, setPos] = useState<Position>('MF');
+  const [pos, setPos] = useState<string>('MF');
   const [room, setRoom] = useState<RecruitmentRoom | null>(null);
   const [loading, setLoading] = useState(false);
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
@@ -1739,6 +1739,19 @@ const App: React.FC = () => {
 
   const [showTier, setShowTier] = useState(true); // 항목 2: 티어 숨기기/보이기
   const [activeRooms, setActiveRooms] = useState<RecruitmentRoom[]>([]); // 항목 7: 멀티 모임 관리
+  const filteredRooms = useMemo(() => {
+    return activeRooms.filter(r => {
+      try {
+        const [y, m, d] = r.matchDate.split('-').map(Number);
+        const [hh, mm] = r.matchTime.split(':').map(Number);
+        const matchTime = new Date(y, m - 1, d, hh, mm);
+        // 필터링 완화: 경기 종료 후 24시간까지 보임
+        const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
+        return expiryLimit > new Date() && r.status !== 'DELETED';
+      } catch { return true; }
+    });
+  }, [activeRooms]);
+
   const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
 
   const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'FULL' | null>(null);
@@ -2476,10 +2489,10 @@ const App: React.FC = () => {
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
 
-      const p1 = applicant.primaryPositions || [applicant.position || 'NONE'];
-      const s1 = applicant.secondaryPositions || [];
-      const t1 = applicant.tertiaryPositions || [];
-      const f1 = applicant.forbiddenPositions || [];
+      const p1 = (applicant as any).primaryPositions || [applicant.position || 'NONE'];
+      const s1 = (applicant as any).secondaryPositions || [];
+      const t1 = (applicant as any).tertiaryPositions || [];
+      const f1 = (applicant as any).forbiddenPositions || [];
 
       setPlayers(prev => {
         const existingIdx = prev.findIndex(p => p.name === applicant.name);
@@ -2531,10 +2544,10 @@ const App: React.FC = () => {
         const newList = [...prev];
         room.applicants.filter(a => !a.isApproved).forEach(a => {
           const existingIdx = newList.findIndex(p => p.name === a.name);
-          const p1 = a.primaryPositions || [a.position || 'NONE'];
-          const s1 = a.secondaryPositions || [];
-          const t1 = a.tertiaryPositions || [];
-          const f1 = a.forbiddenPositions || [];
+          const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
+          const s1 = (a as any).secondaryPositions || [];
+          const t1 = (a as any).tertiaryPositions || [];
+          const f1 = (a as any).forbiddenPositions || [];
 
           if (existingIdx > -1) {
             // 이름이 같은 선수가 있는 경우 최신 정보로 업데이트
@@ -3050,7 +3063,7 @@ const App: React.FC = () => {
       <section className="w-full px-4 mb-3" data-capture-ignore="true">
         <div className="flex justify-between items-center mb-2 px-1">
           <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('recruitParticipants')}</h3>
-          {activeRooms.length === 0 && (
+          {filteredRooms.length === 0 && (
             <button
               onClick={() => { setCurrentActiveRoom(null); setShowHostRoomModal(true); }}
               className="text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center gap-1 hover:scale-105 active:scale-95 transition-all"
@@ -3061,18 +3074,6 @@ const App: React.FC = () => {
         </div>
         <div className="space-y-2">
           {(() => {
-            const filteredRooms = activeRooms.filter(r => {
-              // 종목 필터 제거 (계정당 1개 방이므로 어떤 탭에서든 보여야 함)
-              try {
-                const [y, m, d] = r.matchDate.split('-').map(Number);
-                const [hh, mm] = r.matchTime.split(':').map(Number);
-                const matchTime = new Date(y, m - 1, d, hh, mm);
-                // 필터링 완화: 경기 종료 후 24시간까지 보임
-                const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
-                return expiryLimit > new Date() && r.status !== 'DELETED';
-              } catch { return true; }
-            });
-
             if (filteredRooms.length === 0) return null;
 
             // 가장 최신 방 하나만 노출
@@ -3126,28 +3127,28 @@ const App: React.FC = () => {
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 opacity-95">
                                   {room.sport !== SportType.GENERAL && (
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                      {(app.primaryPositions?.length || (app.position ? 1 : 0)) > 0 && (
+                                      {((app as any).primaryPositions?.length || (app.position ? 1 : 0)) > 0 && (
                                         <div className="flex items-center gap-1 text-[8px] font-semibold text-emerald-600 dark:text-emerald-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                          <span>{(app.primaryPositions || [app.position]).join(',')}</span>
+                                          <span>{((app as any).primaryPositions || [app.position]).join(',')}</span>
                                         </div>
                                       )}
-                                      {(app.secondaryPositions?.length > 0) && (
+                                      {((app as any).secondaryPositions?.length > 0) && (
                                         <div className="flex items-center gap-1 text-[8px] font-extrabold text-yellow-600 dark:text-yellow-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                                          <span>{app.secondaryPositions.join(',')}</span>
+                                          <span>{(app as any).secondaryPositions.join(',')}</span>
                                         </div>
                                       )}
-                                      {(app.tertiaryPositions?.length > 0) && (
+                                      {((app as any).tertiaryPositions?.length > 0) && (
                                         <div className="flex items-center gap-1 text-[8px] font-semibold text-orange-500 dark:text-orange-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                                          <span>{app.tertiaryPositions.join(',')}</span>
+                                          <span>{(app as any).tertiaryPositions.join(',')}</span>
                                         </div>
                                       )}
-                                      {(app.forbiddenPositions?.length > 0) && (
+                                      {((app as any).forbiddenPositions?.length > 0) && (
                                         <div className="flex items-center gap-1 text-[8px] font-semibold text-rose-500 dark:text-rose-400">
                                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                          <span>{app.forbiddenPositions.join(',')}</span>
+                                          <span>{(app as any).forbiddenPositions.join(',')}</span>
                                         </div>
                                       )}
                                     </div>
@@ -3932,6 +3933,7 @@ const App: React.FC = () => {
             if (exists) return prev.map(r => r.id === room.id ? room : r);
             return [...prev, room];
           });
+          setShowHostRoomModal(false);
           AnalyticsService.logEvent('recruit_room_created', { sport: room.sport });
         }}
         activeRoom={currentActiveRoom}
