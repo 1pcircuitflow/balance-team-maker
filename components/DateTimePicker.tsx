@@ -18,7 +18,7 @@ const WheelPicker: React.FC<{
     darkMode?: boolean;
 }> = ({ items, selected, onSelect, width = 'w-16' }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const itemHeight = 30;
+    const itemHeight = 26; // Ultra compact
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -40,12 +40,12 @@ const WheelPicker: React.FC<{
     };
 
     return (
-        <div className={`relative h-[90px] overflow-hidden ${width} touch-none select-none`}>
+        <div className={`relative h-[78px] overflow-hidden ${width} touch-none select-none`}>
             {/* 중앙 하이라이트 라인 */}
-            <div className="absolute top-[30px] left-0 right-0 h-[30px] border-t border-b border-slate-200 dark:border-slate-800 pointer-events-none z-0" />
+            <div className="absolute top-[26px] left-0 right-0 h-[26px] border-t border-b border-slate-200 dark:border-slate-800 pointer-events-none z-0" />
             <div
                 ref={scrollRef}
-                className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide py-[30px]"
+                className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide py-[26px]"
                 onScroll={(e) => {
                     clearTimeout((scrollRef.current as any)._timeout);
                     (scrollRef.current as any)._timeout = setTimeout(handleScrollEnd, 50);
@@ -54,7 +54,7 @@ const WheelPicker: React.FC<{
                 {items.map((item, i) => (
                     <div
                         key={i}
-                        className={`h-[30px] flex items-center justify-center snap-center z-10 relative cursor-pointer text-[11px]
+                        className={`h-[26px] flex items-center justify-center snap-center z-10 relative cursor-pointer text-[10px]
               ${item === selected
                                 ? 'font-bold text-slate-900 dark:text-white scale-110'
                                 : 'text-slate-400 dark:text-slate-600'
@@ -92,7 +92,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     // UI State
     const [viewMode, setViewMode] = useState<'CALENDAR' | 'YEAR_MONTH_SELECT'>('CALENDAR');
 
-    // Calendar logic
+    // Calendar logic (memoized)
     const calendarDays = useMemo(() => {
         const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1).getDay();
         const lastDateOfMonth = new Date(currentYear, currentMonth, 0).getDate();
@@ -102,7 +102,6 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         return days;
     }, [currentYear, currentMonth]);
 
-    // Helpers
     const update = (newDate: string, newTime: string) => {
         onChange(newDate, newTime);
     };
@@ -113,7 +112,6 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     };
 
     const handleYearSelect = (y: number) => {
-        // 날짜 보정
         const lastDate = new Date(y, currentMonth, 0).getDate();
         const d = Math.min(currentDate, lastDate);
         const newDate = `${y}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -121,12 +119,10 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     };
 
     const handleMonthSelect = (m: number) => {
-        // 날짜 보정
         const lastDate = new Date(currentYear, m, 0).getDate();
         const d = Math.min(currentDate, lastDate);
         const newDate = `${currentYear}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         update(newDate, time);
-        // 월 선택 후엔 달력으로 돌아가는 게 일반적
         setViewMode('CALENDAR');
     };
 
@@ -163,47 +159,37 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const hourItems = Array.from({ length: 12 }, (_, i) => String(i + 1));
     const minuteItems = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 
-    // Years for selection (Current - 5 ~ + 6)
     const yearBase = new Date().getFullYear();
     const selectYears = Array.from({ length: 12 }, (_, i) => yearBase - 5 + i);
     const selectMonths = Array.from({ length: 12 }, (_, i) => i + 1);
 
     return (
-        <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
-            {/* 헤더 (Center & Clickable) */}
-            <div className="flex items-center justify-center py-2 relative">
+        <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+            {/* Header */}
+            <div className="flex items-center justify-center py-1.5 relative">
                 <button
                     onClick={() => setViewMode(prev => prev === 'CALENDAR' ? 'YEAR_MONTH_SELECT' : 'CALENDAR')}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95"
                 >
-                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
                         {currentYear}{lang === 'ko' ? '.' : '/'}{String(currentMonth).padStart(2, '0')}
                     </span>
                     <Icons.PlusIcon
-                        className={`w-3 h-3 text-slate-400 transition-transform ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`} // Using PlusIcon as chevron alternative or need distinct icon? Assuming PlusIcon rotated is chevron-like or just use specific icon if available.
-                        // Actually, PlusIcon is a cross usually. Let's assume we want a chevron.
-                        // If no chevron, maybe rotate-45? But let's stick to rotate logic if it was used as chevron before.
-                        // In previous code: rotate-90 used for chevron. 
-                        // Let's use rotate-90/270 for left/right. 
-                        // Here we want down/up.
-                        // Let's check available icons... but for now, rotating PlusIcon might look like an 'X'.
-                        // Wait, previous code used PlusIcon rotated for chevron? Yes: rotate-90.
-                        // Ideally should use ChevronDown/Up. Assuming PlusIcon is actually just lines? 
-                        // Let's just use it as indicator.
+                        className={`w-2.5 h-2.5 text-slate-400 transition-transform ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`}
                         style={{ transform: viewMode === 'YEAR_MONTH_SELECT' ? 'rotate(135deg)' : 'rotate(0deg)' }}
                     />
                 </button>
             </div>
 
             {viewMode === 'YEAR_MONTH_SELECT' ? (
-                <div className="flex flex-col h-[210px] animate-in fade-in zoom-in-95 duration-200 p-2 gap-2">
+                <div className="flex flex-col h-[180px] animate-in fade-in zoom-in-95 duration-200 p-1 gap-1">
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
-                        <div className="grid grid-cols-4 gap-2 p-1">
+                        <div className="grid grid-cols-4 gap-1 p-0.5">
                             {selectYears.map(y => (
                                 <button
                                     key={y}
                                     onClick={() => handleYearSelect(y)}
-                                    className={`py-1.5 rounded-lg text-xs font-bold transition-all ${y === currentYear
+                                    className={`py-1 rounded-md text-[10px] font-bold transition-all ${y === currentYear
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
                                 >
@@ -214,12 +200,12 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                     </div>
                     <div className="h-px bg-slate-100 dark:bg-slate-800 shrink-0" />
                     <div className="flex-1 overflow-y-auto scrollbar-hide">
-                        <div className="grid grid-cols-4 gap-2 p-1">
+                        <div className="grid grid-cols-4 gap-1 p-0.5">
                             {selectMonths.map(m => (
                                 <button
                                     key={m}
                                     onClick={() => handleMonthSelect(m)}
-                                    className={`py-1.5 rounded-lg text-xs font-bold transition-all ${m === currentMonth
+                                    className={`py-1 rounded-md text-[10px] font-bold transition-all ${m === currentMonth
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
                                 >
@@ -231,23 +217,23 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                 </div>
             ) : (
                 <>
-                    {/* 요일 (Moderate Compact) */}
-                    <div className="grid grid-cols-7 px-2 mb-1">
+                    {/* Days */}
+                    <div className="grid grid-cols-7 px-3 mb-0.5">
                         {t('days').map((day: string, i: number) => (
-                            <div key={i} className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-600">
+                            <div key={i} className="text-center text-[9px] font-bold text-slate-400 dark:text-slate-600">
                                 {day}
                             </div>
                         ))}
                     </div>
 
-                    {/* 날짜 그리드 (Moderate Compact) */}
-                    <div className="grid grid-cols-7 px-2 gap-y-1 mb-2">
+                    {/* Dates */}
+                    <div className="grid grid-cols-7 px-3 gap-y-0.5 mb-1.5">
                         {calendarDays.map((d, i) => (
                             <div key={i} className="aspect-square flex items-center justify-center p-0.5">
                                 {d && (
                                     <button
                                         onClick={() => handleDateSelect(d)}
-                                        className={`w-7 h-7 rounded-full text-[11px] font-bold transition-all
+                                        className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all
                                             ${isSelected(d)
                                                 ? 'bg-blue-600 text-white shadow-sm'
                                                 : isToday(d)
@@ -261,15 +247,15 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                         ))}
                     </div>
 
-                    {/* 구분선 */}
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 mx-4 mb-1" />
+                    {/* Divider */}
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 mx-3 mb-1" />
 
-                    {/* 시간 휠 (Moderate Compact) */}
-                    <div className="flex justify-center items-center px-4 mb-2 gap-2">
-                        <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-14" />
-                        <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-10" />
-                        <div className="text-slate-300 dark:text-slate-700 font-bold text-xs pb-1">:</div>
-                        <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-10" />
+                    {/* Wheel */}
+                    <div className="flex justify-center items-center px-3 mb-1 gap-1.5">
+                        <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-12" />
+                        <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-9" />
+                        <div className="text-slate-300 dark:text-slate-700 font-bold text-[10px] pb-0.5">:</div>
+                        <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-9" />
                     </div>
                 </>
             )}

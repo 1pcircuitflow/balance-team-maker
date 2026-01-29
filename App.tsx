@@ -1447,31 +1447,31 @@ const HostRoomModal: React.FC<{
 
 
           {!activeRoom ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
+            <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-4 py-3 focus:outline-none dark:text-white font-bold text-sm" />
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-3 py-2.5 focus:outline-none dark:text-white font-bold text-sm" />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between px-2">
                   <div
                     onClick={() => setActivePicker('START')}
                     className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-50'}`}
                   >
-                    <span className="text-[10px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
-                    <span className={`text-base font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
+                    <span className="text-[9px] font-black uppercase text-blue-500 mb-0.5">{t('startTime')}</span>
+                    <span className={`text-sm font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
                       {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
                     </span>
                   </div>
-                  <div className="text-slate-300 dark:text-slate-600 pb-4">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  <div className="text-slate-300 dark:text-slate-600 pb-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                   </div>
                   <div
                     onClick={() => setActivePicker('END')}
                     className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-50'}`}
                   >
-                    <span className="text-[10px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
-                    <span className={`text-base font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                    <span className="text-[9px] font-black uppercase text-rose-500 mb-0.5">{t('endTime')}</span>
+                    <span className={`text-sm font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
                       {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
                     </span>
                   </div>
@@ -1485,30 +1485,30 @@ const HostRoomModal: React.FC<{
                   )}
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('limitApplicants')}</label>
                   <button
                     onClick={() => setUseLimit(!useLimit)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
                   >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useLimit ? 'translate-x-6' : 'translate-x-1'}`} />
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${useLimit ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
                   </button>
                 </div>
 
                 {useLimit && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('maxApplicants')}</label>
-                    <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-3">
-                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
-                      <span className="flex-1 text-center font-black dark:text-white">{t('peopleCount', maxApplicants)}</span>
-                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950 rounded-2xl px-4 py-2">
+                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
+                      <span className="flex-1 text-center font-black dark:text-white text-sm">{t('peopleCount', maxApplicants)}</span>
+                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
                     </div>
                   </div>
                 )}
-                <div className="flex justify-end mt-4">
-                  <button onClick={handleCreate} disabled={loading} className="w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
-                </div>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button onClick={handleCreate} disabled={loading} className="w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
               </div>
             </div>
           ) : (
