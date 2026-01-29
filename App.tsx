@@ -1367,11 +1367,13 @@ const HostRoomModal: React.FC<{
 
   const handleShare = async () => {
     if (!activeRoom) return;
-    const currentOrigin = window.location.origin;
-    const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':5000'))
-      ? (Capacitor.getPlatform() === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000')
-      : currentOrigin;
-    const webUrl = `${webOrigin}/hosting/index.html?room=${activeRoom.id}&lang=${lang}`;
+
+    // 실제 배포된 도메인 주소
+    const DEPLOYED_HOSTING_URL = "https://belo-apply.web.app";
+
+    // 공유 링크는 어떤 환경에서든 항상 운영 주소를 사용하도록 고정합니다.
+    // (로컬 주소를 공유할 일이 없으므로 판별 로직 생략)
+    const webUrl = `${DEPLOYED_HOSTING_URL}/index.html?room=${activeRoom.id}&lang=${lang}`;
 
     try {
       if (Capacitor.isNativePlatform()) {
@@ -2357,11 +2359,10 @@ const App: React.FC = () => {
   };
 
   const handleShareRecruitLink = async (room: RecruitmentRoom) => {
-    const currentOrigin = window.location.origin;
-    const webOrigin = (currentOrigin.includes('localhost') && !currentOrigin.includes(':5000'))
-      ? (Capacitor.getPlatform() === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000')
-      : currentOrigin;
-    const webUrl = `${webOrigin}/hosting/index.html?room=${room.id}&lang=${lang}`;
+    // 실제 배포된 도메인 주소
+    const DEPLOYED_HOSTING_URL = "https://belo-apply.web.app";
+    // 항상 운영 주소를 사용하도록 고정
+    const webUrl = `${DEPLOYED_HOSTING_URL}/index.html?room=${room.id}&lang=${lang}`;
 
     try {
       if (Capacitor.isNativePlatform()) {

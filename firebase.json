@@ -1,5 +1,6 @@
 {
     "hosting": {
+        "target": "belo-apply",
         "public": "hosting",
         "ignore": [
             "firebase.json",
