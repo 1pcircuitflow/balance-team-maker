@@ -1450,7 +1450,7 @@ const HostRoomModal: React.FC<{
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-4 py-3 focus:outline-none dark:text-white font-bold text-sm" />
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
@@ -1506,8 +1506,10 @@ const HostRoomModal: React.FC<{
                     </div>
                   </div>
                 )}
+                <div className="flex justify-end mt-4">
+                  <button onClick={handleCreate} disabled={loading} className="w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
+                </div>
               </div>
-              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('create')}</button>
             </div>
           ) : (
             null
@@ -2916,7 +2918,7 @@ const App: React.FC = () => {
             setResult(null);
             setEditingPlayerId(null);
             AnalyticsService.logEvent('tab_change', { sport: value });
-          }} className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeTab === value ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'}`}>
+          }} className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === value ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'}`}>
             {t(value.toLowerCase() as any)}
           </button>
         ))}

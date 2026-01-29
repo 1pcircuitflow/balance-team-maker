@@ -18,7 +18,7 @@ const WheelPicker: React.FC<{
     darkMode?: boolean;
 }> = ({ items, selected, onSelect, width = 'w-16' }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const itemHeight = 30; // Compact height
+    const itemHeight = 30;
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -48,13 +48,13 @@ const WheelPicker: React.FC<{
                 className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide py-[30px]"
                 onScroll={(e) => {
                     clearTimeout((scrollRef.current as any)._timeout);
-                    (scrollRef.current as any)._timeout = setTimeout(handleScrollEnd, 50); // Faster response
+                    (scrollRef.current as any)._timeout = setTimeout(handleScrollEnd, 50);
                 }}
             >
                 {items.map((item, i) => (
                     <div
                         key={i}
-                        className={`h-[30px] flex items-center justify-center snap-center z-10 relative cursor-pointer text-[10px]
+                        className={`h-[30px] flex items-center justify-center snap-center z-10 relative cursor-pointer text-[11px]
               ${item === selected
                                 ? 'font-bold text-slate-900 dark:text-white scale-110'
                                 : 'text-slate-400 dark:text-slate-600'
@@ -82,12 +82,15 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const hour = parseInt(hStr);
     const minute = parseInt(minStr);
 
-    // Derived states for WheelPicker
+    // Derived states
     const isPM = hour >= 12;
     const ampmStr = isPM ? t('pm') : t('am');
     const displayHour = hour % 12 === 0 ? 12 : hour % 12;
     const displayHourStr = String(displayHour);
     const minuteStr = String(minute).padStart(2, '0');
+
+    // UI State
+    const [viewMode, setViewMode] = useState<'CALENDAR' | 'YEAR_MONTH_SELECT'>('CALENDAR');
 
     // Calendar logic
     const calendarDays = useMemo(() => {
@@ -99,7 +102,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         return days;
     }, [currentYear, currentMonth]);
 
-    // Helpers to notify change immediately
+    // Helpers
     const update = (newDate: string, newTime: string) => {
         onChange(newDate, newTime);
     };
@@ -109,18 +112,22 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         update(newDate, time); // Keep current time
     };
 
-    const handleMonthChange = (delta: number) => {
-        let newM = currentMonth + delta;
-        let newY = currentYear;
-        if (newM > 12) { newM = 1; newY++; }
-        if (newM < 1) { newM = 12; newY--; }
-
-        // 날짜가 해당 월의 최대 일수를 넘지 않도록 조정
-        const lastDayOfNewMonth = new Date(newY, newM, 0).getDate();
-        const newD = Math.min(currentDate, lastDayOfNewMonth);
-
-        const newDate = `${newY}-${String(newM).padStart(2, '0')}-${String(newD).padStart(2, '0')}`;
+    const handleYearSelect = (y: number) => {
+        // 날짜 보정
+        const lastDate = new Date(y, currentMonth, 0).getDate();
+        const d = Math.min(currentDate, lastDate);
+        const newDate = `${y}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         update(newDate, time);
+    };
+
+    const handleMonthSelect = (m: number) => {
+        // 날짜 보정
+        const lastDate = new Date(currentYear, m, 0).getDate();
+        const d = Math.min(currentDate, lastDate);
+        const newDate = `${currentYear}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        update(newDate, time);
+        // 월 선택 후엔 달력으로 돌아가는 게 일반적
+        setViewMode('CALENDAR');
     };
 
     const handleTimeChange = (type: 'AMPM' | 'HOUR' | 'MINUTE', val: string) => {
@@ -156,63 +163,116 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const hourItems = Array.from({ length: 12 }, (_, i) => String(i + 1));
     const minuteItems = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 
+    // Years for selection (Current - 5 ~ + 6)
+    const yearBase = new Date().getFullYear();
+    const selectYears = Array.from({ length: 12 }, (_, i) => yearBase - 5 + i);
+    const selectMonths = Array.from({ length: 12 }, (_, i) => i + 1);
+
     return (
         <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
-            {/* 헤더 (Compact) */}
-            <div className="flex items-center justify-between px-4 py-2">
-                <span className="text-sm font-black text-slate-900 dark:text-white">
-                    {currentYear}{lang === 'ko' ? '.' : '/'}{String(currentMonth).padStart(2, '0')}
-                </span>
-                <div className="flex gap-2">
-                    <button onClick={() => handleMonthChange(-1)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <Icons.MinusIcon className="w-3 h-3 text-slate-600 dark:text-slate-400 rotate-90" />
-                    </button>
-                    <button onClick={() => handleMonthChange(1)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                        <Icons.PlusIcon className="w-3 h-3 text-slate-600 dark:text-slate-400 -rotate-90" />
-                    </button>
+            {/* 헤더 (Center & Clickable) */}
+            <div className="flex items-center justify-center py-2 relative">
+                <button
+                    onClick={() => setViewMode(prev => prev === 'CALENDAR' ? 'YEAR_MONTH_SELECT' : 'CALENDAR')}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95"
+                >
+                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                        {currentYear}{lang === 'ko' ? '.' : '/'}{String(currentMonth).padStart(2, '0')}
+                    </span>
+                    <Icons.PlusIcon
+                        className={`w-3 h-3 text-slate-400 transition-transform ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`} // Using PlusIcon as chevron alternative or need distinct icon? Assuming PlusIcon rotated is chevron-like or just use specific icon if available.
+                        // Actually, PlusIcon is a cross usually. Let's assume we want a chevron.
+                        // If no chevron, maybe rotate-45? But let's stick to rotate logic if it was used as chevron before.
+                        // In previous code: rotate-90 used for chevron. 
+                        // Let's use rotate-90/270 for left/right. 
+                        // Here we want down/up.
+                        // Let's check available icons... but for now, rotating PlusIcon might look like an 'X'.
+                        // Wait, previous code used PlusIcon rotated for chevron? Yes: rotate-90.
+                        // Ideally should use ChevronDown/Up. Assuming PlusIcon is actually just lines? 
+                        // Let's just use it as indicator.
+                        style={{ transform: viewMode === 'YEAR_MONTH_SELECT' ? 'rotate(135deg)' : 'rotate(0deg)' }}
+                    />
+                </button>
+            </div>
+
+            {viewMode === 'YEAR_MONTH_SELECT' ? (
+                <div className="flex flex-col h-[210px] animate-in fade-in zoom-in-95 duration-200 p-2 gap-2">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                        <div className="grid grid-cols-4 gap-2 p-1">
+                            {selectYears.map(y => (
+                                <button
+                                    key={y}
+                                    onClick={() => handleYearSelect(y)}
+                                    className={`py-1.5 rounded-lg text-xs font-bold transition-all ${y === currentYear
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
+                                >
+                                    {y}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 shrink-0" />
+                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                        <div className="grid grid-cols-4 gap-2 p-1">
+                            {selectMonths.map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => handleMonthSelect(m)}
+                                    className={`py-1.5 rounded-lg text-xs font-bold transition-all ${m === currentMonth
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            {/* 요일 (Compact) */}
-            <div className="grid grid-cols-7 px-2 mb-1">
-                {t('days').map((day: string, i: number) => (
-                    <div key={i} className="text-center text-[9px] font-bold text-slate-400 dark:text-slate-600">
-                        {day}
+            ) : (
+                <>
+                    {/* 요일 (Moderate Compact) */}
+                    <div className="grid grid-cols-7 px-2 mb-1">
+                        {t('days').map((day: string, i: number) => (
+                            <div key={i} className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-600">
+                                {day}
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            {/* 날짜 그리드 (Compact) */}
-            <div className="grid grid-cols-7 px-2 gap-y-0.5 mb-2">
-                {calendarDays.map((d, i) => (
-                    <div key={i} className="aspect-square flex items-center justify-center p-0.5">
-                        {d && (
-                            <button
-                                onClick={() => handleDateSelect(d)}
-                                className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all
-                                    ${isSelected(d)
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : isToday(d)
-                                            ? 'text-blue-600 dark:text-blue-400'
-                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                            >
-                                {d}
-                            </button>
-                        )}
+                    {/* 날짜 그리드 (Moderate Compact) */}
+                    <div className="grid grid-cols-7 px-2 gap-y-1 mb-2">
+                        {calendarDays.map((d, i) => (
+                            <div key={i} className="aspect-square flex items-center justify-center p-0.5">
+                                {d && (
+                                    <button
+                                        onClick={() => handleDateSelect(d)}
+                                        className={`w-7 h-7 rounded-full text-[11px] font-bold transition-all
+                                            ${isSelected(d)
+                                                ? 'bg-blue-600 text-white shadow-sm'
+                                                : isToday(d)
+                                                    ? 'text-blue-600 dark:text-blue-400'
+                                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    >
+                                        {d}
+                                    </button>
+                                )}
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            {/* 구분선 */}
-            <div className="h-px bg-slate-100 dark:bg-slate-800 mx-4 mb-2" />
+                    {/* 구분선 */}
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 mx-4 mb-1" />
 
-            {/* 시간 휠 (Compact) */}
-            <div className="flex justify-center items-center px-4 mb-3 gap-2">
-                <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-14" />
-                <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-10" />
-                <div className="text-slate-300 dark:text-slate-700 font-bold text-xs pb-1">:</div>
-                <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-10" />
-            </div>
+                    {/* 시간 휠 (Moderate Compact) */}
+                    <div className="flex justify-center items-center px-4 mb-2 gap-2">
+                        <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-14" />
+                        <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-10" />
+                        <div className="text-slate-300 dark:text-slate-700 font-bold text-xs pb-1">:</div>
+                        <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-10" />
+                    </div>
+                </>
+            )}
         </div>
     );
 };
