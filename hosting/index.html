@@ -438,48 +438,38 @@
                 document.getElementById('roomSport').textContent = currentSport;
                 document.getElementById('roomDateTime').textContent = `${currentRoomData.matchDate || ''} ${currentRoomData.matchTime || ''}`;
 
-                // --- 시간 기반 자동 마감 로직 추가 ---
-                const [y, m, d] = currentRoomData.matchDate.split('-').map(Number);
-                const [hh, mm] = currentRoomData.matchTime.split(':').map(Number);
-                const matchTime = new Date(y, m - 1, d, hh, mm);
-                const now = new Date();
-                const diffMs = now - matchTime;
-                const diffMin = diffMs / (1000 * 60);
+                // --- 시간 기반 자동 마감 로직 시작 ---
+                if (currentRoomData.matchDate && currentRoomData.matchTime) {
+                    const now = new Date();
+                    const matchStart = new Date(`${currentRoomData.matchDate}T${currentRoomData.matchTime}`);
+                    const matchEnd = new Date(matchStart.getTime() + 30 * 60000); // 30분 후
 
-                if (diffMin >= 30) {
-                    // 30분 경과: URL 만료 (모든 정보 숨김)
-                    document.getElementById('loading').innerHTML = `
-                        <div class="text-center p-8 space-y-4 animate-in fade-in duration-700">
-                            <div class="w-20 h-20 bg-rose-50 dark:bg-rose-900/30 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                    // 1. 경기 시작 30분 후: 아예 페이지 차단 (URL 무효화 효과)
+                    if (now > matchEnd) {
+                        document.body.innerHTML = `
+                            <div class="min-h-screen flex flex-col items-center justify-center p-8 text-center space-y-4 bg-slate-50 dark:bg-slate-950">
+                                <div class="text-6xl mb-4">🚫</div>
+                                <h1 class="text-xl font-black text-slate-800 dark:text-slate-200">유효하지 않은 링크입니다</h1>
+                                <p class="text-slate-500 text-sm">모집이 종료되었거나 존재하지 않는 페이지입니다.</p>
                             </div>
-                            <div class="space-y-2">
-                                <h3 class="text-2xl font-black text-slate-900 dark:text-white">URL 만료 안내</h3>
-                                <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">경기가 시작되어 해당 페이지는 자동으로 만료되었습니다.</p>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('loading').classList.remove('hidden');
-                    return; // 이후 로직(명단 로드 등) 실행 안 함
-                } else if (diffMin >= 0) {
-                    // 정시 ~ 30분 미만: 모집 마감 (안내만 표시)
-                    const statusMsg = document.createElement('div');
-                    statusMsg.className = 'w-full p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 text-amber-700 dark:text-amber-400 text-sm font-bold text-center mb-4 animate-in slide-in-from-top-4 duration-500';
-                    statusMsg.innerHTML = '⚠️ 모집이 마감되었습니다. 현재 경기가 진행 중입니다.';
-                    document.getElementById('roomInfo').prepend(statusMsg);
+                        `;
+                        return; // 이후 로직 중단
+                    }
 
-                    // 신청 폼은 숨김 처리
-                    document.getElementById('applyForm').classList.add('hidden');
-                    // 하지만 명단(참가자 정보)은 볼 수 있게 함
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('roomInfo').classList.remove('hidden');
-                    document.getElementById('participantsInfo').classList.remove('hidden');
-                    renderParticipants(currentRoomData.activeParticipants || currentRoomData.applicants || []);
-                    return;
+                    // 2. 경기 시작 (정시) ~ 30분 사이: 마감 안내 표시 (신청 불가)
+                    if (now >= matchStart) {
+                        document.getElementById('loading').innerHTML = `
+                             <div class="text-center p-8 space-y-4">
+                                <div class="text-4xl text-amber-500 font-black">⏳</div>
+                                <p class="text-slate-500 font-bold">경기가 시작되어 모집이 마감되었습니다.</p>
+                                <p class="text-xs text-slate-400">(${currentRoomData.matchDate} ${currentRoomData.matchTime})</p>
+                            </div>
+                        `;
+                        // 로딩 표시를 숨기지 않고 안내 메시지로 대체하여 신청 폼 등 노출 차단
+                        return;
+                    }
                 }
-                // --- 시간 체크 끝 ---
+                // --- 시간 기반 자동 마감 로직 끝 ---
 
                 if (currentRoomData.sport?.toUpperCase() === 'GENERAL' || currentRoomData.sport?.toUpperCase() === '일반') {
                     document.getElementById('posSection').classList.add('hidden');

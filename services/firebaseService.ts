@@ -114,7 +114,8 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
         const newApplicant: Applicant = {
             ...applicant,
             id: Math.random().toString(36).substring(2, 9),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            isApproved: false // 명시적으로 false 설정 (동기화 안정성)
         };
         await updateDoc(roomRef, {
             applicants: arrayUnion(newApplicant)

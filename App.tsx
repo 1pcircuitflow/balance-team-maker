@@ -1277,27 +1277,8 @@ const HostRoomModal: React.FC<{
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
 
-  const [isEditMode, setIsEditMode] = useState(false);
-
   useEffect(() => {
-    if (isOpen && activeRoom) {
-      // 기존 방 정보로 초기화
-      setTitle(activeRoom.title);
-      setStartDate(activeRoom.matchDate);
-      setStartTime(activeRoom.matchTime);
-      setEndDate(activeRoom.matchEndDate || activeRoom.matchDate);
-      setEndTime(activeRoom.matchEndTime || activeRoom.matchTime);
-      setUseLimit(activeRoom.maxApplicants > 0);
-      setMaxApplicants(activeRoom.maxApplicants > 0 ? activeRoom.maxApplicants : 12);
-
-      // 만약 외부(App)에서 수정 버튼을 눌러 열렸다면 자동으로 편집 모드 활성화
-      if ((window as any).__edit_requested) {
-        setIsEditMode(true);
-        (window as any).__edit_requested = false; // 소모된 플래그 리셋
-      } else {
-        setIsEditMode(false); // 기본은 관리 모드
-      }
-    } else if (isOpen && !activeRoom) {
+    if (isOpen && !activeRoom) {
       // 모달이 열릴 때(새 방 생성 모드인 경우) 날짜와 시간을 현재 기준으로 리셋
       const d = new Date();
       d.setHours(d.getHours() + 1, 0, 0, 0);
@@ -1318,7 +1299,7 @@ const HostRoomModal: React.FC<{
     }
 
     if (activeRoom?.id && isOpen) {
-      // 실시간 방 정보 구독 (관리 모드용)
+      // 실시간 방 정보 구독
       const unsub = subscribeToRoom(activeRoom.id, (room) => {
         if (room) onRoomCreated(room);
       });
@@ -1331,59 +1312,117 @@ const HostRoomModal: React.FC<{
 
       return () => unsub();
     }
+
+    // 모달이 열릴 때(또는 활성 룸이 변경될 때) 만료된 방 자동 삭제 체크
+    if (isOpen && activeRooms.length > 0) {
+      const now = new Date();
+      activeRooms.forEach(async (room) => {
+        if (room.matchDate && room.matchTime) {
+          const matchStart = new Date(`${room.matchDate}T${room.matchTime}`);
+          // 30분 여유 시간
+          const expireTime = new Date(matchStart.getTime() + 30 * 60000);
+
+          if (now > expireTime) {
+            console.log(`Auto deleting expired room: ${room.id} (${room.title})`);
+            try {
+              await updateDoc(doc(db, "rooms", room.id), { status: 'DELETED' });
+              // 모달이 열려있는 동안에만 UI 갱신을 위해 상위 컴포넌트 알림 등은 생략하고
+              // 다음 렌더링 때 activeRooms에서 빠지기를 기대하거나 강제로 닫을 수 있음.
+              // 여기서는 조용히 백그라운드 삭제만 진행.
+            } catch (e) {
+              console.error("Auto delete failed:", e);
+            }
+          }
+        }
+      });
+    }
   }, [activeRoom?.id, isOpen]);
 
   const handleStartTimeChange = (newDate: string, newTime: string) => {
     setStartDate(newDate);
     setStartTime(newTime);
+
+    // 종료 시간 자동 계산 (시작 시간 + 1시간)
     const start = new Date(`${newDate}T${newTime}`);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
-    setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
-    setEndTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`);
+
+    // 날짜 포맷팅
+    const eYear = end.getFullYear();
+    const eMonth = String(end.getMonth() + 1).padStart(2, '0');
+    const eDay = String(end.getDate()).padStart(2, '0');
+    const eHours = String(end.getHours()).padStart(2, '0');
+    const eMinutes = String(end.getMinutes()).padStart(2, '0');
+
+    setEndDate(`${eYear}-${eMonth}-${eDay}`);
+    setEndTime(`${eHours}:${eMinutes}`);
   };
 
   const handleCreate = async () => {
     setLoading(true);
     try {
       const roomId = await createRecruitmentRoom({
-        hostId: currentUserId, hostName: userNickname, title, sport: activeTab,
-        matchDate: startDate, matchTime: startTime, matchEndDate: endDate, matchEndTime: endTime,
-        maxApplicants: useLimit ? maxApplicants : 0, fcmToken: localStorage.getItem('fcm_token') || undefined
+        hostId: currentUserId,
+        hostName: userNickname,
+        title: title,
+        sport: activeTab,
+        matchDate: startDate,
+        matchTime: startTime,
+        matchEndDate: endDate,
+        matchEndTime: endTime,
+        maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
+        fcmToken: localStorage.getItem('fcm_token') || undefined
       });
       const room = await getRoomInfo(roomId);
       if (room) onRoomCreated(room);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdateLimit = async (newLimit: number) => {
     if (!activeRoom) return;
-    setLoading(true);
     try {
-      await updateDoc(doc(db, "rooms", activeRoom.id), {
-        title, matchDate: startDate, matchTime: startTime,
-        matchEndDate: endDate, matchEndTime: endTime, maxApplicants: useLimit ? maxApplicants : 0
-      });
-      setIsEditMode(false);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+      await updateDoc(doc(db, "rooms", activeRoom.id), { maxApplicants: newLimit });
+    } catch (e) { console.error(e); }
   };
+
 
   const handleShare = async () => {
     if (!activeRoom) return;
-    const webUrl = `https://belo-apply.web.app/index.html?room=${activeRoom.id}&lang=${lang}`;
+
+    // 실제 배포된 도메인 주소
+    const DEPLOYED_HOSTING_URL = "https://belo-apply.web.app";
+
+    // 공유 링크는 어떤 환경에서든 항상 운영 주소를 사용하도록 고정합니다.
+    // (로컬 주소를 공유할 일이 없으므로 판별 로직 생략)
+    const webUrl = `${DEPLOYED_HOSTING_URL}/index.html?room=${activeRoom.id}&lang=${lang}`;
+
     try {
       if (Capacitor.isNativePlatform()) {
-        await Share.share({ title: t('shareRecruitLink'), text: `[${activeRoom.title}] ${activeRoom.matchDate} ${activeRoom.matchTime} ${t(activeRoom.sport.toLowerCase())} 참여자를 모집합니다!\n\n${webUrl}` });
-      } else { await Clipboard.write({ string: webUrl }); }
-    } catch (e) { await Clipboard.write({ string: webUrl }); }
+        try {
+          await Share.share({
+            title: t('shareRecruitLink'),
+            text: `[${activeRoom.title}] ${activeRoom.matchDate} ${activeRoom.matchTime} ${t(activeRoom.sport.toLowerCase())} 참여자를 모집합니다!\n\n👇 참가하기 👇\n${webUrl}`,
+            dialogTitle: t('shareRecruitLink'),
+          });
+        } catch (shareError) {
+          await Clipboard.write({ string: webUrl });
+        }
+      } else {
+        await Clipboard.write({ string: webUrl });
+      }
+    } catch (e) {
+      try {
+        await Clipboard.write({ string: webUrl });
+      } catch (err) {
+        // Fail silently or log
+      }
+    }
   };
 
-  if (!isOpen) return null;
-
-  // 관리 모드일 때 (방 정보가 있고 편집 모드가 아닐 때)
-  if (activeRoom && !isEditMode) {
-    const pendingApplicants = activeRoom.applicants.filter(a => !a.isApproved);
-    // ... 기존 관리 UI 렌더링 (아래 return 문에 있음)
-  }
+  if (!isOpen || activeRoom) return null;
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
@@ -1396,7 +1435,7 @@ const HostRoomModal: React.FC<{
 
 
 
-          {(!activeRoom || isEditMode) ? (
+          {!activeRoom ? (
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
@@ -1457,14 +1496,7 @@ const HostRoomModal: React.FC<{
                   </div>
                 )}
               </div>
-              {isEditMode ? (
-                <div className="flex gap-2">
-                  <button onClick={() => setIsEditMode(false)} className="flex-1 py-5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black rounded-[2rem] transition-all active:scale-95 mt-4">{t('cancel')}</button>
-                  <button onClick={handleUpdate} disabled={loading} className="flex-[2] py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('update' as any)}</button>
-                </div>
-              ) : (
-                <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
-              )}
+              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
             </div>
           ) : (
             null
@@ -2300,20 +2332,42 @@ const App: React.FC = () => {
       const t1 = (applicant as any).tertiaryPositions || [];
       const f1 = (applicant as any).forbiddenPositions || [];
 
-      const newPlayer: Player = {
-        id: 'p_' + Math.random().toString(36).substr(2, 9),
-        name: applicant.name,
-        tier: (Tier as any)[applicant.tier] || Tier.B,
-        isActive: true,
-        sportType: room.sport as SportType,
-        primaryPosition: p1[0] || 'NONE',
-        primaryPositions: p1,
-        secondaryPosition: s1[0] || 'NONE',
-        secondaryPositions: s1,
-        tertiaryPositions: t1,
-        forbiddenPositions: f1
-      };
-      setPlayers(prev => [...prev, newPlayer]);
+      setPlayers(prev => {
+        const existingIdx = prev.findIndex(p => p.name === applicant.name);
+        if (existingIdx > -1) {
+          // 이름이 같은 선수가 있는 경우: 티어와 포지션을 최신 신청 정보로 업데이트하고 참가 상태로 만듦
+          const newList = [...prev];
+          newList[existingIdx] = {
+            ...newList[existingIdx],
+            tier: (Tier as any)[applicant.tier] || Tier.B,
+            isActive: true,
+            sportType: room.sport as SportType,
+            primaryPosition: p1[0] || 'NONE',
+            primaryPositions: p1,
+            secondaryPosition: s1[0] || 'NONE',
+            secondaryPositions: s1,
+            tertiaryPositions: t1,
+            forbiddenPositions: f1
+          };
+          return newList;
+        }
+
+        // 명단에 없는 경우 새로 추가
+        const newPlayer: Player = {
+          id: 'p_' + Math.random().toString(36).substr(2, 9),
+          name: applicant.name,
+          tier: (Tier as any)[applicant.tier] || Tier.B,
+          isActive: true,
+          sportType: room.sport as SportType,
+          primaryPosition: p1[0] || 'NONE',
+          primaryPositions: p1,
+          secondaryPosition: s1[0] || 'NONE',
+          secondaryPositions: s1,
+          tertiaryPositions: t1,
+          forbiddenPositions: f1
+        };
+        return [...prev, newPlayer];
+      });
     } catch (e) {
       console.error("Approval Error:", e);
     }
@@ -2324,27 +2378,48 @@ const App: React.FC = () => {
       const updatedApplicants = room.applicants.map(a => ({ ...a, isApproved: true }));
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
 
-      const newPlayers: Player[] = room.applicants.filter(a => !a.isApproved).map(a => {
-        const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
-        const s1 = (a as any).secondaryPositions || [];
-        const t1 = (a as any).tertiaryPositions || [];
-        const f1 = (a as any).forbiddenPositions || [];
+      setPlayers(prev => {
+        const newList = [...prev];
+        room.applicants.filter(a => !a.isApproved).forEach(a => {
+          const existingIdx = newList.findIndex(p => p.name === a.name);
+          const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
+          const s1 = (a as any).secondaryPositions || [];
+          const t1 = (a as any).tertiaryPositions || [];
+          const f1 = (a as any).forbiddenPositions || [];
 
-        return {
-          id: 'p_' + Math.random().toString(36).substr(2, 9),
-          name: a.name,
-          tier: (Tier as any)[a.tier] || Tier.B,
-          isActive: true,
-          sportType: room.sport as SportType,
-          primaryPosition: p1[0] || 'NONE',
-          primaryPositions: p1,
-          secondaryPosition: s1[0] || 'NONE',
-          secondaryPositions: s1,
-          tertiaryPositions: t1,
-          forbiddenPositions: f1
-        };
+          if (existingIdx > -1) {
+            // 이름이 같은 선수가 있는 경우 최신 정보로 업데이트
+            newList[existingIdx] = {
+              ...newList[existingIdx],
+              tier: (Tier as any)[a.tier] || Tier.B,
+              isActive: true,
+              sportType: room.sport as SportType,
+              primaryPosition: p1[0] || 'NONE',
+              primaryPositions: p1,
+              secondaryPosition: s1[0] || 'NONE',
+              secondaryPositions: s1,
+              tertiaryPositions: t1,
+              forbiddenPositions: f1
+            };
+          } else {
+            // 명단에 없는 경우 새로 추가
+            newList.push({
+              id: 'p_' + Math.random().toString(36).substr(2, 9),
+              name: a.name,
+              tier: (Tier as any)[a.tier] || Tier.B,
+              isActive: true,
+              sportType: room.sport as SportType,
+              primaryPosition: p1[0] || 'NONE',
+              primaryPositions: p1,
+              secondaryPosition: s1[0] || 'NONE',
+              secondaryPositions: s1,
+              tertiaryPositions: t1,
+              forbiddenPositions: f1
+            });
+          }
+        });
+        return newList;
       });
-      setPlayers(prev => [...prev, ...newPlayers]);
     } catch (e) {
       console.error("Approve All Error:", e);
     }
@@ -2826,7 +2901,7 @@ const App: React.FC = () => {
                 const [y, m, d] = r.matchDate.split('-').map(Number);
                 const [hh, mm] = r.matchTime.split(':').map(Number);
                 const matchTime = new Date(y, m - 1, d, hh, mm);
-                const expiryLimit = new Date(matchTime.getTime() + 30 * 60 * 1000);
+                const expiryLimit = new Date(matchTime.getTime() + 2 * 60 * 60 * 1000);
                 return expiryLimit > new Date() && r.status !== 'DELETED';
               } catch { return true; }
             });
@@ -2840,26 +2915,13 @@ const App: React.FC = () => {
             return (
               <div key={room.id} className="space-y-2">
                 <div
-                  className={`w-full rounded-2xl p-4 shadow-md border transition-all text-left flex items-center justify-between group relative overflow-hidden ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
+                  className={`w-full rounded-2xl p-4 shadow-md border transition-all text-left flex items-center justify-between ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
                 >
                   <div className="flex flex-col gap-0.5 overflow-hidden flex-1 mr-3">
                     <p className={`text-[9px] font-black uppercase tracking-widest ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
                     <p className="text-sm font-black truncate">{room.matchDate} {room.matchTime}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // 전역 상태가 없으므로 DOM 이벤트를 통해 HostRoomModal에 알리거나,
-                        // 임시로 activeRoom 인스턴스를 조작하여 편집 모드를 유도합니다.
-                        // 가장 깔끔한 방법은 App 수준에서 isEditRequested 상태를 두는 것입니다.
-                        (window as any).__edit_requested = true;
-                        setShowHostRoomModal(true);
-                      }}
-                      className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-90 ${currentActiveRoom?.id === room.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
-                    >
-                      <EditIcon />
-                    </button>
                     <div className="flex flex-col items-end">
                       <span className="text-lg font-black leading-none">
                         {players.filter(p => p.isActive && p.sportType === room.sport).length}명
@@ -2887,7 +2949,7 @@ const App: React.FC = () => {
                               <span className="text-[9px] font-bold text-slate-400">{app.position}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <button onClick={() => cancelApplication(room.id, app)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><TrashIcon /></button>
+                              <button onClick={() => cancelApplication(room.id, app)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><TrashIcon /></button>
                               <button onClick={() => handleApproveApplicant(room, app)} className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg active:scale-95 transition-all">{t('approve' as any)}</button>
                             </div>
                           </div>
@@ -2909,7 +2971,7 @@ const App: React.FC = () => {
                       <UserCheckIcon />
                       {t('approveAll' as any)}
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); handleCloseRecruitRoom(room); }} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-rose-500 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); handleCloseRecruitRoom(room); }} className="bg-white dark:bg-slate-950 py-3 text-[10px] font-black text-slate-600 dark:text-slate-400 flex flex-col items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
                       <TrashIcon />
                       {t('delete_recruit_room' as any)}
                     </button>
@@ -3638,7 +3700,7 @@ const App: React.FC = () => {
             approvedPlayers.forEach(ap => {
               const existingIdx = newList.findIndex(p => p.name === ap.name);
               if (existingIdx > -1) {
-                // 이름이 같으면 기존 선수 정보 업데이트 및 참가 활성화
+                // 이름이 같은 선수가 있는 경우 최신 신청 정보로 업데이트하고 참가 상태로 만듦
                 newList[existingIdx] = {
                   ...newList[existingIdx],
                   tier: ap.tier,
