@@ -1254,24 +1254,24 @@ const HostRoomModal: React.FC<{
   /* 날짜/시간 초기값 및 상태 관리 */
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours() + 1, 0, 0, 0);
+    d.setHours(d.getHours(), 0, 0, 0); // 현재 시간 정각
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [startTime, setStartTime] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours() + 1, 0, 0, 0);
+    d.setHours(d.getHours(), 0, 0, 0);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
 
   // 종료 시간은 시작 시간 + 1시간 기본값
   const [endDate, setEndDate] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours() + 2, 0, 0, 0); // Start + 1 hour
+    d.setHours(d.getHours() + 1, 0, 0, 0); // Start + 1 hour
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [endTime, setEndTime] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours() + 2, 0, 0, 0);
+    d.setHours(d.getHours() + 1, 0, 0, 0);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
 
@@ -1293,7 +1293,7 @@ const HostRoomModal: React.FC<{
     if (isOpen && !activeRoom) {
       // 모달이 열릴 때(새 방 생성 모드인 경우) 날짜와 시간을 현재 기준으로 리셋
       const d = new Date();
-      d.setHours(d.getHours() + 1, 0, 0, 0);
+      d.setHours(d.getHours(), 0, 0, 0); // 현재 시간의 정각
 
       const newStartDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const newStartTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
