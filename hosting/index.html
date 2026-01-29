@@ -430,35 +430,42 @@
 
                 currentRoomData = docSnap.data();
 
-                // --- 자동 마감 체크 로직 ---
-                const matchDateStr = currentRoomData.matchDate;
-                const matchTimeStr = currentRoomData.matchTime;
-                const matchDateTime = new Date(`${matchDateStr}T${matchTimeStr}`);
-                const expireTime = new Date(matchDateTime.getTime() + 30 * 60 * 1000); // 30분 여유
+                // --- 시작: 시간 기반 자동 마감 로직 ---
+                const matchStartStr = `${currentRoomData.matchDate}T${currentRoomData.matchTime}`;
+                const matchStartTime = new Date(matchStartStr);
+                const now = new Date();
+                const diffMs = now - matchStartTime;
+                const diffMinutes = diffMs / (1000 * 60);
 
-                if (currentRoomData.status === 'CLOSED' || (matchDateStr && matchTimeStr && new Date() > expireTime)) {
+                if (diffMinutes >= 30) {
+                    // 30분 초과: URL 만료 (아예 아무것도 안 보여줌)
                     document.getElementById('loading').innerHTML = `
-                        <div class="text-center p-8 space-y-6 animate-in zoom-in-95 duration-500">
-                            <div class="w-20 h-20 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <div class="text-center p-12 space-y-6 animate-in fade-in zoom-in duration-500">
+                            <div class="w-24 h-24 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <div class="space-y-2">
-                                <h3 class="text-2xl font-black text-rose-500">모집 마감</h3>
-                                <p class="text-slate-500 dark:text-slate-400 font-bold leading-relaxed">경기가 시작되어 모집이 종료되었습니다.<br>나중에 새로운 모임으로 만나요!</p>
-                            </div>
-                            <div class="pt-4">
-                                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker&hl=ko" target="_blank"
-                                    class="inline-block px-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 transition-all">
-                                    Belo 앱 다운로드 하기
-                                </a>
+                            <div class="space-y-3">
+                                <h3 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">URL 만료됨</h3>
+                                <p class="text-slate-500 dark:text-slate-400 font-bold leading-relaxed">경기가 시작된 지 30분이 지나<br>해당 페이지는 자동으로 비활성화되었습니다.</p>
                             </div>
                         </div>
                     `;
-                    return;
+                    return; // 리스너 등록 생략
                 }
-                // --------------------------
+
+                if (diffMinutes >= 0) {
+                    // 정시 ~ 30분: 모집 종료 안내 (정보는 보여주되 신청 불가)
+                    const statusBanner = document.createElement('div');
+                    statusBanner.className = 'w-full p-4 mb-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 font-black text-sm text-center animate-in slide-in-from-top-4 duration-500';
+                    statusBanner.innerHTML = '⚡ 모집이 마감되어 현재 경기가 진행 중입니다.';
+                    document.querySelector('.max-w-md').prepend(statusBanner);
+
+                    // 신청 폼 숨기기
+                    document.getElementById('applyForm').remove();
+                }
+                // --- 종료: 시간 기반 자동 마감 로직 ---
 
                 const rawSport = currentRoomData.sport || 'Soccer';
                 currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
