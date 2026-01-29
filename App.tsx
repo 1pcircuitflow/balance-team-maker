@@ -1477,7 +1477,7 @@ const HostRoomModal: React.FC<{
                   </div>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-2 transition-colors duration-300 border border-slate-100 dark:border-slate-800">
+                <div className="flex justify-center transition-all duration-300">
                   {activePicker === 'START' ? (
                     <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} lang={lang} />
                   ) : (
@@ -1507,7 +1507,7 @@ const HostRoomModal: React.FC<{
                   </div>
                 )}
               </div>
-              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
+              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('create')}</button>
             </div>
           ) : (
             null
@@ -1607,6 +1607,7 @@ const App: React.FC = () => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedTeamColors, setSelectedTeamColors] = useState<string[]>(['#ef4444', '#3b82f6']);
   const [useRandomMix, setUseRandomMix] = useState(false);
+  const [editingResultTeamIdx, setEditingResultTeamIdx] = useState<number | null>(null);
 
   const [alertState, setAlertState] = useState<{ isOpen: boolean; title?: string; message: string }>({
     isOpen: false,
@@ -2113,9 +2114,28 @@ const App: React.FC = () => {
       // 클라우드에서 데이터 가져오기
       setIsDataLoaded(false); // 로드 시작 전 플래그 리셋
       const cloudPlayers = await loadPlayersFromCloud(googleUser.id);
-      if (cloudPlayers && cloudPlayers.length > 0) {
-        setPlayers(cloudPlayers);
-      }
+
+      setPlayers(prev => {
+        const sampleIdPattern = /^(ko|en|pt|es|ja)_/;
+        // 현재 로컬 선수들 중 샘플이 아닌 실제 추가된 선수들만 필터링
+        const actualLocalPlayers = prev.filter(p => !sampleIdPattern.test(p.id));
+
+        if (!cloudPlayers || cloudPlayers.length === 0) {
+          // 클라우드에 데이터가 없으면 현재 로컬의 실제 데이터만 유지 (샘플 제거 효과)
+          return actualLocalPlayers.length > 0 ? actualLocalPlayers : prev;
+        }
+
+        // 병합: 클라우드 데이터를 기본으로 하되, 로컬에만 있는 새로운 선수를 추가 (이름 기준)
+        const merged = [...cloudPlayers];
+        actualLocalPlayers.forEach(lp => {
+          const isDuplicate = merged.some(cp => cp.name === lp.name);
+          if (!isDuplicate) {
+            merged.push(lp);
+          }
+        });
+
+        return merged;
+      });
       setIsDataLoaded(true);
     } catch (e: any) {
       console.error('Login failed', e);
@@ -2817,6 +2837,16 @@ const App: React.FC = () => {
   };
 
   const currentQuotaTotal = Object.values(quotas).reduce<number>((acc, val) => acc + (typeof val === 'number' ? val : 0), 0);
+  const handleUpdateResultTeamColor = (idx: number, colorValue: string, colorName: string) => {
+    if (!result) return;
+    const nextResult = { ...result };
+    const nextTeams = [...nextResult.teams];
+    nextTeams[idx] = { ...nextTeams[idx], color: colorValue, colorName: colorName };
+    nextResult.teams = nextTeams;
+    setResult(nextResult);
+    setEditingResultTeamIdx(null);
+  };
+
   const expectedPerTeam = activePlayers.length > 0 ? Math.floor(activePlayers.length / teamCount) : 0;
 
   return (
@@ -3470,22 +3500,53 @@ const App: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {result.teams.map((team, idx) => (
                 <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] flex flex-col h-full hover:border-transparent transition-all overflow-hidden">
-                  <div className="bg-white dark:bg-slate-950 px-5 py-4 flex items-center justify-between" style={{ borderTop: team.color ? `4px solid ${team.color}` : 'none' }}>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm pt-0.5 shadow-sm"
-                        style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: darkMode ? '#e2e8f0' : '#0f172a', color: darkMode ? '#0f172a' : 'white' }}
-                      >
-                        {idx + 1}
+                  <div className="bg-white dark:bg-slate-950 px-5 py-4 flex flex-col gap-3" style={{ borderTop: team.color ? `4px solid ${team.color}` : 'none' }}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm pt-0.5 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-all relative group"
+                          style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: darkMode ? '#e2e8f0' : '#0f172a', color: darkMode ? '#0f172a' : 'white' }}
+                          onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
+                          data-capture-ignore="true"
+                        >
+                          {idx + 1}
+                          <div className="absolute -top-1 -right-1 bg-white dark:bg-slate-800 rounded-full p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                            <EditIcon />
+                          </div>
+                        </div>
+                        {/* 캡처용 (보이는 것과 동일하지만 클릭 불가) */}
+                        <div
+                          className="hidden w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm pt-0.5 shadow-sm"
+                          style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: darkMode ? '#e2e8f0' : '#0f172a', color: darkMode ? '#0f172a' : 'white' }}
+                          data-capture-only="true"
+                        >
+                          {idx + 1}
+                        </div>
+
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider pt-0.5">
+                          {team.colorName ? t('teamNameWithColor', t(team.colorName as any)) : `TEAM ${String.fromCharCode(65 + idx)}`}
+                        </h4>
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider pt-0.5">
-                        {team.colorName ? t('teamNameWithColor', t(team.colorName as any)) : `TEAM ${String.fromCharCode(65 + idx)}`}
-                      </h4>
+                      <div className="text-right flex flex-col items-end justify-center">
+                        <span className="block text-[8px] font-semibold text-slate-400 dark:text-slate-500 uppercase mb-0.5 pt-0.5">{t('squadSum')}</span>
+                        <span className="text-xl font-semibold font-mono text-slate-900 dark:text-slate-100">{team.totalSkill}</span>
+                      </div>
                     </div>
-                    <div className="text-right flex flex-col items-end justify-center">
-                      <span className="block text-[8px] font-semibold text-slate-400 dark:text-slate-500 uppercase mb-0.5 pt-0.5">{t('squadSum')}</span>
-                      <span className="text-xl font-semibold font-mono text-slate-900 dark:text-slate-100">{team.totalSkill}</span>
-                    </div>
+
+                    {/* 결과용 색상 피커 */}
+                    {editingResultTeamIdx === idx && (
+                      <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200" data-capture-ignore="true">
+                        {TEAM_COLORS.map(color => (
+                          <button
+                            key={color.value}
+                            onClick={() => handleUpdateResultTeamColor(idx, color.value, color.name)}
+                            className={`w-6 h-6 rounded-lg transition-all ring-offset-2 dark:ring-offset-slate-950 ${team.color === color.value ? 'ring-2 ring-slate-900 dark:ring-slate-100 scale-110 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                            style={{ backgroundColor: color.value, border: color.value === '#ffffff' ? '1px solid #e2e8f0' : 'none' }}
+                            title={t(color.name as any)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="p-3.5 flex-1 space-y-2">
                     {getSortedTeamPlayers(team.players).map(p => (
