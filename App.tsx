@@ -1287,6 +1287,7 @@ const HostRoomModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
+  const [isPickerSelectionMode, setIsPickerSelectionMode] = useState(false);
 
   useEffect(() => {
     if (isOpen && !activeRoom) {
@@ -1479,9 +1480,21 @@ const HostRoomModal: React.FC<{
 
                 <div className="flex justify-center transition-all duration-300">
                   {activePicker === 'START' ? (
-                    <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} lang={lang} />
+                    <DateTimePicker
+                      date={startDate}
+                      time={startTime}
+                      onChange={handleStartTimeChange}
+                      lang={lang}
+                      onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                    />
                   ) : (
-                    <DateTimePicker date={endDate} time={endTime} onChange={(d, t) => { setEndDate(d); setEndTime(t); }} lang={lang} />
+                    <DateTimePicker
+                      date={endDate}
+                      time={endTime}
+                      onChange={(d, t) => { setEndDate(d); setEndTime(t); }}
+                      lang={lang}
+                      onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                    />
                   )}
                 </div>
               </div>
@@ -1507,9 +1520,11 @@ const HostRoomModal: React.FC<{
                   </div>
                 )}
               </div>
-              <div className="flex justify-end mt-2">
-                <button onClick={handleCreate} disabled={loading} className="w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
-              </div>
+              {!isPickerSelectionMode && (
+                <div className="flex justify-end mt-2">
+                  <button onClick={handleCreate} disabled={loading} className="w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
+                </div>
+              )}
             </div>
           ) : (
             null

@@ -239,6 +239,7 @@ export const TRANSLATIONS = {
     am: 'AM',
     pm: 'PM',
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    select: 'Select',
   },
   es: {
     appTitle: 'Generador de Equipos Pro',
@@ -464,6 +465,7 @@ export const TRANSLATIONS = {
     am: 'AM',
     pm: 'PM',
     months: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    select: 'Seleccionar',
   },
   ja: {
     appTitle: 'バランスチームメーカー Pro',
@@ -689,6 +691,7 @@ export const TRANSLATIONS = {
     am: '午前',
     pm: '午後',
     months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    select: '選択',
   },
   ko: {
     appTitle: 'Balance Team Maker Pro',
@@ -927,6 +930,7 @@ export const TRANSLATIONS = {
     am: '오전',
     pm: '오후',
     months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+    select: '선택',
   },
   pt: {
     appTitle: 'Gerador de Equipes Pro',

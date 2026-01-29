@@ -8,6 +8,7 @@ interface DateTimePickerProps {
     onChange: (date: string, time: string) => void;
     lang: Language;
     onClose?: () => void;
+    onViewModeChange?: (mode: 'CALENDAR' | 'YEAR_MONTH_SELECT') => void;
 }
 
 const WheelPicker: React.FC<{
@@ -25,7 +26,12 @@ const WheelPicker: React.FC<{
         if (scrollRef.current) {
             const index = items.indexOf(selected);
             if (index !== -1) {
-                scrollRef.current.scrollTop = index * itemHeight;
+                // 렌더링 타이밍 이슈로 스크롤이 씹히는 현상 방지
+                setTimeout(() => {
+                    if (scrollRef.current) {
+                        scrollRef.current.scrollTop = index * itemHeight;
+                    }
+                }, 10);
             }
         }
     }, [selected, items, itemHeight]);
@@ -74,7 +80,7 @@ const WheelPicker: React.FC<{
     );
 };
 
-export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange, lang }) => {
+export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange, lang, onViewModeChange }) => {
     const t = (key: any): any => (TRANSLATIONS[lang] as any)[key] || key;
 
     // Parse input props
@@ -95,7 +101,12 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const minuteStr = String(minute).padStart(2, '0');
 
     // UI State
-    const [viewMode, setViewMode] = useState<'CALENDAR' | 'YEAR_MONTH_SELECT'>('CALENDAR');
+    const [viewMode, setViewModeState] = useState<'CALENDAR' | 'YEAR_MONTH_SELECT'>('CALENDAR');
+
+    const setViewMode = (mode: 'CALENDAR' | 'YEAR_MONTH_SELECT') => {
+        setViewModeState(mode);
+        if (onViewModeChange) onViewModeChange(mode);
+    };
 
     // Calendar logic (memoized)
     const calendarDays = useMemo(() => {
@@ -176,8 +187,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
             {/* Header (Refined) */}
             <div className="flex items-center justify-center py-2 relative">
                 <button
-                    onClick={() => setViewMode(prev => prev === 'CALENDAR' ? 'YEAR_MONTH_SELECT' : 'CALENDAR')}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 group 
+                    onClick={() => setViewMode(viewMode === 'CALENDAR' ? 'YEAR_MONTH_SELECT' : 'CALENDAR')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 group
                         ${viewMode === 'YEAR_MONTH_SELECT' ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 >
                     <span className="text-sm font-black text-slate-900 dark:text-white">
@@ -227,7 +238,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                 onClick={() => setViewMode('CALENDAR')}
                                 className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-95"
                             >
-                                {t('select') || 'Select'}
+                                {t('select')}
                             </button>
                         </div>
                     </div>
