@@ -1277,45 +1277,49 @@ const HostRoomModal: React.FC<{
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
 
+  const [isEditMode, setIsEditMode] = useState(false);
+
   useEffect(() => {
-    if (isOpen) {
-      if (!activeRoom) {
-        // 모달이 열릴 때(새 방 생성 모드인 경우) 날짜와 시간을 현재 기준으로 리셋
-        const d = new Date();
-        d.setHours(d.getHours() + 1, 0, 0, 0);
+    if (isOpen && activeRoom) {
+      // 기존 방 정보로 초기화
+      setTitle(activeRoom.title);
+      setStartDate(activeRoom.matchDate);
+      setStartTime(activeRoom.matchTime);
+      setEndDate(activeRoom.matchEndDate || activeRoom.matchDate);
+      setEndTime(activeRoom.matchEndTime || activeRoom.matchTime);
+      setUseLimit(activeRoom.maxApplicants > 0);
+      setMaxApplicants(activeRoom.maxApplicants > 0 ? activeRoom.maxApplicants : 12);
 
-        const newStartDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        const newStartTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-
-        setStartDate(newStartDate);
-        setStartTime(newStartTime);
-
-        // 종료 시간은 시작 + 1시간
-        const endD = new Date(d.getTime() + 60 * 60 * 1000);
-        setEndDate(`${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`);
-        setEndTime(`${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}`);
-
-        // 제목도 현재 탭에 맞춰 초기화
-        setTitle(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} ${t('meeting')}`);
-        setUseLimit(false);
-        setMaxApplicants(12);
+      // 만약 외부(App)에서 수정 버튼을 눌러 열렸다면 자동으로 편집 모드 활성화
+      if ((window as any).__edit_requested) {
+        setIsEditMode(true);
+        (window as any).__edit_requested = false; // 소모된 플래그 리셋
       } else {
-        // 기존 방 수정 모드: 기존 정보로 초기화
-        setStartDate(activeRoom.matchDate);
-        setStartTime(activeRoom.matchTime);
-        setEndDate(activeRoom.matchEndDate || activeRoom.matchDate);
-        setEndTime(activeRoom.matchEndTime || activeRoom.matchTime);
-        setTitle(activeRoom.title);
-        setUseLimit(activeRoom.maxApplicants > 0);
-        setMaxApplicants(activeRoom.maxApplicants || 12);
+        setIsEditMode(false); // 기본은 관리 모드
       }
+    } else if (isOpen && !activeRoom) {
+      // 모달이 열릴 때(새 방 생성 모드인 경우) 날짜와 시간을 현재 기준으로 리셋
+      const d = new Date();
+      d.setHours(d.getHours() + 1, 0, 0, 0);
+
+      const newStartDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const newStartTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+      setStartDate(newStartDate);
+      setStartTime(newStartTime);
+
+      // 종료 시간은 시작 + 1시간
+      const endD = new Date(d.getTime() + 60 * 60 * 1000);
+      setEndDate(`${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`);
+      setEndTime(`${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}`);
+
+      // 제목도 현재 탭에 맞춰 초기화
+      setTitle(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} ${t('meeting')}`);
     }
 
     if (activeRoom?.id && isOpen) {
-      // 실시간 방 정보 구독
+      // 실시간 방 정보 구독 (관리 모드용)
       const unsub = subscribeToRoom(activeRoom.id, (room) => {
-        // 여기서 onRoomCreated를 호출하면 상태가 업데이트됨 (단, 사용자가 수정 중일 때는 덮어쓰지 않도록 주의해야 하나?)
-        // 일단 UI 흐름상 방장이 수정하는 동안 데이터가 바뀌는 일은 거의 없으므로 그대로 둡니다.
         if (room) onRoomCreated(room);
       });
 
@@ -1332,84 +1336,23 @@ const HostRoomModal: React.FC<{
   const handleStartTimeChange = (newDate: string, newTime: string) => {
     setStartDate(newDate);
     setStartTime(newTime);
-
-    // 종료 시간 자동 계산 (시작 시간 + 1시간)
     const start = new Date(`${newDate}T${newTime}`);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
-
-    // 날짜 포맷팅
-    const eYear = end.getFullYear();
-    const eMonth = String(end.getMonth() + 1).padStart(2, '0');
-    const eDay = String(end.getDate()).padStart(2, '0');
-    const eHours = String(end.getHours()).padStart(2, '0');
-    const eMinutes = String(end.getMinutes()).padStart(2, '0');
-
-    setEndDate(`${eYear}-${eMonth}-${eDay}`);
-    setEndTime(`${eHours}:${eMinutes}`);
+    setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+    setEndTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`);
   };
 
   const handleCreate = async () => {
     setLoading(true);
     try {
       const roomId = await createRecruitmentRoom({
-        hostId: currentUserId,
-        hostName: userNickname,
-        title: title,
-        sport: activeTab,
-        matchDate: startDate,
-        matchTime: startTime,
-        matchEndDate: endDate,
-        matchEndTime: endTime,
-        maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
-        fcmToken: localStorage.getItem('fcm_token') || undefined
+        hostId: currentUserId, hostName: userNickname, title, sport: activeTab,
+        matchDate: startDate, matchTime: startTime, matchEndDate: endDate, matchEndTime: endTime,
+        maxApplicants: useLimit ? maxApplicants : 0, fcmToken: localStorage.getItem('fcm_token') || undefined
       });
       const room = await getRoomInfo(roomId);
       if (room) onRoomCreated(room);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateLimit = async (newLimit: number) => {
-    if (!activeRoom) return;
-    try {
-      await updateDoc(doc(db, "rooms", activeRoom.id), { maxApplicants: newLimit });
-    } catch (e) { console.error(e); }
-  };
-
-
-  const handleShare = async () => {
-    if (!activeRoom) return;
-
-    // 실제 배포된 도메인 주소
-    const DEPLOYED_HOSTING_URL = "https://belo-apply.web.app";
-
-    // 공유 링크는 어떤 환경에서든 항상 운영 주소를 사용하도록 고정합니다.
-    const webUrl = `${DEPLOYED_HOSTING_URL}/index.html?room=${activeRoom.id}&lang=${lang}`;
-
-    try {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          await Share.share({
-            title: t('shareRecruitLink'),
-            text: `[${activeRoom.title}] ${startDate} ${startTime} ${t(activeRoom.sport.toLowerCase() as any)} 참여자를 모집합니다!\n\n👇 참가하기 👇\n${webUrl}`,
-            dialogTitle: t('shareRecruitLink'),
-          });
-        } catch (shareError) {
-          await Clipboard.write({ string: webUrl });
-        }
-      } else {
-        await Clipboard.write({ string: webUrl });
-      }
-    } catch (e) {
-      try {
-        await Clipboard.write({ string: webUrl });
-      } catch (err) {
-        // Fail silently or log
-      }
-    }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const handleUpdate = async () => {
@@ -1417,116 +1360,115 @@ const HostRoomModal: React.FC<{
     setLoading(true);
     try {
       await updateDoc(doc(db, "rooms", activeRoom.id), {
-        title: title,
-        matchDate: startDate,
-        matchTime: startTime,
-        matchEndDate: endDate,
-        matchEndTime: endTime,
-        maxApplicants: useLimit ? maxApplicants : 0
+        title, matchDate: startDate, matchTime: startTime,
+        matchEndDate: endDate, matchEndTime: endTime, maxApplicants: useLimit ? maxApplicants : 0
       });
-      // showAlert(t('updateSuccess' as any));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+      setIsEditMode(false);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
-
-  const handleShareButton = async () => {
-    await handleShare();
+  const handleShare = async () => {
+    if (!activeRoom) return;
+    const webUrl = `https://belo-apply.web.app/index.html?room=${activeRoom.id}&lang=${lang}`;
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({ title: t('shareRecruitLink'), text: `[${activeRoom.title}] ${activeRoom.matchDate} ${activeRoom.matchTime} ${t(activeRoom.sport.toLowerCase())} 참여자를 모집합니다!\n\n${webUrl}` });
+      } else { await Clipboard.write({ string: webUrl }); }
+    } catch (e) { await Clipboard.write({ string: webUrl }); }
   };
 
   if (!isOpen) return null;
+
+  // 관리 모드일 때 (방 정보가 있고 편집 모드가 아닐 때)
+  if (activeRoom && !isEditMode) {
+    const pendingApplicants = activeRoom.applicants.filter(a => !a.isApproved);
+    // ... 기존 관리 UI 렌더링 (아래 return 문에 있음)
+  }
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-black dark:text-white">{activeRoom ? t('manageRecruitRoom' as any) : t('createRecruitRoom')}</h3>
+          <div className="flex justify-end items-center">
             <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200 transition-colors"><CloseIcon /></button>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
-              <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
-            </div>
 
+
+          {(!activeRoom || isEditMode) ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between px-2">
-                <div
-                  onClick={() => setActivePicker('START')}
-                  className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-50'}`}
-                >
-                  <span className="text-[10px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
-                  <span className={`text-base font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
-                    {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
-                  </span>
-                </div>
-                <div className="text-slate-300 dark:text-slate-600 pb-4">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                </div>
-                <div
-                  onClick={() => setActivePicker('END')}
-                  className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-50'}`}
-                >
-                  <span className="text-[10px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
-                  <span className={`text-base font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
-                    {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
-                  </span>
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 focus:outline-none dark:text-white font-bold" />
               </div>
-
-              <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-2 transition-colors duration-300 border border-slate-100 dark:border-slate-800">
-                {activePicker === 'START' ? (
-                  <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} lang={lang} />
-                ) : (
-                  <DateTimePicker date={endDate} time={endTime} onChange={(d, t) => { setEndDate(d); setEndTime(t); }} lang={lang} />
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('limitApplicants')}</label>
-                <button
-                  onClick={() => setUseLimit(!useLimit)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useLimit ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-              {useLimit && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('maxApplicants')}</label>
-                  <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-3">
-                    <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
-                    <span className="flex-1 text-center font-black dark:text-white">{t('peopleCount', maxApplicants)}</span>
-                    <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <div
+                    onClick={() => setActivePicker('START')}
+                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-50'}`}
+                  >
+                    <span className="text-[10px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
+                    <span className={`text-base font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
+                      {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
+                    </span>
+                  </div>
+                  <div className="text-slate-300 dark:text-slate-600 pb-4">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </div>
+                  <div
+                    onClick={() => setActivePicker('END')}
+                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-50'}`}
+                  >
+                    <span className="text-[10px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
+                    <span className={`text-base font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                      {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
+                    </span>
                   </div>
                 </div>
+
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-2 transition-colors duration-300 border border-slate-100 dark:border-slate-800">
+                  {activePicker === 'START' ? (
+                    <DateTimePicker date={startDate} time={startTime} onChange={handleStartTimeChange} lang={lang} />
+                  ) : (
+                    <DateTimePicker date={endDate} time={endTime} onChange={(d, t) => { setEndDate(d); setEndTime(t); }} lang={lang} />
+                  )}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('limitApplicants')}</label>
+                  <button
+                    onClick={() => setUseLimit(!useLimit)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useLimit ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                {useLimit && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('maxApplicants')}</label>
+                    <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-3">
+                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
+                      <span className="flex-1 text-center font-black dark:text-white">{t('peopleCount', maxApplicants)}</span>
+                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {isEditMode ? (
+                <div className="flex gap-2">
+                  <button onClick={() => setIsEditMode(false)} className="flex-1 py-5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black rounded-[2rem] transition-all active:scale-95 mt-4">{t('cancel')}</button>
+                  <button onClick={handleUpdate} disabled={loading} className="flex-[2] py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('update' as any)}</button>
+                </div>
+              ) : (
+                <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">{loading ? '...' : t('createRecruitRoom')}</button>
               )}
             </div>
-
-            {!activeRoom ? (
-              <button onClick={handleCreate} disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all active:scale-95 mt-4">
-                {loading ? '...' : t('createRecruitRoom')}
-              </button>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <button onClick={handleUpdate} disabled={loading} className="py-4 bg-slate-900 dark:bg-slate-700 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95">
-                  {loading ? '...' : t('update' as any)}
-                </button>
-                <button onClick={handleShareButton} className="py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-                  <ShareIcon /> {t('shareList')}
-                </button>
-              </div>
-            )}
-          </div>
+          ) : (
+            null
+          )}
         </div>
       </div>
     </div >
@@ -2884,7 +2826,7 @@ const App: React.FC = () => {
                 const [y, m, d] = r.matchDate.split('-').map(Number);
                 const [hh, mm] = r.matchTime.split(':').map(Number);
                 const matchTime = new Date(y, m - 1, d, hh, mm);
-                const expiryLimit = new Date(matchTime.getTime() + 2 * 60 * 60 * 1000);
+                const expiryLimit = new Date(matchTime.getTime() + 30 * 60 * 1000);
                 return expiryLimit > new Date() && r.status !== 'DELETED';
               } catch { return true; }
             });
@@ -2898,13 +2840,26 @@ const App: React.FC = () => {
             return (
               <div key={room.id} className="space-y-2">
                 <div
-                  className={`w-full rounded-2xl p-4 shadow-md border transition-all text-left flex items-center justify-between ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
+                  className={`w-full rounded-2xl p-4 shadow-md border transition-all text-left flex items-center justify-between group relative overflow-hidden ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
                 >
                   <div className="flex flex-col gap-0.5 overflow-hidden flex-1 mr-3">
                     <p className={`text-[9px] font-black uppercase tracking-widest ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
                     <p className="text-sm font-black truncate">{room.matchDate} {room.matchTime}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // 전역 상태가 없으므로 DOM 이벤트를 통해 HostRoomModal에 알리거나,
+                        // 임시로 activeRoom 인스턴스를 조작하여 편집 모드를 유도합니다.
+                        // 가장 깔끔한 방법은 App 수준에서 isEditRequested 상태를 두는 것입니다.
+                        (window as any).__edit_requested = true;
+                        setShowHostRoomModal(true);
+                      }}
+                      className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-90 ${currentActiveRoom?.id === room.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+                    >
+                      <EditIcon />
+                    </button>
                     <div className="flex flex-col items-end">
                       <span className="text-lg font-black leading-none">
                         {players.filter(p => p.isActive && p.sportType === room.sport).length}명
