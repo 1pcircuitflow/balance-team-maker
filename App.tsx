@@ -1384,6 +1384,18 @@ const HostRoomModal: React.FC<{
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
         fcmToken: localStorage.getItem('fcm_token') || undefined
       });
+
+      // 링크생성 및 자동 복사
+      const DEPLOYED_HOSTING_URL = "https://belo-apply.web.app";
+      const webUrl = `${DEPLOYED_HOSTING_URL}/index.html?room=${roomId}&lang=${lang}`;
+
+      try {
+        await Clipboard.write({ string: webUrl });
+        alert(t('linkCopied' as any));
+      } catch (err) {
+        console.error('Clipboard copy failed', err);
+      }
+
       const room = await getRoomInfo(roomId);
       if (room) onRoomCreated(room);
     } catch (e) {
@@ -3000,18 +3012,52 @@ const App: React.FC = () => {
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('waitingList' as any)} ({pendingApplicants.length})</h4>
                       </div>
                       <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto pr-1">
-                        {pendingApplicants.map(app => (
-                          <div key={app.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white">{app.name}</span>
-                              <span className="text-[9px] font-bold text-slate-400">{app.position}</span>
+                        {pendingApplicants.map(app => {
+                          // 티어 값/라벨 정규화
+                          const tierVal = isNaN(Number(app.tier)) ? (Tier as any)[app.tier] : Number(app.tier);
+                          const tierLabel = isNaN(Number(app.tier)) ? app.tier : (Tier as any)[Number(app.tier)];
+
+                          return (
+                            <div key={app.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                              <div className="flex flex-col gap-1 justify-center pt-0.5 w-full">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${TIER_COLORS[tierVal as Tier] || TIER_COLORS[Tier.B]} pt-1`}>
+                                    {tierLabel}
+                                  </span>
+                                  <span className="text-xs font-black text-slate-900 dark:text-white leading-tight truncate">{app.name}</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 opacity-95">
+                                  {room.sport !== SportType.GENERAL && (
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                      {((app as any).primaryPositions?.length || (app.position ? 1 : 0)) > 0 && (
+                                        <div className="flex items-center gap-1 text-[8px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                          <span>{((app as any).primaryPositions || [app.position]).join(',')}</span>
+                                        </div>
+                                      )}
+                                      {((app as any).secondaryPositions?.length > 0) && (
+                                        <div className="flex items-center gap-1 text-[8px] font-extrabold text-yellow-600 dark:text-yellow-400">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                          <span>{(app as any).secondaryPositions.join(',')}</span>
+                                        </div>
+                                      )}
+                                      {((app as any).tertiaryPositions?.length > 0) && (
+                                        <div className="flex items-center gap-1 text-[8px] font-semibold text-orange-500 dark:text-orange-400">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                                          <span>{(app as any).tertiaryPositions.join(',')}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                                <button onClick={() => cancelApplication(room.id, app)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><TrashIcon /></button>
+                                <button onClick={() => handleApproveApplicant(room, app)} className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg active:scale-95 transition-all w-max whitespace-nowrap">{t('approve' as any)}</button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <button onClick={() => cancelApplication(room.id, app)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><TrashIcon /></button>
-                              <button onClick={() => handleApproveApplicant(room, app)} className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg active:scale-95 transition-all">{t('approve' as any)}</button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ) : null}
