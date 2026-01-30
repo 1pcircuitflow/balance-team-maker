@@ -1,0 +1,66 @@
+{
+  "results": {
+    "A1": {
+      "name": "Baseline (Greedy)",
+      "avgSD": "7.191",
+      "sdOfSD": "2.797",
+      "avgTime": "0.000",
+      "avgScore": "0.466"
+    },
+    "A6": {
+      "name": "Genetic Algorithm",
+      "avgSD": "0.653",
+      "sdOfSD": "0.341",
+      "avgTime": "0.010",
+      "avgScore": "0.797"
+    },
+    "A8": {
+      "name": "Tabu Search",
+      "avgSD": "2.541",
+      "sdOfSD": "1.612",
+      "avgTime": "0.000",
+      "avgScore": "0.652"
+    },
+    "A12": {
+      "name": "Rule-based",
+      "avgSD": "0.482",
+      "sdOfSD": "0.263",
+      "avgTime": "0.000",
+      "avgScore": "0.811"
+    }
+  },
+  "rankings": [
+    {
+      "id": "A12",
+      "name": "Rule-based",
+      "avgSD": "0.482",
+      "sdOfSD": "0.263",
+      "avgTime": "0.000",
+      "avgScore": "0.811"
+    },
+    {
+      "id": "A6",
+      "name": "Genetic Algorithm",
+      "avgSD": "0.653",
+      "sdOfSD": "0.341",
+      "avgTime": "0.010",
+      "avgScore": "0.797"
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "2.541",
+      "sdOfSD": "1.612",
+      "avgTime": "0.000",
+      "avgScore": "0.652"
+    },
+    {
+      "id": "A1",
+      "name": "Baseline (Greedy)",
+      "avgSD": "7.191",
+      "sdOfSD": "2.797",
+      "avgTime": "0.000",
+      "avgScore": "0.466"
+    }
+  ]
+}

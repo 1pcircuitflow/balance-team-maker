@@ -1,0 +1,379 @@
+{
+  "analysis": {
+    "variant": "high-temp",
+    "displayName": "High Temperature",
+    "config": {
+      "pairPenalty": 10000000,
+      "temperature": 500,
+      "iterations": 5000
+    },
+    "totalRuns": 1000,
+    "validRuns": 3,
+    "avgSD": 0.3733333333333333,
+    "minSD": 0,
+    "maxSD": 0.71,
+    "perfectCount": 1,
+    "perfectRate": "33.3",
+    "totalTime": 3397.4,
+    "avgTime": 3.3974,
+    "topPairs": [
+      {
+        "pair": "user_017-user_018",
+        "frequency": 82,
+        "percentage": "8.2"
+      },
+      {
+        "pair": "user_009-user_010",
+        "frequency": 70,
+        "percentage": "7.0"
+      },
+      {
+        "pair": "user_007-user_008",
+        "frequency": 66,
+        "percentage": "6.6"
+      },
+      {
+        "pair": "user_019-user_020",
+        "frequency": 64,
+        "percentage": "6.4"
+      },
+      {
+        "pair": "user_011-user_012",
+        "frequency": 64,
+        "percentage": "6.4"
+      },
+      {
+        "pair": "user_005-user_006",
+        "frequency": 61,
+        "percentage": "6.1"
+      },
+      {
+        "pair": "user_001-user_002",
+        "frequency": 54,
+        "percentage": "5.4"
+      },
+      {
+        "pair": "user_013-user_014",
+        "frequency": 54,
+        "percentage": "5.4"
+      },
+      {
+        "pair": "user_003-user_004",
+        "frequency": 50,
+        "percentage": "5.0"
+      },
+      {
+        "pair": "user_015-user_016",
+        "frequency": 37,
+        "percentage": "3.7"
+      }
+    ],
+    "maxPairFreq": 82,
+    "avgPairSimilarity": "8.2"
+  },
+  "results": [
+    {
+      "runNumber": 352,
+      "teams": [
+        {
+          "name": "Team A",
+          "totalSkill": 15,
+          "players": [
+            {
+              "name": "유저19",
+              "tier": 4,
+              "position": "SG"
+            },
+            {
+              "name": "유저20",
+              "tier": 4,
+              "position": "C"
+            },
+            {
+              "name": "유저47",
+              "tier": 3,
+              "position": "PF"
+            },
+            {
+              "name": "유저28",
+              "tier": 3,
+              "position": "SF"
+            },
+            {
+              "name": "유저86",
+              "tier": 2,
+              "position": "PG"
+            }
+          ]
+        },
+        {
+          "name": "Team B",
+          "totalSkill": 16,
+          "players": [
+            {
+              "name": "유저8",
+              "tier": 4,
+              "position": "PG"
+            },
+            {
+              "name": "유저7",
+              "tier": 4,
+              "position": "PF"
+            },
+            {
+              "name": "유저89",
+              "tier": 2,
+              "position": "SG"
+            },
+            {
+              "name": "유저14",
+              "tier": 4,
+              "position": "C"
+            },
+            {
+              "name": "유저32",
+              "tier": 3,
+              "position": "SF"
+            }
+          ]
+        },
+        {
+          "name": "Team C",
+          "totalSkill": 15.5,
+          "players": [
+            {
+              "name": "유저1",
+              "tier": 5,
+              "position": "PF"
+            },
+            {
+              "name": "유저27",
+              "tier": 3,
+              "position": "PG"
+            },
+            {
+              "name": "유저39",
+              "tier": 3,
+              "position": "SG"
+            },
+            {
+              "name": "유저59",
+              "tier": 3,
+              "position": "C"
+            },
+            {
+              "name": "유저41",
+              "tier": 3,
+              "position": "SF"
+            }
+          ]
+        }
+      ],
+      "standardDeviation": 0.41,
+      "maxDiff": 1,
+      "isValid": true
+    },
+    {
+      "runNumber": 426,
+      "teams": [
+        {
+          "name": "Team A",
+          "totalSkill": 18,
+          "players": [
+            {
+              "name": "유저2",
+              "tier": 5,
+              "position": "SF"
+            },
+            {
+              "name": "유저1",
+              "tier": 5,
+              "position": "PF"
+            },
+            {
+              "name": "유저95",
+              "tier": 1,
+              "position": "SG"
+            },
+            {
+              "name": "유저56",
+              "tier": 3,
+              "position": "C"
+            },
+            {
+              "name": "유저18",
+              "tier": 4,
+              "position": "PG"
+            }
+          ]
+        },
+        {
+          "name": "Team B",
+          "totalSkill": 16.5,
+          "players": [
+            {
+              "name": "유저47",
+              "tier": 3,
+              "position": "PF"
+            },
+            {
+              "name": "유저13",
+              "tier": 4,
+              "position": "PG"
+            },
+            {
+              "name": "유저6",
+              "tier": 4,
+              "position": "SF"
+            },
+            {
+              "name": "유저35",
+              "tier": 3,
+              "position": "SG"
+            },
+            {
+              "name": "유저38",
+              "tier": 3,
+              "position": "C"
+            }
+          ]
+        },
+        {
+          "name": "Team C",
+          "totalSkill": 16.5,
+          "players": [
+            {
+              "name": "유저91",
+              "tier": 1,
+              "position": "SF"
+            },
+            {
+              "name": "유저15",
+              "tier": 4,
+              "position": "SG"
+            },
+            {
+              "name": "유저43",
+              "tier": 3,
+              "position": "PF"
+            },
+            {
+              "name": "유저12",
+              "tier": 4,
+              "position": "C"
+            },
+            {
+              "name": "유저3",
+              "tier": 5,
+              "position": "PG"
+            }
+          ]
+        }
+      ],
+      "standardDeviation": 0.71,
+      "maxDiff": 1.5,
+      "isValid": true
+    },
+    {
+      "runNumber": 778,
+      "teams": [
+        {
+          "name": "Team A",
+          "totalSkill": 14,
+          "players": [
+            {
+              "name": "유저8",
+              "tier": 4,
+              "position": "PG"
+            },
+            {
+              "name": "유저7",
+              "tier": 4,
+              "position": "C"
+            },
+            {
+              "name": "유저82",
+              "tier": 2,
+              "position": "SF"
+            },
+            {
+              "name": "유저88",
+              "tier": 2,
+              "position": "SG"
+            },
+            {
+              "name": "유저38",
+              "tier": 3,
+              "position": "PF"
+            }
+          ]
+        },
+        {
+          "name": "Team B",
+          "totalSkill": 14,
+          "players": [
+            {
+              "name": "유저12",
+              "tier": 4,
+              "position": "C"
+            },
+            {
+              "name": "유저99",
+              "tier": 1,
+              "position": "PF"
+            },
+            {
+              "name": "유저100",
+              "tier": 1,
+              "position": "PG"
+            },
+            {
+              "name": "유저23",
+              "tier": 3,
+              "position": "SG"
+            },
+            {
+              "name": "유저2",
+              "tier": 5,
+              "position": "SF"
+            }
+          ]
+        },
+        {
+          "name": "Team C",
+          "totalSkill": 14,
+          "players": [
+            {
+              "name": "유저24",
+              "tier": 3,
+              "position": "C"
+            },
+            {
+              "name": "유저95",
+              "tier": 1,
+              "position": "PG"
+            },
+            {
+              "name": "유저10",
+              "tier": 4,
+              "position": "SF"
+            },
+            {
+              "name": "유저15",
+              "tier": 4,
+              "position": "SG"
+            },
+            {
+              "name": "유저41",
+              "tier": 3,
+              "position": "PF"
+            }
+          ]
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "isValid": true
+    }
+  ]
+}

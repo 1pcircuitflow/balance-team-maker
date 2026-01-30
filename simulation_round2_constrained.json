@@ -1,0 +1,172 @@
+{
+  "results": {
+    "A13": {
+      "name": "Hybrid",
+      "avgSD": "0.386",
+      "sdOfSD": "0.288",
+      "minSD": "0.000",
+      "maxSD": "1.782",
+      "avgScore": "0.736",
+      "constraintRate": "94.3",
+      "avgPairSim": "54.1",
+      "avgTime": "0.007",
+      "perfectRate": "3.0"
+    },
+    "A8": {
+      "name": "Tabu Search",
+      "avgSD": "0.675",
+      "sdOfSD": "1.099",
+      "minSD": "0.000",
+      "maxSD": "8.384",
+      "avgScore": "0.709",
+      "constraintRate": "92.0",
+      "avgPairSim": "54.0",
+      "avgTime": "0.001",
+      "perfectRate": "1.3"
+    },
+    "A9": {
+      "name": "Ant Colony",
+      "avgSD": "0.720",
+      "sdOfSD": "0.462",
+      "minSD": "0.047",
+      "maxSD": "3.564",
+      "avgScore": "0.665",
+      "constraintRate": "90.3",
+      "avgPairSim": "54.3",
+      "avgTime": "0.000",
+      "perfectRate": "0.0"
+    },
+    "A10": {
+      "name": "PSO",
+      "avgSD": "0.593",
+      "sdOfSD": "0.999",
+      "minSD": "0.000",
+      "maxSD": "8.500",
+      "avgScore": "0.729",
+      "constraintRate": "93.7",
+      "avgPairSim": "54.0",
+      "avgTime": "0.001",
+      "perfectRate": "1.0"
+    },
+    "A7": {
+      "name": "Differential Evolution",
+      "avgSD": "0.761",
+      "sdOfSD": "0.525",
+      "minSD": "0.047",
+      "maxSD": "3.584",
+      "avgScore": "0.700",
+      "constraintRate": "96.0",
+      "avgPairSim": "54.2",
+      "avgTime": "0.006",
+      "perfectRate": "0.0"
+    }
+  },
+  "rankings": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.386",
+      "sdOfSD": "0.288",
+      "minSD": "0.000",
+      "maxSD": "1.782",
+      "avgScore": "0.736",
+      "constraintRate": "94.3",
+      "avgPairSim": "54.1",
+      "avgTime": "0.007",
+      "perfectRate": "3.0"
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.593",
+      "sdOfSD": "0.999",
+      "minSD": "0.000",
+      "maxSD": "8.500",
+      "avgScore": "0.729",
+      "constraintRate": "93.7",
+      "avgPairSim": "54.0",
+      "avgTime": "0.001",
+      "perfectRate": "1.0"
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.675",
+      "sdOfSD": "1.099",
+      "minSD": "0.000",
+      "maxSD": "8.384",
+      "avgScore": "0.709",
+      "constraintRate": "92.0",
+      "avgPairSim": "54.0",
+      "avgTime": "0.001",
+      "perfectRate": "1.3"
+    },
+    {
+      "id": "A7",
+      "name": "Differential Evolution",
+      "avgSD": "0.761",
+      "sdOfSD": "0.525",
+      "minSD": "0.047",
+      "maxSD": "3.584",
+      "avgScore": "0.700",
+      "constraintRate": "96.0",
+      "avgPairSim": "54.2",
+      "avgTime": "0.006",
+      "perfectRate": "0.0"
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.720",
+      "sdOfSD": "0.462",
+      "minSD": "0.047",
+      "maxSD": "3.564",
+      "avgScore": "0.665",
+      "constraintRate": "90.3",
+      "avgPairSim": "54.3",
+      "avgTime": "0.000",
+      "perfectRate": "0.0"
+    }
+  ],
+  "top3": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.386",
+      "sdOfSD": "0.288",
+      "minSD": "0.000",
+      "maxSD": "1.782",
+      "avgScore": "0.736",
+      "constraintRate": "94.3",
+      "avgPairSim": "54.1",
+      "avgTime": "0.007",
+      "perfectRate": "3.0"
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.593",
+      "sdOfSD": "0.999",
+      "minSD": "0.000",
+      "maxSD": "8.500",
+      "avgScore": "0.729",
+      "constraintRate": "93.7",
+      "avgPairSim": "54.0",
+      "avgTime": "0.001",
+      "perfectRate": "1.0"
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.675",
+      "sdOfSD": "1.099",
+      "minSD": "0.000",
+      "maxSD": "8.384",
+      "avgScore": "0.709",
+      "constraintRate": "92.0",
+      "avgPairSim": "54.0",
+      "avgTime": "0.001",
+      "perfectRate": "1.3"
+    }
+  ]
+}

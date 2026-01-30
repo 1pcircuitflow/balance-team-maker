@@ -1,0 +1,98 @@
+{
+  "results": {
+    "Gemini": {
+      "name": "Gemini (Greedy+Swap)",
+      "avgSD": "0.121",
+      "minSD": "0.000",
+      "maxSD": "0.591",
+      "avgScore": "0.568",
+      "avgViolations": "2.62",
+      "avgPairSim": "25.4",
+      "avgTime": "0.0002",
+      "perfectRate": 13
+    },
+    "MoreGA": {
+      "name": "MoreGA (GA 50세대)",
+      "avgSD": "0.634",
+      "minSD": "0.047",
+      "maxSD": "1.584",
+      "avgScore": "0.539",
+      "avgViolations": "2.60",
+      "avgPairSim": "25.1",
+      "avgTime": "0.0153",
+      "perfectRate": 0
+    },
+    "MorePSO": {
+      "name": "MorePSO (PSO 60반복)",
+      "avgSD": "0.205",
+      "minSD": "0.000",
+      "maxSD": "0.556",
+      "avgScore": "0.575",
+      "avgViolations": "2.57",
+      "avgPairSim": "25.0",
+      "avgTime": "0.0005",
+      "perfectRate": 4
+    },
+    "SD_Limit": {
+      "name": "SD_Limit_2 (SD>2 패널티)",
+      "avgSD": "0.630",
+      "minSD": "0.094",
+      "maxSD": "1.713",
+      "avgScore": "0.528",
+      "avgViolations": "2.74",
+      "avgPairSim": "25.9",
+      "avgTime": "0.0088",
+      "perfectRate": 0
+    }
+  },
+  "rankings": [
+    {
+      "id": "MorePSO",
+      "name": "MorePSO (PSO 60반복)",
+      "avgSD": "0.205",
+      "minSD": "0.000",
+      "maxSD": "0.556",
+      "avgScore": "0.575",
+      "avgViolations": "2.57",
+      "avgPairSim": "25.0",
+      "avgTime": "0.0005",
+      "perfectRate": 4
+    },
+    {
+      "id": "Gemini",
+      "name": "Gemini (Greedy+Swap)",
+      "avgSD": "0.121",
+      "minSD": "0.000",
+      "maxSD": "0.591",
+      "avgScore": "0.568",
+      "avgViolations": "2.62",
+      "avgPairSim": "25.4",
+      "avgTime": "0.0002",
+      "perfectRate": 13
+    },
+    {
+      "id": "MoreGA",
+      "name": "MoreGA (GA 50세대)",
+      "avgSD": "0.634",
+      "minSD": "0.047",
+      "maxSD": "1.584",
+      "avgScore": "0.539",
+      "avgViolations": "2.60",
+      "avgPairSim": "25.1",
+      "avgTime": "0.0153",
+      "perfectRate": 0
+    },
+    {
+      "id": "SD_Limit",
+      "name": "SD_Limit_2 (SD>2 패널티)",
+      "avgSD": "0.630",
+      "minSD": "0.094",
+      "maxSD": "1.713",
+      "avgScore": "0.528",
+      "avgViolations": "2.74",
+      "avgPairSim": "25.9",
+      "avgTime": "0.0088",
+      "perfectRate": 0
+    }
+  ]
+}

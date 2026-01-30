@@ -100,6 +100,40 @@
 
 <body
     class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col items-center py-4 px-4 sm:px-6">
+    <!-- 인앱 브라우저 차단 안내 레이어 -->
+    <div id="inAppOverlay"
+        class="hidden fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-8 text-center space-y-6">
+        <div
+            class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shadow-inner animate-bounce">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </div>
+        <div class="space-y-2">
+            <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">보안 브라우저로 이동 중</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                구글 보안 정책에 따라<br>안전한 외부 브라우저로 이동합니다...
+            </p>
+        </div>
+        <div id="iosGuide"
+            class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+            <p class="text-xs text-slate-500 font-bold italic">아이폰(iOS) 사용자는 아래 순서대로 진행해주세요.</p>
+            <div class="flex items-center justify-center gap-3 text-slate-700 dark:text-slate-300">
+                <span
+                    class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center font-black border border-slate-200 dark:border-slate-700">1</span>
+                <p class="text-[11px] font-black text-left leading-snug">하단 바의 <span
+                        class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1 rounded font-black italic">내보내기
+                        아이콘(위로 화살표 📤)</span> 또는 <span
+                        class="bg-slate-100 dark:bg-slate-800 px-1 rounded font-black">나침반</span> 클릭</p>
+            </div>
+            <div class="flex items-center justify-center gap-3 text-slate-700 dark:text-slate-300">
+                <span
+                    class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center font-black border border-slate-200 dark:border-slate-700">2</span>
+                <p class="text-[11px] font-black text-left leading-snug">'Safari로 열기' 또는 '기본 브라우저로 앱 열기' 선택</p>
+            </div>
+        </div>
+    </div>
     <button id="themeToggle"
         class="fixed top-4 right-4 p-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm z-50 transition-all hover:scale-110 active:scale-95">
         <span id="themeIcon" class="text-xl leading-none block">🌙</span>
@@ -153,9 +187,26 @@
         <form id="applyForm" class="hidden space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
             <div
                 class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <div id="loginSection" class="hidden space-y-2">
+                <div id="loginSection" class="hidden space-y-4">
+                    <div id="authError"
+                        class="hidden mx-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 text-[11px] font-bold text-rose-600 dark:text-rose-400 text-center animate-in fade-in duration-300">
+                    </div>
+                    <div id="loginPrompt" class="text-center py-4 space-y-3">
+                        <div
+                            class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <p class="text-[14px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">
+                            구글 로그인 후 신청하실 수 있습니다.</p>
+                        <p class="text-[12px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed px-4">타인 사칭이나
+                            허위 신청을 방지하기 위해<br>구글 로그인을 해주세요.</p>
+                    </div>
+
                     <button type="button" id="loginBtn"
-                        class="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
+                        class="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group shadow-sm">
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
                             <path fill="#4285F4"
                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -166,68 +217,186 @@
                             <path fill="#EA4335"
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        <span class="text-[13px] font-bold text-slate-600 dark:text-slate-400">Google 로그인으로 정보
-                            기억하기</span>
+                        <span class="text-[14px] font-black text-slate-700 dark:text-slate-300">Google로 계속하기</span>
                     </button>
+
                     <div id="userInfo"
-                        class="hidden flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                        class="hidden flex items-center justify-between p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50">
                         <div class="flex items-center gap-3 text-left">
                             <img id="userPhoto" src=""
-                                class="w-8 h-8 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                                class="w-9 h-9 rounded-full border-2 border-white dark:border-slate-700 shadow-sm"
                                 alt="P">
                             <div class="flex flex-col">
                                 <span id="userName"
-                                    class="text-xs font-black text-slate-800 dark:text-slate-100">User</span>
-                                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Auto
-                                    Sync Active</span>
+                                    class="text-[13px] font-black text-slate-800 dark:text-slate-100 leading-tight">User</span>
+                                <span
+                                    class="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-tight">Verified
+                                    Applicant</span>
                             </div>
                         </div>
                         <button type="button" id="logoutBtn"
-                            class="text-[10px] font-black text-slate-400 hover:text-rose-500 transition-colors uppercase px-2">Logout</button>
+                            class="text-[10px] font-black text-slate-400 hover:text-rose-500 transition-colors uppercase px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">Logout</button>
                     </div>
                 </div>
 
-                <div class="space-y-1 text-left">
-                    <label
-                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">이름</label>
-                    <input type="text" id="name" required maxlength="10" placeholder="본인의 이름을 입력하세요"
-                        class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-[13px]">
-                </div>
+                <div id="formContent" class="hidden space-y-4 pt-2">
 
-                <div class="space-y-2 text-left">
-                    <label
-                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">실력
-                        티어</label>
-                    <div id="tierGroup" class="grid grid-cols-5 gap-2">
-                        <button type="button" data-tier="S"
-                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">S</button>
-                        <button type="button" data-tier="A"
-                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">A</button>
-                        <button type="button" data-tier="B"
-                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">B</button>
-                        <button type="button" data-tier="C"
-                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">C</button>
-                        <button type="button" data-tier="D"
-                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">D</button>
+                    <div class="space-y-1 text-left">
+                        <label
+                            class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">이름</label>
+                        <input type="text" id="name" required readonly maxlength="10" placeholder="로그인하면 자동으로 입력됩니다"
+                            class="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 font-bold focus:ring-0 transition-all outline-none text-[13px] cursor-not-allowed">
+                    </div>
+
+                    <div class="space-y-2 text-left">
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="tierGuideBtn"
+                                class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">?</button>
+                            <label
+                                class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">티어(경기
+                                승패에 미치는 영향력을 기준으로 선택)</label>
+                        </div>
+                        <div id="tierGroup" class="grid grid-cols-5 gap-2">
+                            <button type="button" data-tier="S"
+                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">S</button>
+                            <button type="button" data-tier="A"
+                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">A</button>
+                            <button type="button" data-tier="B"
+                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">B</button>
+                            <button type="button" data-tier="C"
+                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">C</button>
+                            <button type="button" data-tier="D"
+                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">D</button>
+                        </div>
+                    </div>
+
+                    <div id="posSection" class="space-y-2 text-left">
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="posGuideBtn"
+                                class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">?</button>
+                            <label
+                                class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">포지션(가능한
+                                포지션을 모두 선택)</label>
+                        </div>
+                        <div class="relative aspect-[1.1/1] w-[85%] mx-auto bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900"
+                            id="pitch">
+                            <div id="pitchLines" class="absolute inset-0 opacity-10 pointer-events-none"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="posSection" class="space-y-2 text-left">
-                    <label
-                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">주
-                        포지션</label>
-                    <div class="relative aspect-[1.1/1] w-[85%] mx-auto bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900"
-                        id="pitch">
-                        <div id="pitchLines" class="absolute inset-0 opacity-10 pointer-events-none"></div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" id="submitBtn"
-                class="w-full p-4 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-900/20 hover:bg-blue-500 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                참가 신청하기
-            </button>
+                <button type="submit" id="submitBtn"
+                    class="w-full p-4 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-900/20 hover:bg-blue-500 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                    참가 신청하기
+                </button>
         </form>
+
+        <!-- 티어 가이드 모달 -->
+        <div id="tierModal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+            <div id="tierModalOverlay" class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+            <div
+                class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
+                <div class="text-center space-y-1">
+                    <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">티어 가이드</h3>
+                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500">실력에 맞는 티어를 선택해 주세요</p>
+                </div>
+
+                <div class="space-y-2">
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50">
+                        <span class="text-base font-black text-purple-600 dark:text-purple-400">S</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">경기를 지배하는
+                                압도적인 실력</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50">
+                        <span class="text-base font-black text-rose-600 dark:text-rose-400">A</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">확실한 실력과 전술
+                                이해도</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50">
+                        <span class="text-base font-black text-blue-600 dark:text-blue-400">B</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">기본기가 탄탄한
+                                일반적인 실력</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50">
+                        <span class="text-base font-black text-emerald-600 dark:text-emerald-400">C</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">이제 막 재미를
+                                붙인 초보자</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50">
+                        <span class="text-base font-black text-slate-600 dark:text-slate-400">D</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">처음 시작하는
+                                왕초보 입문자</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="closeTierModal"
+                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95">
+                    확인
+                </button>
+            </div>
+        </div>
+
+        <!-- 포지션 가이드 모달 -->
+        <div id="posModal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+            <div id="posModalOverlay" class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+            <div
+                class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
+                <div class="text-center space-y-1">
+                    <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">포지션 가이드
+                    </h3>
+                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500">포지션 숙련도를 선택해 주세요</p>
+                </div>
+
+                <div class="space-y-2">
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50">
+                        <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">100</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">자연스러움 : 본인
+                                실력 100% 발휘</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800/50">
+                        <span class="text-sm font-black text-yellow-600 dark:text-yellow-400">75</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">능숙함 : 본인
+                                실력의 75% 발휘</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-4 p-3 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/50">
+                        <span class="text-sm font-black text-orange-600 dark:text-orange-400">50</span>
+                        <div class="flex items-center">
+                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">가능함 : 본인
+                                실력의 50% 발휘</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="closePosModal"
+                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95">
+                    확인
+                </button>
+            </div>
+        </div>
 
         <div id="success"
             class="hidden p-8 rounded-[40px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6 animate-in zoom-in-95 duration-500">
@@ -238,13 +407,17 @@
                 </svg>
             </div>
             <div class="space-y-2">
-                <h3 class="text-2xl font-black text-slate-900 dark:text-white">신청 완료!</h3>
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white">참가 신청이 완료되었습니다.</h3>
                 <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">팀 편성이 완료되면 알려드릴게요.<br>방장의 승인을
                     기다려주세요.</p>
             </div>
-            <div class="pt-4">
+            <div class="flex flex-col gap-3 pt-4">
+                <button type="button" id="closeSuccessBtn"
+                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm shadow-xl transition-all active:scale-95">
+                    닫기
+                </button>
                 <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker&hl=ko" target="_blank"
-                    class="inline-block px-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 transition-all">
+                    class="inline-block px-8 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
                     Belo 앱 다운로드 하기
                 </a>
             </div>
@@ -264,12 +437,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCX43ePWFhdIbCUZUtoMePqMdTXiAowlx0",
-            authDomain: "balance-team-maker.firebaseapp.com",
+            authDomain: "belo-apply.web.app",
             projectId: "balance-team-maker",
             storageBucket: "balance-team-maker.firebasestorage.app",
             messagingSenderId: "834065889708",
@@ -298,6 +471,34 @@
         let selectedTier = 'B';
         let currentRoomData = null;
         let currentSport = 'Soccer';
+
+        const tierModal = document.getElementById('tierModal');
+        const tierGuideBtn = document.getElementById('tierGuideBtn');
+        const closeTierModal = document.getElementById('closeTierModal');
+        const tierModalOverlay = document.getElementById('tierModalOverlay');
+
+        const posModal = document.getElementById('posModal');
+        const posGuideBtn = document.getElementById('posGuideBtn');
+        const closePosModal = document.getElementById('closePosModal');
+        const posModalOverlay = document.getElementById('posModalOverlay');
+
+        function toggleModal(modal, show) {
+            if (show) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        tierGuideBtn.onclick = () => toggleModal(tierModal, true);
+        closeTierModal.onclick = () => toggleModal(tierModal, false);
+        tierModalOverlay.onclick = () => toggleModal(tierModal, false);
+
+        posGuideBtn.onclick = () => toggleModal(posModal, true);
+        closePosModal.onclick = () => toggleModal(posModal, false);
+        posModalOverlay.onclick = () => toggleModal(posModal, false);
 
         const themeBtn = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
@@ -484,6 +685,22 @@
                     renderPitch();
                 }
 
+                // --- 등급 체계 (Tier Mode) 반영 ---
+                if (currentRoomData.tierMode === '3TIER') {
+                    const cBtn = document.querySelector('[data-tier="C"]');
+                    const dBtn = document.querySelector('[data-tier="D"]');
+                    if (cBtn) cBtn.remove();
+                    if (dBtn) dBtn.remove();
+                    const tierGroup = document.getElementById('tierGroup');
+                    if (tierGroup) {
+                        tierGroup.classList.remove('grid-cols-5');
+                        tierGroup.classList.add('grid-cols-3');
+                    }
+                    if (selectedTier === 'C' || selectedTier === 'D') {
+                        selectTier('B');
+                    }
+                }
+
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('roomInfo').classList.remove('hidden');
                 document.getElementById('participantsInfo').classList.remove('hidden');
@@ -505,33 +722,128 @@
 
         document.querySelectorAll('.tier-btn').forEach(btn => btn.onclick = () => selectTier(btn.dataset.tier));
 
-        loginBtn.onclick = async () => {
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { console.error("Login Error:", e); }
-        };
-        logoutBtn.onclick = () => signOut(auth);
+        // 인증 엔진 초기화 (지속성 설정)
+        const persistencePromise = setPersistence(auth, browserLocalPersistence);
 
-        onAuthStateChanged(auth, async (user) => {
-            if (loginSection) loginSection.classList.remove('hidden');
-            if (user) {
-                if (loginBtn) loginBtn.classList.add('hidden');
-                if (userInfo) userInfo.classList.remove('hidden');
-                document.getElementById('userPhoto').src = user.photoURL || '';
-                document.getElementById('userName').textContent = user.displayName;
-                try {
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) {
-                        const d = userDoc.data();
-                        if (d.nickname) nameInput.value = d.nickname;
-                        if (d.tier) selectTier(d.tier);
-                    } else if (!nameInput.value) {
-                        nameInput.value = user.displayName;
-                    }
-                } catch (e) { }
-            } else {
-                if (loginBtn) loginBtn.classList.remove('hidden');
-                if (userInfo) userInfo.classList.add('hidden');
+        function isInAppBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            return ua.includes('kakao') || ua.includes('naver') || ua.includes('instagram') || ua.includes('line') || ua.includes('fbav');
+        }
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+        function checkAndRedirect() {
+            if (isInAppBrowser()) {
+                const overlay = document.getElementById('inAppOverlay');
+                const iosGuide = document.getElementById('iosGuide');
+                if (overlay) overlay.classList.remove('hidden');
+
+                const currentUrl = window.location.href;
+                if (isAndroid) {
+                    // 안드로이드는 1.5초 후 intent 실행
+                    setTimeout(() => {
+                        const intentUrl = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+                        window.location.href = intentUrl;
+                    }, 1500);
+                } else if (isIOS) {
+                    // iOS는 안내 가이드 즉시 노출
+                    if (iosGuide) iosGuide.classList.remove('hidden');
+                }
+                return true;
             }
-        });
+            return false;
+        }
+
+        // 페이지 로드 시 즉시 실행
+        if (checkAndRedirect()) {
+            // 인앱 브라우저인 경우 나머지 초기화 중단 (필요시)
+            // return; // 모듈 최상위에서는 return 불가이므로 로직 제어 필요
+        }
+
+        async function startAuth() {
+            try {
+                // 1. 세션 지속성 설정 (완료될 때까지 대기)
+                await setPersistence(auth, browserLocalPersistence);
+                console.log("Persistence set to LOCAL");
+
+                // 2. 인증 상태 변화 감지 등록 (먼저 등록해야 함)
+                onAuthStateChanged(auth, async (user) => {
+                    console.log("Auth state changed, user:", user ? user.displayName : "null");
+                    const formContent = document.getElementById('formContent');
+                    const loginPrompt = document.getElementById('loginPrompt');
+                    const loginSection = document.getElementById('loginSection');
+                    const submitBtn = document.getElementById('submitBtn');
+                    const authError = document.getElementById('authError');
+
+                    if (loginSection) loginSection.classList.remove('hidden');
+
+                    if (user) {
+                        if (loginBtn) loginBtn.classList.add('hidden');
+                        if (loginPrompt) loginPrompt.classList.add('hidden');
+                        if (userInfo) userInfo.classList.remove('hidden');
+                        if (formContent) formContent.classList.remove('hidden');
+                        if (submitBtn) submitBtn.classList.remove('hidden');
+                        if (authError) authError.classList.add('hidden');
+
+                        document.getElementById('userPhoto').src = user.photoURL || '';
+                        document.getElementById('userName').textContent = user.displayName;
+                        nameInput.value = user.displayName;
+                        nameInput.readOnly = true;
+
+                        try {
+                            const userDoc = await getDoc(doc(db, "users", user.uid));
+                            if (userDoc.exists()) {
+                                const d = userDoc.data();
+                                if (d.tier) selectTier(d.tier);
+                            }
+                        } catch (e) { }
+                    } else {
+                        if (loginBtn) loginBtn.classList.remove('hidden');
+                        if (loginPrompt) loginPrompt.classList.remove('hidden');
+                        if (userInfo) userInfo.classList.add('hidden');
+                        if (formContent) formContent.classList.add('hidden');
+                        if (submitBtn) submitBtn.classList.add('hidden');
+
+                        nameInput.value = '';
+                        nameInput.readOnly = true;
+                    }
+                });
+
+                // 3. 리다이렉트 결과 확인
+                const result = await getRedirectResult(auth);
+                if (result?.user) {
+                    console.log("Login Success via Result:", result.user.displayName);
+                }
+            } catch (error) {
+                console.error("Auth System Error:", error);
+                const authError = document.getElementById('authError');
+                if (authError) {
+                    let msg = "오류: " + error.code;
+                    if (error.code === 'auth/unauthorized-domain') {
+                        msg = "⚠️ [안내] 도메인 승인이 필요합니다. Firebase 콘솔 > Auth > Settings > Authorized domains에 belo-apply.web.app을 추가해주세요.";
+                    }
+                    authError.textContent = msg;
+                    authError.classList.remove('hidden');
+                    if (loginSection) loginSection.classList.remove('hidden');
+                }
+            }
+        }
+
+        startAuth();
+
+        loginBtn.onclick = async () => {
+            if (checkAndRedirect()) return;
+
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithRedirect(auth, provider);
+            } catch (e) {
+                console.error("Login Error:", e);
+                alert("로그인 시작 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
+        logoutBtn.onclick = () => signOut(auth);
 
         document.getElementById('applyForm').onsubmit = async (e) => {
             e.preventDefault();
@@ -539,11 +851,13 @@
             const urlParams = new URLSearchParams(window.location.search);
             const rid = urlParams.get('room');
             if (!rid) return;
+            if (!auth.currentUser) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
             localStorage.setItem(KEY_NAME, n);
             localStorage.setItem(KEY_TIER, selectedTier);
-            if (auth.currentUser) {
-                try { await setDoc(doc(db, "users", auth.currentUser.uid), { nickname: n, tier: selectedTier }, { merge: true }); } catch (e) { }
-            }
+            try { await setDoc(doc(db, "users", auth.currentUser.uid), { nickname: n, tier: selectedTier }, { merge: true }); } catch (e) { }
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = '신청 중...';
@@ -562,6 +876,18 @@
         };
 
         init();
+
+        const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+        if (closeSuccessBtn) {
+            closeSuccessBtn.onclick = () => {
+                // 브라우저 닫기 시도
+                window.close();
+                // 팝업 등으로 직접 닫히지 않는 경우를 대비한 안내
+                setTimeout(() => {
+                    alert("브라우저의 '탭 닫기' 기능을 이용하여 창을 닫아주세요.");
+                }, 300);
+            };
+        }
     </script>
 </body>
 

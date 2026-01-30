@@ -19,3 +19,21 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Capacitor
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+
+# AndroidX & Support
+-keep class androidx.** { *; }
+-keep interface androidx.** { *; }
+-keep class android.support.** { *; }
+
+# WebView
+-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+   public *;
+}
+
+# Keep line numbers for debugging
+-keepattributes SourceFile,LineNumberTable
+

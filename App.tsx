@@ -1442,6 +1442,7 @@ const HostRoomModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
+  const [tierMode, setTierMode] = useState<'5TIER' | '3TIER'>('5TIER');
   const [isPickerSelectionMode, setIsPickerSelectionMode] = useState(false);
 
   useEffect(() => {
@@ -1539,6 +1540,7 @@ const HostRoomModal: React.FC<{
         matchEndDate: endDate,
         matchEndTime: endTime,
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
+        tierMode: tierMode,
         fcmToken: localStorage.getItem('fcm_token') || undefined
       });
 
@@ -1689,6 +1691,33 @@ const HostRoomModal: React.FC<{
                   </div>
                 )}
               </div>
+
+              {/* 등급 체계 선택 섹션 */}
+              <div className="space-y-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tierMode')}</label>
+                  <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
+                    <button
+                      onClick={() => setTierMode('5TIER')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${tierMode === '5TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      {t('tierMode5')}
+                    </button>
+                    <button
+                      onClick={() => setTierMode('3TIER')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${tierMode === '3TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      {t('tierMode3')}
+                    </button>
+                  </div>
+                </div>
+                {tierMode === '3TIER' && (
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 px-1 italic">
+                    ※ {t('tierModeDesc')}
+                  </p>
+                )}
+              </div>
+
               {!isPickerSelectionMode && (
                 <div className="flex justify-end mt-2">
                   <button onClick={handleCreate} disabled={loading} className="w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
@@ -1738,7 +1767,16 @@ const ApplyRoomModal: React.FC<{
         <form onSubmit={handleSubmit} className="space-y-4">
           <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder={t('inputNamePlaceholder')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 dark:text-white font-bold" />
           <div className="grid grid-cols-5 gap-1.5">
-            {['S', 'A', 'B', 'C', 'D'].map(v => <button key={v} type="button" onClick={() => setTier(v)} className={`py-3 rounded-xl font-black text-xs ${tier === v ? 'bg-slate-900 text-white dark:bg-slate-200' : 'bg-slate-50 dark:bg-slate-950 text-slate-400'}`}>{v}</button>)}
+            {(room.tierMode === '3TIER' ? ['S', 'A', 'B'] : ['S', 'A', 'B', 'C', 'D']).map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setTier(v)}
+                className={`py-3 rounded-xl font-black text-xs ${tier === v ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 border-2 border-slate-900 dark:border-slate-200' : 'bg-slate-50 dark:bg-slate-950 text-slate-400 border-2 border-transparent'}`}
+              >
+                {v}
+              </button>
+            ))}
           </div>
           <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 text-white font-black rounded-3xl mt-4 shadow-xl shadow-blue-500/20">{loading ? '...' : t('completeApplication')}</button>
           <button type="button" onClick={onClose} className="w-full py-3 text-slate-400 font-bold text-sm">{t('cancel')}</button>
@@ -1893,7 +1931,7 @@ const App: React.FC = () => {
   const isUnlimitedPos = true; // 항목 4: 전면 무료화
   const isPro = isAdFree;
 
-  const [showTier, setShowTier] = useState(true); // 항목 2: 티어 숨기기/보이기
+  const [showTier, setShowTier] = useState(false); // 항목 2: 티어 숨기기/보이기
   const [activeRooms, setActiveRooms] = useState<RecruitmentRoom[]>([]); // 항목 7: 멀티 모임 관리
   const filteredRooms = useMemo(() => {
     return activeRooms.filter(r => {

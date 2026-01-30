@@ -1,0 +1,305 @@
+{
+  "results": {
+    "A1": {
+      "name": "Baseline",
+      "avgSD": "7.719",
+      "avgScore": "0.229",
+      "avgViolations": "2.70",
+      "avgPairSim": "28.8",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A2": {
+      "name": "Branch & Bound",
+      "avgSD": "7.427",
+      "avgScore": "0.242",
+      "avgViolations": "2.73",
+      "avgPairSim": "28.2",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A3": {
+      "name": "Backtracking",
+      "avgSD": "7.721",
+      "avgScore": "0.227",
+      "avgViolations": "2.79",
+      "avgPairSim": "28.7",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A4": {
+      "name": "Integer Programming",
+      "avgSD": "0.461",
+      "avgScore": "0.545",
+      "avgViolations": "2.52",
+      "avgPairSim": "26.7",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A5": {
+      "name": "LP Relaxation",
+      "avgSD": "0.479",
+      "avgScore": "0.556",
+      "avgViolations": "2.47",
+      "avgPairSim": "26.6",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    "A6": {
+      "name": "Genetic Algorithm",
+      "avgSD": "0.659",
+      "avgScore": "0.541",
+      "avgViolations": "2.62",
+      "avgPairSim": "26.1",
+      "avgTime": "0.008",
+      "perfectRate": 0
+    },
+    "A7": {
+      "name": "Differential Evolution",
+      "avgSD": "0.668",
+      "avgScore": "0.533",
+      "avgViolations": "2.73",
+      "avgPairSim": "25.2",
+      "avgTime": "0.008",
+      "perfectRate": 0
+    },
+    "A8": {
+      "name": "Tabu Search",
+      "avgSD": "0.287",
+      "avgScore": "0.557",
+      "avgViolations": "2.65",
+      "avgPairSim": "25.3",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A9": {
+      "name": "Ant Colony",
+      "avgSD": "0.371",
+      "avgScore": "0.558",
+      "avgViolations": "2.64",
+      "avgPairSim": "26.5",
+      "avgTime": "0.003",
+      "perfectRate": 1
+    },
+    "A10": {
+      "name": "PSO",
+      "avgSD": "0.272",
+      "avgScore": "0.561",
+      "avgViolations": "2.74",
+      "avgPairSim": "25.9",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    "A11": {
+      "name": "Reinforcement Learning",
+      "avgSD": "0.633",
+      "avgScore": "0.533",
+      "avgViolations": "2.47",
+      "avgPairSim": "25.4",
+      "avgTime": "0.008",
+      "perfectRate": 0
+    },
+    "A12": {
+      "name": "Rule-based",
+      "avgSD": "0.437",
+      "avgScore": "0.546",
+      "avgViolations": "2.62",
+      "avgPairSim": "26.0",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    "A13": {
+      "name": "Hybrid",
+      "avgSD": "0.214",
+      "avgScore": "0.575",
+      "avgViolations": "2.61",
+      "avgPairSim": "25.9",
+      "avgTime": "0.010",
+      "perfectRate": 3
+    }
+  },
+  "rankings": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.214",
+      "avgScore": "0.575",
+      "avgViolations": "2.61",
+      "avgPairSim": "25.9",
+      "avgTime": "0.010",
+      "perfectRate": 3
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.272",
+      "avgScore": "0.561",
+      "avgViolations": "2.74",
+      "avgPairSim": "25.9",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.371",
+      "avgScore": "0.558",
+      "avgViolations": "2.64",
+      "avgPairSim": "26.5",
+      "avgTime": "0.003",
+      "perfectRate": 1
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.287",
+      "avgScore": "0.557",
+      "avgViolations": "2.65",
+      "avgPairSim": "25.3",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A5",
+      "name": "LP Relaxation",
+      "avgSD": "0.479",
+      "avgScore": "0.556",
+      "avgViolations": "2.47",
+      "avgPairSim": "26.6",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    {
+      "id": "A12",
+      "name": "Rule-based",
+      "avgSD": "0.437",
+      "avgScore": "0.546",
+      "avgViolations": "2.62",
+      "avgPairSim": "26.0",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    {
+      "id": "A4",
+      "name": "Integer Programming",
+      "avgSD": "0.461",
+      "avgScore": "0.545",
+      "avgViolations": "2.52",
+      "avgPairSim": "26.7",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A6",
+      "name": "Genetic Algorithm",
+      "avgSD": "0.659",
+      "avgScore": "0.541",
+      "avgViolations": "2.62",
+      "avgPairSim": "26.1",
+      "avgTime": "0.008",
+      "perfectRate": 0
+    },
+    {
+      "id": "A7",
+      "name": "Differential Evolution",
+      "avgSD": "0.668",
+      "avgScore": "0.533",
+      "avgViolations": "2.73",
+      "avgPairSim": "25.2",
+      "avgTime": "0.008",
+      "perfectRate": 0
+    },
+    {
+      "id": "A11",
+      "name": "Reinforcement Learning",
+      "avgSD": "0.633",
+      "avgScore": "0.533",
+      "avgViolations": "2.47",
+      "avgPairSim": "25.4",
+      "avgTime": "0.008",
+      "perfectRate": 0
+    },
+    {
+      "id": "A2",
+      "name": "Branch & Bound",
+      "avgSD": "7.427",
+      "avgScore": "0.242",
+      "avgViolations": "2.73",
+      "avgPairSim": "28.2",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A1",
+      "name": "Baseline",
+      "avgSD": "7.719",
+      "avgScore": "0.229",
+      "avgViolations": "2.70",
+      "avgPairSim": "28.8",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A3",
+      "name": "Backtracking",
+      "avgSD": "7.721",
+      "avgScore": "0.227",
+      "avgViolations": "2.79",
+      "avgPairSim": "28.7",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    }
+  ],
+  "top5": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.214",
+      "avgScore": "0.575",
+      "avgViolations": "2.61",
+      "avgPairSim": "25.9",
+      "avgTime": "0.010",
+      "perfectRate": 3
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.272",
+      "avgScore": "0.561",
+      "avgViolations": "2.74",
+      "avgPairSim": "25.9",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.371",
+      "avgScore": "0.558",
+      "avgViolations": "2.64",
+      "avgPairSim": "26.5",
+      "avgTime": "0.003",
+      "perfectRate": 1
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.287",
+      "avgScore": "0.557",
+      "avgViolations": "2.65",
+      "avgPairSim": "25.3",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A5",
+      "name": "LP Relaxation",
+      "avgSD": "0.479",
+      "avgScore": "0.556",
+      "avgViolations": "2.47",
+      "avgPairSim": "26.6",
+      "avgTime": "0.000",
+      "perfectRate": 1
+    }
+  ]
+}

@@ -1,0 +1,2070 @@
+{
+  "summary": {
+    "totalRuns": 20,
+    "totalPlayers": 15,
+    "teamCount": 3,
+    "avgStdDev": 0.48949999999999994,
+    "minStdDev": 0,
+    "maxStdDev": 2.46,
+    "avgMaxDiff": 1.175,
+    "avgPairSimilarity": 0.8234375,
+    "uniqueTeamCombinations": 60,
+    "totalTeamCombinations": 60,
+    "totalTime": 5.39,
+    "avgTimePerRun": 0.26949999999999996
+  },
+  "results": [
+    {
+      "runNumber": 1,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "유성진",
+              "position": "PG"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "조성준",
+              "position": "SF"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            },
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            },
+            {
+              "name": "고병찬",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "1,12,13,6,9",
+        "10,15,4,5,8",
+        "11,14,2,3,7"
+      ],
+      "pairSimilarity": 0,
+      "pairDetails": {
+        "similarity": 0,
+        "totalPairs": 30,
+        "uniquePairs": 30,
+        "duplicatePairs": 0
+      }
+    },
+    {
+      "runNumber": 2,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "14,4,5,6,7",
+        "1,11,12,2,8",
+        "10,13,15,3,9"
+      ],
+      "pairSimilarity": 0.2,
+      "pairDetails": {
+        "similarity": 0.2,
+        "totalPairs": 30,
+        "uniquePairs": 24,
+        "duplicatePairs": 6
+      }
+    },
+    {
+      "runNumber": 3,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "전광필",
+              "position": "PG"
+            },
+            {
+              "name": "이승환",
+              "position": "SG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "김종철",
+              "position": "SF"
+            },
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            },
+            {
+              "name": "김우원",
+              "position": "PF"
+            },
+            {
+              "name": "유성진",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 12.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "11,12,13,14,4",
+        "10,2,5,6,9",
+        "1,15,3,7,8"
+      ],
+      "pairSimilarity": 0.4,
+      "pairDetails": {
+        "similarity": 0.4,
+        "totalPairs": 30,
+        "uniquePairs": 18,
+        "duplicatePairs": 12
+      }
+    },
+    {
+      "runNumber": 4,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "1,2,3,4,6",
+        "10,12,13,7,8",
+        "11,14,15,5,9"
+      ],
+      "pairSimilarity": 0.5333333333333333,
+      "pairDetails": {
+        "similarity": 0.5333333333333333,
+        "totalPairs": 30,
+        "uniquePairs": 14,
+        "duplicatePairs": 16
+      }
+    },
+    {
+      "runNumber": 5,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "유성진",
+              "position": "PG"
+            },
+            {
+              "name": "고병찬",
+              "position": "SG"
+            },
+            {
+              "name": "배일상",
+              "position": "SF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 15
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "김주석",
+              "position": "PF"
+            },
+            {
+              "name": "김우원",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "김종철",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            },
+            {
+              "name": "강희철",
+              "position": "PG"
+            }
+          ],
+          "totalSkill": 9
+        }
+      ],
+      "standardDeviation": 2.46,
+      "maxDiff": 6,
+      "teamHashes": [
+        "12,3,4,8,9",
+        "1,10,11,5,7",
+        "13,14,15,2,6"
+      ],
+      "pairSimilarity": 0.7,
+      "pairDetails": {
+        "similarity": 0.7,
+        "totalPairs": 30,
+        "uniquePairs": 9,
+        "duplicatePairs": 21
+      }
+    },
+    {
+      "runNumber": 6,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "김종철",
+              "position": "SG"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "PG"
+            },
+            {
+              "name": "고병찬",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "이승환",
+              "position": "SF"
+            },
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "김주석",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 9.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "유종현",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 14.5
+        }
+      ],
+      "standardDeviation": 2.05,
+      "maxDiff": 5,
+      "teamHashes": [
+        "11,13,3,6,8",
+        "12,15,2,5,7",
+        "1,10,14,4,9"
+      ],
+      "pairSimilarity": 0.8,
+      "pairDetails": {
+        "similarity": 0.8,
+        "totalPairs": 30,
+        "uniquePairs": 6,
+        "duplicatePairs": 24
+      }
+    },
+    {
+      "runNumber": 7,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            },
+            {
+              "name": "유성진",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "김주석",
+              "position": "C"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "광필이언구",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "PG"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12
+        }
+      ],
+      "standardDeviation": 0.62,
+      "maxDiff": 1.5,
+      "teamHashes": [
+        "10,14,2,3,9",
+        "1,13,5,7,8",
+        "11,12,15,4,6"
+      ],
+      "pairSimilarity": 0.9666666666666667,
+      "pairDetails": {
+        "similarity": 0.9666666666666667,
+        "totalPairs": 30,
+        "uniquePairs": 1,
+        "duplicatePairs": 29
+      }
+    },
+    {
+      "runNumber": 8,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "김우원",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 14.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        }
+      ],
+      "standardDeviation": 0.62,
+      "maxDiff": 1.5,
+      "teamHashes": [
+        "13,2,3,4,5",
+        "10,11,12,6,7",
+        "1,14,15,8,9"
+      ],
+      "pairSimilarity": 0.9333333333333333,
+      "pairDetails": {
+        "similarity": 0.9333333333333333,
+        "totalPairs": 30,
+        "uniquePairs": 2,
+        "duplicatePairs": 28
+      }
+    },
+    {
+      "runNumber": 9,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "김우원",
+              "position": "SF"
+            },
+            {
+              "name": "강희철",
+              "position": "PF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "배일상",
+              "position": "SG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "조성준",
+              "position": "PG"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            },
+            {
+              "name": "전과자",
+              "position": "PF"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 12.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "1,12,2,5,9",
+        "15,3,4,6,8",
+        "10,11,13,14,7"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 10,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 14.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 15.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "김우원",
+              "position": "SG"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "고병찬",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 12
+        }
+      ],
+      "standardDeviation": 1.47,
+      "maxDiff": 3.5,
+      "teamHashes": [
+        "1,10,11,15,4",
+        "13,6,7,8,9",
+        "12,14,2,3,5"
+      ],
+      "pairSimilarity": 0.9666666666666667,
+      "pairDetails": {
+        "similarity": 0.9666666666666667,
+        "totalPairs": 30,
+        "uniquePairs": 1,
+        "duplicatePairs": 29
+      }
+    },
+    {
+      "runNumber": 11,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "이승환",
+              "position": "PF"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "10,11,12,14,9",
+        "1,13,15,2,4",
+        "3,5,6,7,8"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 12,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "이승환",
+              "position": "PF"
+            },
+            {
+              "name": "유성진",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "김종철",
+              "position": "SG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "광필이언구",
+              "position": "C"
+            },
+            {
+              "name": "유종현",
+              "position": "PG"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "김우원",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "1,12,3,7,9",
+        "10,14,4,6,8",
+        "11,13,15,2,5"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 13,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            },
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "이승환",
+              "position": "PF"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "1,13,4,6,7",
+        "10,11,14,5,8",
+        "12,15,2,3,9"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 14,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "유종현",
+              "position": "C"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "고병찬",
+              "position": "PF"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "전과자",
+              "position": "SG"
+            },
+            {
+              "name": "배일상",
+              "position": "SF"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "강희철",
+              "position": "PG"
+            }
+          ],
+          "totalSkill": 13
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "10,14,6,7,9",
+        "1,11,15,3,5",
+        "12,13,2,4,8"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 15,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "이승환",
+              "position": "SF"
+            },
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            },
+            {
+              "name": "유성진",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "고병찬",
+              "position": "SG"
+            },
+            {
+              "name": "전광필",
+              "position": "PG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            },
+            {
+              "name": "김우원",
+              "position": "C"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13
+        }
+      ],
+      "standardDeviation": 0.24,
+      "maxDiff": 0.5,
+      "teamHashes": [
+        "1,10,12,8,9",
+        "13,14,15,3,4",
+        "11,2,5,6,7"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 16,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "배일상",
+              "position": "SF"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "유성진",
+              "position": "SG"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "이경근",
+              "position": "PF"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "강희철",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "전광필",
+              "position": "SG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "김주석",
+              "position": "PG"
+            }
+          ],
+          "totalSkill": 13
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "15,5,6,8,9",
+        "1,10,11,13,2",
+        "12,14,3,4,7"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 17,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "유종현",
+              "position": "PG"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "김우원",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "고병찬",
+              "position": "SG"
+            },
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "유성진",
+              "position": "PG"
+            },
+            {
+              "name": "김종철",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "배일상",
+              "position": "SF"
+            },
+            {
+              "name": "김주석",
+              "position": "SG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "강희철",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "10,11,12,15,5",
+        "13,14,3,6,9",
+        "1,2,4,7,8"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 18,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "유성진",
+              "position": "PG"
+            },
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "전광필",
+              "position": "C"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            },
+            {
+              "name": "김주석",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 13.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "김우원",
+              "position": "PG"
+            },
+            {
+              "name": "조성준",
+              "position": "SG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 13
+        }
+      ],
+      "standardDeviation": 0.24,
+      "maxDiff": 0.5,
+      "teamHashes": [
+        "10,13,2,6,8",
+        "1,11,14,7,9",
+        "12,15,3,4,5"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    },
+    {
+      "runNumber": 19,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "이경근",
+              "position": "SF"
+            },
+            {
+              "name": "광필이언구",
+              "position": "PF"
+            },
+            {
+              "name": "배일상",
+              "position": "C"
+            },
+            {
+              "name": "강승철",
+              "position": "PG"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            },
+            {
+              "name": "김우원",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 17
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "김주석",
+              "position": "PG"
+            },
+            {
+              "name": "조성준",
+              "position": "C"
+            },
+            {
+              "name": "유종현",
+              "position": "SG"
+            },
+            {
+              "name": "고병찬",
+              "position": "PF"
+            }
+          ],
+          "totalSkill": 12
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "이승환",
+              "position": "PF"
+            },
+            {
+              "name": "이승환",
+              "position": "C"
+            },
+            {
+              "name": "전과자",
+              "position": "SF"
+            },
+            {
+              "name": "유성진",
+              "position": "PG"
+            },
+            {
+              "name": "강희철",
+              "position": "SG"
+            }
+          ],
+          "totalSkill": 13.5
+        }
+      ],
+      "standardDeviation": 2.09,
+      "maxDiff": 5,
+      "teamHashes": [
+        "1,11,4,5,6,8",
+        "10,14,15,3,7",
+        "12,12,13,2,9"
+      ],
+      "pairSimilarity": 0.96875,
+      "pairDetails": {
+        "similarity": 0.96875,
+        "totalPairs": 32,
+        "uniquePairs": 1,
+        "duplicatePairs": 31
+      }
+    },
+    {
+      "runNumber": 20,
+      "teams": [
+        {
+          "name": "Team A",
+          "players": [
+            {
+              "name": "전광필",
+              "position": "SF"
+            },
+            {
+              "name": "배일상",
+              "position": "PF"
+            },
+            {
+              "name": "강희철",
+              "position": "PG"
+            },
+            {
+              "name": "김우원",
+              "position": "SG"
+            },
+            {
+              "name": "김종철",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team B",
+          "players": [
+            {
+              "name": "이승환",
+              "position": "SG"
+            },
+            {
+              "name": "고병찬",
+              "position": "SF"
+            },
+            {
+              "name": "이경근",
+              "position": "PF"
+            },
+            {
+              "name": "전과자",
+              "position": "C"
+            },
+            {
+              "name": "유종현",
+              "position": "PG"
+            }
+          ],
+          "totalSkill": 12.5
+        },
+        {
+          "name": "Team C",
+          "players": [
+            {
+              "name": "유성진",
+              "position": "PG"
+            },
+            {
+              "name": "광필이언구",
+              "position": "SF"
+            },
+            {
+              "name": "조성준",
+              "position": "PF"
+            },
+            {
+              "name": "강승철",
+              "position": "SG"
+            },
+            {
+              "name": "김주석",
+              "position": "C"
+            }
+          ],
+          "totalSkill": 12.5
+        }
+      ],
+      "standardDeviation": 0,
+      "maxDiff": 0,
+      "teamHashes": [
+        "14,2,5,6,8",
+        "10,11,12,13,3",
+        "1,15,4,7,9"
+      ],
+      "pairSimilarity": 1,
+      "pairDetails": {
+        "similarity": 1,
+        "totalPairs": 30,
+        "uniquePairs": 0,
+        "duplicatePairs": 30
+      }
+    }
+  ],
+  "pairFrequency": {
+    "12-9": 8,
+    "13-9": 5,
+    "6-9": 6,
+    "1-9": 8,
+    "12-13": 6,
+    "12-6": 3,
+    "1-12": 5,
+    "13-6": 7,
+    "1-13": 5,
+    "1-6": 4,
+    "15-8": 5,
+    "15-5": 8,
+    "10-15": 5,
+    "15-4": 8,
+    "5-8": 7,
+    "10-8": 6,
+    "4-8": 7,
+    "10-5": 5,
+    "4-5": 5,
+    "10-4": 4,
+    "11-14": 7,
+    "11-7": 6,
+    "11-2": 5,
+    "11-3": 4,
+    "14-7": 7,
+    "14-2": 5,
+    "14-3": 7,
+    "2-7": 4,
+    "3-7": 6,
+    "2-3": 6,
+    "4-7": 5,
+    "14-4": 6,
+    "4-6": 7,
+    "5-7": 6,
+    "14-5": 5,
+    "5-6": 7,
+    "6-7": 7,
+    "14-6": 6,
+    "1-11": 7,
+    "1-8": 7,
+    "1-2": 6,
+    "11-8": 4,
+    "11-12": 7,
+    "12-8": 5,
+    "2-8": 5,
+    "12-2": 7,
+    "10-3": 4,
+    "15-3": 8,
+    "13-3": 6,
+    "3-9": 6,
+    "10-13": 6,
+    "10-9": 7,
+    "13-15": 5,
+    "15-9": 6,
+    "12-14": 4,
+    "13-14": 5,
+    "12-4": 6,
+    "11-4": 4,
+    "11-13": 6,
+    "13-4": 6,
+    "10-6": 5,
+    "2-6": 6,
+    "10-2": 4,
+    "2-5": 8,
+    "2-9": 5,
+    "5-9": 4,
+    "1-3": 4,
+    "3-8": 5,
+    "1-7": 8,
+    "1-15": 6,
+    "15-7": 4,
+    "7-8": 6,
+    "2-4": 5,
+    "3-4": 7,
+    "1-4": 8,
+    "3-6": 5,
+    "10-7": 6,
+    "10-12": 6,
+    "13-7": 5,
+    "12-7": 5,
+    "13-8": 6,
+    "11-5": 8,
+    "11-9": 3,
+    "14-9": 8,
+    "11-15": 6,
+    "14-15": 5,
+    "8-9": 5,
+    "4-9": 3,
+    "12-3": 7,
+    "1-10": 5,
+    "1-5": 5,
+    "10-11": 9,
+    "15-6": 4,
+    "15-2": 5,
+    "13-2": 8,
+    "11-6": 5,
+    "6-8": 9,
+    "12-5": 5,
+    "12-15": 5,
+    "1-14": 3,
+    "10-14": 8,
+    "13-5": 3,
+    "3-5": 5,
+    "14-8": 4,
+    "7-9": 5,
+    "12-12": 1
+  }
+}

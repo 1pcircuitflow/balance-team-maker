@@ -1,0 +1,66 @@
+{
+  "rankings": [
+    {
+      "id": "Gemini",
+      "avgSD": "0.107",
+      "minSD": "0.000",
+      "maxSD": "0.566",
+      "avgViol": "2.76",
+      "avgTime": "0.0001",
+      "perfect": 42,
+      "wins": 388
+    },
+    {
+      "id": "MorePSO",
+      "avgSD": "0.178",
+      "minSD": "0.000",
+      "maxSD": "0.544",
+      "avgViol": "2.80",
+      "avgTime": "0.0005",
+      "perfect": 14,
+      "wins": 129
+    },
+    {
+      "id": "SD_Limit",
+      "avgSD": "0.621",
+      "minSD": "0.000",
+      "maxSD": "2.316",
+      "avgViol": "2.80",
+      "avgTime": "0.0069",
+      "perfect": 1,
+      "wins": 8
+    },
+    {
+      "id": "MoreGA",
+      "avgSD": "0.630",
+      "minSD": "0.000",
+      "maxSD": "1.948",
+      "avgViol": "2.78",
+      "avgTime": "0.0115",
+      "perfect": 2,
+      "wins": 7
+    }
+  ],
+  "h2h": {
+    "Gemini": {
+      "MoreGA": 491,
+      "MorePSO": 365,
+      "SD_Limit": 488
+    },
+    "MoreGA": {
+      "Gemini": 6,
+      "MorePSO": 19,
+      "SD_Limit": 252
+    },
+    "MorePSO": {
+      "Gemini": 107,
+      "MoreGA": 478,
+      "SD_Limit": 477
+    },
+    "SD_Limit": {
+      "Gemini": 11,
+      "MoreGA": 246,
+      "MorePSO": 20
+    }
+  }
+}

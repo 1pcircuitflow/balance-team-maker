@@ -1,0 +1,42 @@
+[
+  {
+    "id": "M2_Weighted",
+    "name": "가중치 최적화",
+    "avgSD": "0.318",
+    "avgSat": "84.7",
+    "wins": 261,
+    "composite": 135.99
+  },
+  {
+    "id": "M1_PosFirst",
+    "name": "포지션 우선+Swap",
+    "avgSD": "0.451",
+    "avgSat": "88.3",
+    "wins": 189,
+    "composite": 135.13
+  },
+  {
+    "id": "Baseline",
+    "name": "Gemini 기본",
+    "avgSD": "0.480",
+    "avgSat": "45.5",
+    "wins": 53,
+    "composite": 113.15
+  },
+  {
+    "id": "M3_Hungarian",
+    "name": "헝가리안 알고리즘",
+    "avgSD": "4.236",
+    "avgSat": "89.3",
+    "wins": 1,
+    "composite": 59.93
+  },
+  {
+    "id": "M4_Reverse",
+    "name": "티어 역순 배정",
+    "avgSD": "7.763",
+    "avgSat": "88.7",
+    "wins": 0,
+    "composite": -10.90999999999999
+  }
+]

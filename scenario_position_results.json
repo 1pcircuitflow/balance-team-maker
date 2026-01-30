@@ -1,0 +1,66 @@
+{
+  "basketball": [
+    {
+      "id": "Gemini",
+      "avgSD": "0.092",
+      "avgViol": "2.77",
+      "avgDiv": "26.1",
+      "avgSat": "45.1",
+      "wins": 348
+    },
+    {
+      "id": "MorePSO",
+      "avgSD": "0.121",
+      "avgViol": "2.68",
+      "avgDiv": "26.1",
+      "avgSat": "44.5",
+      "wins": 166
+    },
+    {
+      "id": "MoreGA",
+      "avgSD": "0.733",
+      "avgViol": "2.67",
+      "avgDiv": "26.1",
+      "avgSat": "45.0",
+      "wins": 9
+    },
+    {
+      "id": "SD_Limit",
+      "avgSD": "0.785",
+      "avgViol": "2.74",
+      "avgDiv": "25.9",
+      "avgSat": "45.0",
+      "wins": 7
+    }
+  ],
+  "tennis": [
+    {
+      "id": "Gemini",
+      "avgSD": "0.277",
+      "avgViol": "2.03",
+      "avgDiv": "61.8",
+      "wins": 456
+    },
+    {
+      "id": "MorePSO",
+      "avgSD": "0.329",
+      "avgViol": "2.03",
+      "avgDiv": "61.1",
+      "wins": 264
+    },
+    {
+      "id": "SD_Limit",
+      "avgSD": "1.092",
+      "avgViol": "2.01",
+      "avgDiv": "61.1",
+      "wins": 26
+    },
+    {
+      "id": "MoreGA",
+      "avgSD": "1.126",
+      "avgViol": "2.03",
+      "avgDiv": "62.3",
+      "wins": 25
+    }
+  ]
+}

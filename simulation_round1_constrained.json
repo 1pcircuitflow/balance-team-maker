@@ -1,0 +1,305 @@
+{
+  "results": {
+    "A1": {
+      "name": "Baseline",
+      "avgSD": "3.446",
+      "avgScore": "0.501",
+      "constraintRate": 88,
+      "avgPairSim": "25.0",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A2": {
+      "name": "Branch & Bound",
+      "avgSD": "3.380",
+      "avgScore": "0.537",
+      "constraintRate": 91,
+      "avgPairSim": "25.6",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A3": {
+      "name": "Backtracking",
+      "avgSD": "3.502",
+      "avgScore": "0.546",
+      "constraintRate": 96,
+      "avgPairSim": "25.2",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A4": {
+      "name": "Integer Programming",
+      "avgSD": "3.063",
+      "avgScore": "0.565",
+      "constraintRate": 92,
+      "avgPairSim": "25.3",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A5": {
+      "name": "LP Relaxation",
+      "avgSD": "3.177",
+      "avgScore": "0.571",
+      "constraintRate": 95,
+      "avgPairSim": "25.4",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A6": {
+      "name": "Genetic Algorithm",
+      "avgSD": "0.736",
+      "avgScore": "0.770",
+      "constraintRate": 93,
+      "avgPairSim": "25.5",
+      "avgTime": "0.007",
+      "perfectRate": 0
+    },
+    "A7": {
+      "name": "Differential Evolution",
+      "avgSD": "0.750",
+      "avgScore": "0.784",
+      "constraintRate": 94,
+      "avgPairSim": "25.2",
+      "avgTime": "0.006",
+      "perfectRate": 1
+    },
+    "A8": {
+      "name": "Tabu Search",
+      "avgSD": "0.608",
+      "avgScore": "0.832",
+      "constraintRate": 94,
+      "avgPairSim": "24.3",
+      "avgTime": "0.001",
+      "perfectRate": 2
+    },
+    "A9": {
+      "name": "Ant Colony",
+      "avgSD": "0.794",
+      "avgScore": "0.815",
+      "constraintRate": 98,
+      "avgPairSim": "24.9",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A10": {
+      "name": "PSO",
+      "avgSD": "0.697",
+      "avgScore": "0.786",
+      "constraintRate": 90,
+      "avgPairSim": "26.9",
+      "avgTime": "0.001",
+      "perfectRate": 2
+    },
+    "A11": {
+      "name": "Reinforcement Learning",
+      "avgSD": "0.820",
+      "avgScore": "0.776",
+      "constraintRate": 95,
+      "avgPairSim": "25.5",
+      "avgTime": "0.006",
+      "perfectRate": 0
+    },
+    "A12": {
+      "name": "Rule-based",
+      "avgSD": "2.967",
+      "avgScore": "0.587",
+      "constraintRate": 95,
+      "avgPairSim": "24.9",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    "A13": {
+      "name": "Hybrid",
+      "avgSD": "0.354",
+      "avgScore": "0.842",
+      "constraintRate": 95,
+      "avgPairSim": "25.5",
+      "avgTime": "0.007",
+      "perfectRate": 2
+    }
+  },
+  "rankings": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.354",
+      "avgScore": "0.842",
+      "constraintRate": 95,
+      "avgPairSim": "25.5",
+      "avgTime": "0.007",
+      "perfectRate": 2
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.608",
+      "avgScore": "0.832",
+      "constraintRate": 94,
+      "avgPairSim": "24.3",
+      "avgTime": "0.001",
+      "perfectRate": 2
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.794",
+      "avgScore": "0.815",
+      "constraintRate": 98,
+      "avgPairSim": "24.9",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.697",
+      "avgScore": "0.786",
+      "constraintRate": 90,
+      "avgPairSim": "26.9",
+      "avgTime": "0.001",
+      "perfectRate": 2
+    },
+    {
+      "id": "A7",
+      "name": "Differential Evolution",
+      "avgSD": "0.750",
+      "avgScore": "0.784",
+      "constraintRate": 94,
+      "avgPairSim": "25.2",
+      "avgTime": "0.006",
+      "perfectRate": 1
+    },
+    {
+      "id": "A11",
+      "name": "Reinforcement Learning",
+      "avgSD": "0.820",
+      "avgScore": "0.776",
+      "constraintRate": 95,
+      "avgPairSim": "25.5",
+      "avgTime": "0.006",
+      "perfectRate": 0
+    },
+    {
+      "id": "A6",
+      "name": "Genetic Algorithm",
+      "avgSD": "0.736",
+      "avgScore": "0.770",
+      "constraintRate": 93,
+      "avgPairSim": "25.5",
+      "avgTime": "0.007",
+      "perfectRate": 0
+    },
+    {
+      "id": "A12",
+      "name": "Rule-based",
+      "avgSD": "2.967",
+      "avgScore": "0.587",
+      "constraintRate": 95,
+      "avgPairSim": "24.9",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A5",
+      "name": "LP Relaxation",
+      "avgSD": "3.177",
+      "avgScore": "0.571",
+      "constraintRate": 95,
+      "avgPairSim": "25.4",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A4",
+      "name": "Integer Programming",
+      "avgSD": "3.063",
+      "avgScore": "0.565",
+      "constraintRate": 92,
+      "avgPairSim": "25.3",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A3",
+      "name": "Backtracking",
+      "avgSD": "3.502",
+      "avgScore": "0.546",
+      "constraintRate": 96,
+      "avgPairSim": "25.2",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A2",
+      "name": "Branch & Bound",
+      "avgSD": "3.380",
+      "avgScore": "0.537",
+      "constraintRate": 91,
+      "avgPairSim": "25.6",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A1",
+      "name": "Baseline",
+      "avgSD": "3.446",
+      "avgScore": "0.501",
+      "constraintRate": 88,
+      "avgPairSim": "25.0",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    }
+  ],
+  "top5": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.354",
+      "avgScore": "0.842",
+      "constraintRate": 95,
+      "avgPairSim": "25.5",
+      "avgTime": "0.007",
+      "perfectRate": 2
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.608",
+      "avgScore": "0.832",
+      "constraintRate": 94,
+      "avgPairSim": "24.3",
+      "avgTime": "0.001",
+      "perfectRate": 2
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.794",
+      "avgScore": "0.815",
+      "constraintRate": 98,
+      "avgPairSim": "24.9",
+      "avgTime": "0.000",
+      "perfectRate": 0
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.697",
+      "avgScore": "0.786",
+      "constraintRate": 90,
+      "avgPairSim": "26.9",
+      "avgTime": "0.001",
+      "perfectRate": 2
+    },
+    {
+      "id": "A7",
+      "name": "Differential Evolution",
+      "avgSD": "0.750",
+      "avgScore": "0.784",
+      "constraintRate": 94,
+      "avgPairSim": "25.2",
+      "avgTime": "0.006",
+      "perfectRate": 1
+    }
+  ]
+}

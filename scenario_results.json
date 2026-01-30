@@ -1,0 +1,114 @@
+{
+  "basketball": {
+    "rankings": [
+      {
+        "id": "Gemini",
+        "avgSD": "0.084",
+        "avgViol": "2.72",
+        "avgPosViol": "8.91",
+        "wins": 340,
+        "perfect": 48
+      },
+      {
+        "id": "MorePSO",
+        "avgSD": "0.114",
+        "avgViol": "2.81",
+        "avgPosViol": "8.74",
+        "wins": 180,
+        "perfect": 18
+      },
+      {
+        "id": "SD_Limit",
+        "avgSD": "0.724",
+        "avgViol": "2.73",
+        "avgPosViol": "8.89",
+        "wins": 9,
+        "perfect": 1
+      },
+      {
+        "id": "MoreGA",
+        "avgSD": "0.727",
+        "avgViol": "2.67",
+        "avgPosViol": "8.92",
+        "wins": 8,
+        "perfect": 1
+      }
+    ],
+    "h2h": {
+      "Gemini": {
+        "MoreGA": 484,
+        "MorePSO": 315,
+        "SD_Limit": 485
+      },
+      "MoreGA": {
+        "Gemini": 13,
+        "MorePSO": 17,
+        "SD_Limit": 254
+      },
+      "MorePSO": {
+        "Gemini": 153,
+        "MoreGA": 481,
+        "SD_Limit": 477
+      },
+      "SD_Limit": {
+        "Gemini": 12,
+        "MoreGA": 246,
+        "MorePSO": 19
+      }
+    }
+  },
+  "tennis": {
+    "rankings": [
+      {
+        "id": "Gemini",
+        "avgSD": "0.276",
+        "avgViol": "1.99",
+        "wins": 461,
+        "perfect": 0
+      },
+      {
+        "id": "MorePSO",
+        "avgSD": "0.321",
+        "avgViol": "1.97",
+        "wins": 282,
+        "perfect": 0
+      },
+      {
+        "id": "MoreGA",
+        "avgSD": "1.100",
+        "avgViol": "1.98",
+        "wins": 22,
+        "perfect": 0
+      },
+      {
+        "id": "SD_Limit",
+        "avgSD": "1.140",
+        "avgViol": "1.98",
+        "wins": 14,
+        "perfect": 0
+      }
+    ],
+    "h2h": {
+      "Gemini": {
+        "MoreGA": 476,
+        "MorePSO": 216,
+        "SD_Limit": 485
+      },
+      "MoreGA": {
+        "Gemini": 2,
+        "MorePSO": 18,
+        "SD_Limit": 258
+      },
+      "MorePSO": {
+        "Gemini": 36,
+        "MoreGA": 460,
+        "SD_Limit": 473
+      },
+      "SD_Limit": {
+        "Gemini": 1,
+        "MoreGA": 228,
+        "MorePSO": 16
+      }
+    }
+  }
+}

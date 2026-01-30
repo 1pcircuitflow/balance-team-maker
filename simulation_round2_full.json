@@ -1,0 +1,133 @@
+{
+  "results": {
+    "A10": {
+      "name": "PSO",
+      "avgSD": "0.297",
+      "sdOfSD": "0.159",
+      "minSD": "0.000",
+      "maxSD": "0.838",
+      "avgTime": "0.000",
+      "avgScore": "0.824"
+    },
+    "A9": {
+      "name": "Ant Colony",
+      "avgSD": "0.357",
+      "sdOfSD": "0.209",
+      "minSD": "0.000",
+      "maxSD": "1.034",
+      "avgTime": "0.002",
+      "avgScore": "0.824"
+    },
+    "A13": {
+      "name": "Hybrid",
+      "avgSD": "0.203",
+      "sdOfSD": "0.120",
+      "minSD": "0.000",
+      "maxSD": "0.535",
+      "avgTime": "0.012",
+      "avgScore": "0.841"
+    },
+    "A12": {
+      "name": "Rule-based",
+      "avgSD": "0.462",
+      "sdOfSD": "0.247",
+      "minSD": "0.047",
+      "maxSD": "1.414",
+      "avgTime": "0.000",
+      "avgScore": "0.811"
+    },
+    "A6": {
+      "name": "Genetic Algorithm",
+      "avgSD": "0.640",
+      "sdOfSD": "0.374",
+      "minSD": "0.000",
+      "maxSD": "2.478",
+      "avgTime": "0.009",
+      "avgScore": "0.803"
+    }
+  },
+  "rankings": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.203",
+      "sdOfSD": "0.120",
+      "minSD": "0.000",
+      "maxSD": "0.535",
+      "avgTime": "0.012",
+      "avgScore": "0.841"
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.297",
+      "sdOfSD": "0.159",
+      "minSD": "0.000",
+      "maxSD": "0.838",
+      "avgTime": "0.000",
+      "avgScore": "0.824"
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.357",
+      "sdOfSD": "0.209",
+      "minSD": "0.000",
+      "maxSD": "1.034",
+      "avgTime": "0.002",
+      "avgScore": "0.824"
+    },
+    {
+      "id": "A12",
+      "name": "Rule-based",
+      "avgSD": "0.462",
+      "sdOfSD": "0.247",
+      "minSD": "0.047",
+      "maxSD": "1.414",
+      "avgTime": "0.000",
+      "avgScore": "0.811"
+    },
+    {
+      "id": "A6",
+      "name": "Genetic Algorithm",
+      "avgSD": "0.640",
+      "sdOfSD": "0.374",
+      "minSD": "0.000",
+      "maxSD": "2.478",
+      "avgTime": "0.009",
+      "avgScore": "0.803"
+    }
+  ],
+  "top3": [
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.203",
+      "sdOfSD": "0.120",
+      "minSD": "0.000",
+      "maxSD": "0.535",
+      "avgTime": "0.012",
+      "avgScore": "0.841"
+    },
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.297",
+      "sdOfSD": "0.159",
+      "minSD": "0.000",
+      "maxSD": "0.838",
+      "avgTime": "0.000",
+      "avgScore": "0.824"
+    },
+    {
+      "id": "A9",
+      "name": "Ant Colony",
+      "avgSD": "0.357",
+      "sdOfSD": "0.209",
+      "minSD": "0.000",
+      "maxSD": "1.034",
+      "avgTime": "0.002",
+      "avgScore": "0.824"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "results": {
+    "A13": {
+      "name": "Hybrid",
+      "avgSD": "0.387",
+      "sdOfSD": "0.284",
+      "minSD": "0.000",
+      "maxSD": "2.240",
+      "avgScore": "0.685",
+      "constraintRate": "94.0",
+      "avgPairSim": "68.8",
+      "avgTime": "0.007",
+      "perfectRate": "0.2"
+    },
+    "A10": {
+      "name": "PSO",
+      "avgSD": "0.575",
+      "sdOfSD": "0.911",
+      "minSD": "0.000",
+      "maxSD": "8.247",
+      "avgScore": "0.696",
+      "constraintRate": "95.6",
+      "avgPairSim": "68.7",
+      "avgTime": "0.001",
+      "perfectRate": "0.8"
+    },
+    "A8": {
+      "name": "Tabu Search",
+      "avgSD": "0.548",
+      "sdOfSD": "0.866",
+      "minSD": "0.000",
+      "maxSD": "8.806",
+      "avgScore": "0.687",
+      "constraintRate": "94.4",
+      "avgPairSim": "68.9",
+      "avgTime": "0.001",
+      "perfectRate": "0.8"
+    }
+  },
+  "rankings": [
+    {
+      "id": "A10",
+      "name": "PSO",
+      "avgSD": "0.575",
+      "sdOfSD": "0.911",
+      "minSD": "0.000",
+      "maxSD": "8.247",
+      "avgScore": "0.696",
+      "constraintRate": "95.6",
+      "avgPairSim": "68.7",
+      "avgTime": "0.001",
+      "perfectRate": "0.8"
+    },
+    {
+      "id": "A8",
+      "name": "Tabu Search",
+      "avgSD": "0.548",
+      "sdOfSD": "0.866",
+      "minSD": "0.000",
+      "maxSD": "8.806",
+      "avgScore": "0.687",
+      "constraintRate": "94.4",
+      "avgPairSim": "68.9",
+      "avgTime": "0.001",
+      "perfectRate": "0.8"
+    },
+    {
+      "id": "A13",
+      "name": "Hybrid",
+      "avgSD": "0.387",
+      "sdOfSD": "0.284",
+      "minSD": "0.000",
+      "maxSD": "2.240",
+      "avgScore": "0.685",
+      "constraintRate": "94.0",
+      "avgPairSim": "68.8",
+      "avgTime": "0.007",
+      "perfectRate": "0.2"
+    }
+  ],
+  "winner": {
+    "id": "A10",
+    "name": "PSO",
+    "avgSD": "0.575",
+    "sdOfSD": "0.911",
+    "minSD": "0.000",
+    "maxSD": "8.247",
+    "avgScore": "0.696",
+    "constraintRate": "95.6",
+    "avgPairSim": "68.7",
+    "avgTime": "0.001",
+    "perfectRate": "0.8"
+  }
+}

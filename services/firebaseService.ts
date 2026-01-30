@@ -59,6 +59,7 @@ export interface RecruitmentRoom {
     maxApplicants: number; // 항목 9: 모집 인원 제한
     applicants: Applicant[];
     createdAt: string;
+    tierMode?: '5TIER' | '3TIER'; // 티어 체계 (5단계 또는 3단계)
     fcmToken?: string; // 방장의 FCM 토큰
 }
 
@@ -222,7 +223,7 @@ export const checkAppVersion = async () => {
 
         // 배포용 설정: 12시간 (43200000)
         // 테스트 시에는 0으로 설정하여 즉시 반영 확인 가능
-        remoteConfig.settings.minimumFetchIntervalMillis = 43200000;
+        remoteConfig.settings.minimumFetchIntervalMillis = 0;
 
         // 기본값 설정
         remoteConfig.defaultConfig = {

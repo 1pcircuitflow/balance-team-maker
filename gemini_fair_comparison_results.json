@@ -1,0 +1,143 @@
+{
+  "results": {
+    "Gemini": {
+      "name": "Gemini (Greedy+Swap)",
+      "avgSD": "0.123",
+      "minSD": "0.000",
+      "maxSD": "0.450",
+      "avgViolations": "2.64",
+      "avgTime": "0.0001",
+      "perfectRate": 5,
+      "winRate": 76
+    },
+    "MoreGA": {
+      "name": "MoreGA (GA 50세대)",
+      "avgSD": "0.676",
+      "minSD": "0.125",
+      "maxSD": "1.651",
+      "avgViolations": "2.80",
+      "avgTime": "0.0137",
+      "perfectRate": 0,
+      "winRate": 0
+    },
+    "MorePSO": {
+      "name": "MorePSO (PSO 60반복)",
+      "avgSD": "0.229",
+      "minSD": "0.000",
+      "maxSD": "0.613",
+      "avgViolations": "2.79",
+      "avgTime": "0.0004",
+      "perfectRate": 1,
+      "winRate": 19
+    },
+    "SD_Limit": {
+      "name": "SD_Limit_2",
+      "avgSD": "0.692",
+      "minSD": "0.094",
+      "maxSD": "1.886",
+      "avgViolations": "2.75",
+      "avgTime": "0.0085",
+      "perfectRate": 0,
+      "winRate": 1
+    },
+    "Hybrid": {
+      "name": "Hybrid (현재 앱)",
+      "avgSD": "0.212",
+      "minSD": "0.000",
+      "maxSD": "0.694",
+      "avgViolations": "2.71",
+      "avgTime": "0.0227",
+      "perfectRate": 2,
+      "winRate": 16
+    }
+  },
+  "rankings": [
+    {
+      "id": "Gemini",
+      "name": "Gemini (Greedy+Swap)",
+      "avgSD": "0.123",
+      "minSD": "0.000",
+      "maxSD": "0.450",
+      "avgViolations": "2.64",
+      "avgTime": "0.0001",
+      "perfectRate": 5,
+      "winRate": 76
+    },
+    {
+      "id": "Hybrid",
+      "name": "Hybrid (현재 앱)",
+      "avgSD": "0.212",
+      "minSD": "0.000",
+      "maxSD": "0.694",
+      "avgViolations": "2.71",
+      "avgTime": "0.0227",
+      "perfectRate": 2,
+      "winRate": 16
+    },
+    {
+      "id": "MorePSO",
+      "name": "MorePSO (PSO 60반복)",
+      "avgSD": "0.229",
+      "minSD": "0.000",
+      "maxSD": "0.613",
+      "avgViolations": "2.79",
+      "avgTime": "0.0004",
+      "perfectRate": 1,
+      "winRate": 19
+    },
+    {
+      "id": "MoreGA",
+      "name": "MoreGA (GA 50세대)",
+      "avgSD": "0.676",
+      "minSD": "0.125",
+      "maxSD": "1.651",
+      "avgViolations": "2.80",
+      "avgTime": "0.0137",
+      "perfectRate": 0,
+      "winRate": 0
+    },
+    {
+      "id": "SD_Limit",
+      "name": "SD_Limit_2",
+      "avgSD": "0.692",
+      "minSD": "0.094",
+      "maxSD": "1.886",
+      "avgViolations": "2.75",
+      "avgTime": "0.0085",
+      "perfectRate": 0,
+      "winRate": 1
+    }
+  ],
+  "headToHead": {
+    "Gemini": {
+      "MoreGA": 99,
+      "MorePSO": 79,
+      "SD_Limit": 98,
+      "Hybrid": 79
+    },
+    "MoreGA": {
+      "Gemini": 1,
+      "MorePSO": 3,
+      "SD_Limit": 54,
+      "Hybrid": 3
+    },
+    "MorePSO": {
+      "Gemini": 16,
+      "MoreGA": 97,
+      "SD_Limit": 95,
+      "Hybrid": 48
+    },
+    "SD_Limit": {
+      "Gemini": 1,
+      "MoreGA": 46,
+      "MorePSO": 4,
+      "Hybrid": 5
+    },
+    "Hybrid": {
+      "Gemini": 15,
+      "MoreGA": 97,
+      "MorePSO": 49,
+      "SD_Limit": 95
+    }
+  }
+}
