@@ -15,6 +15,7 @@ import {
     arrayRemove,
     deleteDoc
 } from "firebase/firestore";
+import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Player } from "../types";
 
@@ -208,6 +209,46 @@ export const loadPlayersFromCloud = async (userId: string): Promise<Player[] | n
         return null;
     } catch (e) {
         console.error("Load cloud error:", e);
+        return null;
+    }
+};
+
+/**
+ * 10. 앱 버전 체크 (Remote Config)
+ */
+export const checkAppVersion = async () => {
+    try {
+        const remoteConfig = getRemoteConfig(app);
+
+        // 개발 중 테스트를 위해 fetch 간격을 최소화 (배포 시 늘리는 것이 좋음)
+        remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1시간
+
+        // 기본값 설정
+        remoteConfig.defaultConfig = {
+            latest_version: "1.0.0",
+            force_update: false,
+            update_message: "새로운 버전이 출시되었습니다.\n더 안정적인 사용을 위해 업데이트해주세요.",
+            store_url_android: "market://details?id=com.balanceteammaker",
+            store_url_ios: ""
+        };
+
+        await fetchAndActivate(remoteConfig);
+
+        const latestVersion = getValue(remoteConfig, "latest_version").asString();
+        const forceUpdate = getValue(remoteConfig, "force_update").asBoolean();
+        const updateMessage = getValue(remoteConfig, "update_message").asString();
+        const storeUrlAndroid = getValue(remoteConfig, "store_url_android").asString();
+        const storeUrlIos = getValue(remoteConfig, "store_url_ios").asString();
+
+        return {
+            latestVersion,
+            forceUpdate,
+            updateMessage,
+            storeUrlAndroid,
+            storeUrlIos
+        };
+    } catch (error) {
+        console.error("Remote Config Error:", error);
         return null;
     }
 };

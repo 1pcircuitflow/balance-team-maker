@@ -29,7 +29,8 @@ import {
   Applicant,
   db,
   savePlayersToCloud,
-  loadPlayersFromCloud
+  loadPlayersFromCloud,
+  checkAppVersion
 } from './services/firebaseService';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -88,6 +89,69 @@ const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean 
   );
 };
 
+
+const compareVersions = (v1: string, v2: string) => {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const n1 = parts1[i] || 0;
+    const n2 = parts2[i] || 0;
+    if (n1 > n2) return 1;
+    if (n1 < n2) return -1;
+  }
+  return 0;
+};
+
+const UpdateModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: () => void;
+  message: string;
+  forceUpdate: boolean;
+  lang: Language;
+  darkMode: boolean;
+}> = ({ isOpen, onClose, onUpdate, message, forceUpdate, lang, darkMode }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
+      <div className={`w-full max-w-[320px] rounded-3xl p-6 shadow-2xl transform transition-all scale-100 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${darkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+            <Icons.RotateCcwIcon size={24} />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+              {lang === 'ko' ? '업데이트 알림' : (lang === 'en' ? 'Update Available' : 'Actualización disponible')}
+            </h3>
+            <p className={`text-sm leading-relaxed whitespace-pre-wrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              {message}
+            </p>
+          </div>
+
+          <div className="flex flex-col w-full gap-2 mt-2">
+            <button
+              onClick={onUpdate}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-500/30"
+            >
+              {lang === 'ko' ? '지금 업데이트' : (lang === 'en' ? 'Update Now' : 'Actualizar ahora')}
+            </button>
+
+            {!forceUpdate && (
+              <button
+                onClick={onClose}
+                className={`w-full py-3.5 font-bold rounded-xl transition-all active:scale-95 ${darkMode ? 'text-slate-500 hover:bg-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                {lang === 'ko' ? '나중에 하기' : (lang === 'en' ? 'Later' : 'Más tarde')}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const GuideModal: React.FC<{
   isOpen: boolean;
@@ -1790,6 +1854,40 @@ const App: React.FC = () => {
   const [showLoginRecommendModal, setShowLoginRecommendModal] = useState(false);
 
   const [pendingJoinRoomId, setPendingJoinRoomId] = useState<string | null>(null);
+
+  // 업데이트 관련 상태
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<{
+    message: string;
+    forceUpdate: boolean;
+    storeUrl: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const checkVersion = async () => {
+      // 1. 현재 앱 버전 가져오기
+      const info = await CapApp.getInfo();
+      const currentVersion = info.version; // 예: "2.1.26"
+
+      // 2. Remote Config 버전 정보 가져오기
+      const remoteInfo = await checkAppVersion();
+
+      if (remoteInfo) {
+        // 3. 버전 비교 (Remote > Current 이면 업데이트 필요)
+        if (compareVersions(remoteInfo.latestVersion, currentVersion) > 0) {
+          const isAndroid = Capacitor.getPlatform() === 'android';
+          setUpdateInfo({
+            message: remoteInfo.updateMessage,
+            forceUpdate: remoteInfo.forceUpdate,
+            storeUrl: isAndroid ? remoteInfo.storeUrlAndroid : remoteInfo.storeUrlIos
+          });
+          setShowUpdateModal(true);
+        }
+      }
+    };
+
+    checkVersion();
+  }, []); // 앱 시작 시 1회 실행
 
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
   const isUnlimitedPos = true; // 항목 4: 전면 무료화
@@ -4094,6 +4192,21 @@ const App: React.FC = () => {
         darkMode={darkMode}
         lang={lang}
       />
+      {updateInfo && (
+        <UpdateModal
+          isOpen={showUpdateModal}
+          onClose={() => setShowUpdateModal(false)}
+          onUpdate={() => {
+            if (updateInfo.storeUrl) {
+              window.open(updateInfo.storeUrl, '_system');
+            }
+          }}
+          message={updateInfo.message}
+          forceUpdate={updateInfo.forceUpdate}
+          lang={lang}
+          darkMode={darkMode}
+        />
+      )}
       <div className="h-[calc(10px+env(safe-area-inset-bottom))]" />
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} />
     </div>
