@@ -220,8 +220,9 @@ export const checkAppVersion = async () => {
     try {
         const remoteConfig = getRemoteConfig(app);
 
-        // 개발 중 테스트를 위해 fetch 간격을 최소화 (배포 시 늘리는 것이 좋음)
-        remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1시간
+        // 배포용 설정: 12시간 (43200000)
+        // 테스트 시에는 0으로 설정하여 즉시 반영 확인 가능
+        remoteConfig.settings.minimumFetchIntervalMillis = 43200000;
 
         // 기본값 설정
         remoteConfig.defaultConfig = {
