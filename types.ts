@@ -8,13 +8,14 @@ export enum Tier {
 }
 
 export enum SportType {
+  ALL = 'ALL',
   GENERAL = 'GENERAL',
   SOCCER = 'SOCCER',
   FUTSAL = 'FUTSAL',
   BASKETBALL = 'BASKETBALL'
 }
 
-export type SoccerPosition = 'FW' | 'LW' | 'RW' | 'MF' | 'DF' | 'LB' | 'RB' | 'GK' | 'NONE';
+export type SoccerPosition = 'ST' | 'LW' | 'RW' | 'MF' | 'DF' | 'LB' | 'RB' | 'GK' | 'NONE';
 export type FutsalPosition = 'PIV' | 'ALA' | 'FIX' | 'GK' | 'NONE';
 export type BasketballPosition = 'PG' | 'SG' | 'SF' | 'PF' | 'C' | 'NONE';
 export type Position = SoccerPosition | FutsalPosition | BasketballPosition;

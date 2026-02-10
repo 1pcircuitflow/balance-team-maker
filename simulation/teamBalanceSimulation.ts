@@ -8,17 +8,17 @@ import { generateBalancedTeams } from '../services/balanceService';
 
 // 테스트 데이터: 이미지에서 확인된 15명의 선수
 const testPlayers: Player[] = [
-    { id: '1', name: '김승원', tier: Tier.S, sportType: SportType.SOCCER, primaryPosition: 'FW', secondaryPosition: 'NONE', isActive: true },
+    { id: '1', name: '김승원', tier: Tier.S, sportType: SportType.SOCCER, primaryPosition: 'ST', secondaryPosition: 'NONE', isActive: true },
     { id: '2', name: '김희원', tier: Tier.A, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'NONE', isActive: true },
     { id: '3', name: '고범찬', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'DF', secondaryPosition: 'MF', isActive: true },
-    { id: '4', name: '광반이언구', tier: Tier.A, sportType: SportType.SOCCER, primaryPosition: 'FW', secondaryPosition: 'MF', isActive: true },
+    { id: '4', name: '광반이언구', tier: Tier.A, sportType: SportType.SOCCER, primaryPosition: 'ST', secondaryPosition: 'MF', isActive: true },
     { id: '5', name: '김주원', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'DF', isActive: true },
     { id: '6', name: '김동원', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'DF', secondaryPosition: 'NONE', isActive: true },
-    { id: '7', name: '김주억', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'FW', isActive: true },
+    { id: '7', name: '김주억', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'ST', isActive: true },
     { id: '8', name: '배창삼', tier: Tier.C, sportType: SportType.SOCCER, primaryPosition: 'DF', secondaryPosition: 'NONE', isActive: true },
-    { id: '9', name: '유성진', tier: Tier.A, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'FW', isActive: true },
+    { id: '9', name: '유성진', tier: Tier.A, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'ST', isActive: true },
     { id: '10', name: '유종현', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'DF', secondaryPosition: 'MF', isActive: true },
-    { id: '11', name: '이경근', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'FW', secondaryPosition: 'MF', isActive: true },
+    { id: '11', name: '이경근', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'ST', secondaryPosition: 'MF', isActive: true },
     { id: '12', name: '이승환', tier: Tier.C, sportType: SportType.SOCCER, primaryPosition: 'GK', secondaryPosition: 'NONE', isActive: true },
     { id: '13', name: '전과자', tier: Tier.B, sportType: SportType.SOCCER, primaryPosition: 'MF', secondaryPosition: 'DF', isActive: true },
     { id: '14', name: '전광필', tier: Tier.C, sportType: SportType.SOCCER, primaryPosition: 'DF', secondaryPosition: 'NONE', isActive: true },

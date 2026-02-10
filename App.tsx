@@ -37,9 +37,9 @@ import { doc, updateDoc } from 'firebase/firestore';
 import * as Icons from './Icons';
 const {
   PlusIcon, MinusIcon, TrashIcon, EditIcon, CheckIcon, ShuffleIcon,
-  UserPlusIcon, UserCheckIcon, ShareIcon, SunIcon, MoonIcon,
-  SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon,
-  SettingsIcon, HeartIcon, RotateCcwIcon, CloseIcon, HelpCircleIcon, HomeIcon
+  UserPlusIcon, UserPlusFilledIcon, UserCheckIcon, ShareIcon, SunIcon, MoonIcon,
+  SlidersIcon, InfoIcon, GlobeIcon, ExternalLinkIcon, MoreIcon, MoreFilledIcon,
+  SettingsIcon, SettingsFilledIcon, HeartIcon, RotateCcwIcon, CloseIcon, HelpCircleIcon, HomeIcon, HomeFilledIcon, ArrowLeftIcon, PlayIcon
 } = Icons;
 import { DateTimePicker } from './components/DateTimePicker';
 
@@ -56,11 +56,11 @@ const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean;
       timerId = setTimeout(async () => {
         try {
           const options = {
-            adId: 'ca-app-pub-4761157658396004/6797378026',
+            adId: 'ca-app-pub-3940256099942544/6300978111',
             adSize: BannerAdSize.ADAPTIVE_BANNER,
             position: BannerAdPosition.BOTTOM_CENTER,
             margin: 0,
-            isTesting: false
+            isTesting: true
           };
           await AdMob.showBanner(options);
         } catch (e) {
@@ -79,16 +79,7 @@ const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: boolean;
 
   if (isAdFree) return null;
 
-  return (
-    <div
-      className={`fixed left-0 right-0 bg-white dark:bg-slate-950 z-[4000] transition-colors duration-300 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]`}
-      style={{ bottom: bottomOffset }}
-    >
-      <div className={`h-[56px] w-full flex items-center justify-center text-[8px] font-black tracking-[0.2em] uppercase ${darkMode ? 'text-slate-800' : 'text-slate-200'}`}>
-        {/* AdMob Banner will be overlaid here */}
-      </div>
-    </div>
-  );
+  return null;
 };
 
 
@@ -260,6 +251,14 @@ const TIER_COLORS: Record<Tier, string> = {
   [Tier.D]: 'bg-slate-50 text-slate-400 dark:bg-slate-950 dark:text-slate-500',
 };
 
+const SPORT_IMAGES: Record<SportType, string[]> = {
+  [SportType.SOCCER]: ['/images/soccer-1.jpeg', '/images/soccer-2.jpeg'],
+  [SportType.FUTSAL]: ['/images/futsal-1.jpeg', '/images/futsal-2.jpeg'],
+  [SportType.BASKETBALL]: ['/images/basketball-1.jpeg', '/images/basketball-2.jpeg'],
+  [SportType.GENERAL]: ['/images/tennis-1.jpeg', '/images/tennis-2.jpeg'],
+  [SportType.ALL]: ['/images/tennis-1.jpeg', '/images/tennis-2.jpeg']
+};
+
 const TEAM_COLORS = [
   { name: 'color_red', value: '#ef4444' },
   { name: 'color_orange', value: '#f97316' },
@@ -293,7 +292,7 @@ const QuotaFormationPicker: React.FC<{
       { id: 'RB', x: '85%', y: '65%' },
       { id: 'MF', x: '50%', y: '42%' },
       { id: 'LW', x: '15%', y: '25%' },
-      { id: 'FW', x: '50%', y: '18%' },
+      { id: 'ST', x: '50%', y: '18%' },
       { id: 'RW', x: '85%', y: '25%' },
     ]
     : sport === SportType.FUTSAL
@@ -318,21 +317,39 @@ const QuotaFormationPicker: React.FC<{
 
   return (
     <div className="relative aspect-[3/4] w-full max-w-[340px] mx-auto mt-4 px-2">
-      <div className="absolute inset-0 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-950/50">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          {sport === SportType.BASKETBALL ? (
-            <div className="w-full h-full border-2 border-slate-400 m-2 rounded-lg">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1/4 border-2 border-slate-400" />
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-48 h-48 border-2 border-slate-400 rounded-full" />
-            </div>
-          ) : (
-            <div className="w-full h-full border-2 border-slate-400 m-2 rounded-lg flex flex-col">
-              <div className="h-1/2 border-b-2 border-slate-400" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-slate-400 rounded-full" />
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-2 border-slate-400" />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-2 border-slate-400" />
-            </div>
-          )}
+      <div className="absolute inset-0 rounded-3xl overflow-hidden">
+        {/* Stadium Backgrounds */}
+        {sport === SportType.BASKETBALL ? (
+          <div className="absolute inset-0 bg-[#E0BA87] dark:bg-[#5c3d2e]" />
+        ) : (
+          <div className="absolute inset-0 bg-[#064e3b]">
+            <div className="absolute inset-0 opacity-20"
+              style={{
+                background: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 40px, transparent 40px, transparent 80px)'
+              }}
+            />
+          </div>
+        )}
+
+        {/* Inner Court Container */}
+        <div className="absolute inset-4">
+          {/* Court Lines */}
+          <div className="absolute inset-0 pointer-events-none">
+            {sport === SportType.BASKETBALL ? (
+              <div className="w-full h-full border-2 border-white/60 rounded-lg overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[160%] aspect-square border-2 border-white/40 rounded-full" style={{ top: '-40%' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1/3 border-x-2 border-b-2 border-white/50" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-24 h-24 border-2 border-white/50 rounded-full" />
+              </div>
+            ) : (
+              <div className="w-full h-full border-2 border-white/50 rounded-lg flex flex-col relative">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/40 -translate-y-1/2" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/50 rounded-full" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x-2 border-b-2 border-white/50 rounded-b-sm" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x-2 border-t-2 border-white/50 rounded-t-sm" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -340,52 +357,66 @@ const QuotaFormationPicker: React.FC<{
         const val = quotas[pos.id];
         const isAuto = typeof val !== 'number';
 
+        const handleMinus = () => {
+          if (isAuto) return;
+          if (val === 1) {
+            onToggleMode(pos.id);
+          } else {
+            onUpdate(pos.id, -1);
+          }
+        };
+
+        const handlePlus = () => {
+          if (isAuto) {
+            onToggleMode(pos.id);
+          } else {
+            onUpdate(pos.id, 1);
+          }
+        };
+
         return (
           <div
             key={pos.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 group"
+            className="absolute -translate-x-1/2 -translate-y-1/2"
             style={{ left: pos.x, top: pos.y }}
           >
-            <div className="flex flex-col items-center gap-1.5">
-              <div className={`p-2 rounded-2xl shadow-xl border-2 transition-all flex flex-col items-center gap-1 min-w-[75px] ${isAuto
-                ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800'
-                : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800'
-                }`}>
-                <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter leading-none">{pos.id}</span>
+            <div
+              className={`backdrop-blur-sm rounded-xl shadow-lg px-2 py-1.5 flex flex-col items-center gap-1 min-w-[65px] transition-all duration-300 border ${isAuto
+                ? 'bg-emerald-50/90 dark:bg-emerald-950/30 border-emerald-400/60 dark:border-emerald-500/40'
+                : 'bg-white/95 dark:bg-slate-900/95 border-slate-200/50 dark:border-slate-800/50'
+                }`}
+              style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+            >
+              <span className="text-[12px] font-semibold uppercase tracking-tight leading-none mb-1 transition-colors text-black dark:text-white">
+                {pos.id}
+              </span>
 
-                <div className="flex items-center gap-1.5">
-                  {!isAuto ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onUpdate(pos.id, -1)}
-                        className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-rose-500 hover:text-white transition-colors active:scale-90"
-                      >
-                        <MinusIcon />
-                      </button>
-                      <span className="text-sm font-bold font-mono text-slate-900 dark:text-slate-100 min-w-[12px] text-center leading-none">{val}</span>
-                      <button
-                        type="button"
-                        onClick={() => onUpdate(pos.id, 1)}
-                        className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-500 hover:text-white transition-colors active:scale-90"
-                      >
-                        <PlusIcon />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-[9px] font-black tracking-widest leading-none">AUTO</div>
-                  )}
-                </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleMinus}
+                  className={`w-[14px] h-[14px] flex items-center justify-center rounded transition-all active:scale-75 ${isAuto
+                    ? 'opacity-20 cursor-not-allowed bg-white/50 dark:bg-slate-800/50 text-slate-400'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-rose-500 hover:text-white active:bg-rose-600 active:text-white'
+                    }`}
+                >
+                  <MinusIcon size={8} />
+                </button>
+
+                <span className={`text-[12px] font-medium min-w-[20px] text-center leading-none tracking-tight transition-colors ${isAuto ? 'text-emerald-600 dark:text-emerald-400' : 'text-black dark:text-white'
+                  }`}>
+                  {isAuto ? t('autoQuota') : val}
+                </span>
 
                 <button
                   type="button"
-                  onClick={() => onToggleMode(pos.id)}
-                  className={`mt-0.5 px-2 py-0.5 rounded-md text-[7px] font-black tracking-tight uppercase transition-all active:scale-95 ${isAuto
-                    ? 'bg-white text-emerald-600 dark:bg-slate-900 dark:text-emerald-400'
-                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+                  onClick={handlePlus}
+                  className={`w-[14px] h-[14px] flex items-center justify-center rounded transition-all active:scale-75 ${isAuto
+                    ? 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-500 hover:text-white active:bg-emerald-600 active:text-white'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-500 hover:text-white active:bg-emerald-600 active:text-white'
                     }`}
                 >
-                  {isAuto ? t('fixQuota') : t('autoQuota')}
+                  <PlusIcon size={8} />
                 </button>
               </div>
             </div>
@@ -417,7 +448,7 @@ const FormationPicker: React.FC<{
       { id: 'RB', x: '85%', y: '65%' },
       { id: 'MF', x: '50%', y: '42%' },
       { id: 'LW', x: '15%', y: '25%' },
-      { id: 'FW', x: '50%', y: '18%' },
+      { id: 'ST', x: '50%', y: '18%' },
       { id: 'RW', x: '85%', y: '25%' },
     ]
     : sport === SportType.FUTSAL
@@ -490,78 +521,96 @@ const FormationPicker: React.FC<{
         </label>
       </div>
 
-      <div className="relative aspect-[3/4] w-full max-w-[280px] mx-auto">
-        <div className="absolute inset-0 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950">
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
+      <div className="relative aspect-[3/4] w-full max-w-[280px] mx-auto rounded-3xl overflow-hidden">
+        {/* Stadium Backgrounds */}
+        {sport === SportType.BASKETBALL ? (
+          <div className="absolute inset-0 bg-[#E0BA87] dark:bg-[#5c3d2e]" />
+        ) : (
+          <div className="absolute inset-0 bg-[#064e3b]">
+            <div className="absolute inset-0 opacity-20"
+              style={{
+                background: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 40px, transparent 40px, transparent 80px)'
+              }}
+            />
+          </div>
+        )}
+
+        {/* Inner Court Container: Fixed the layout by removing redundant 'relative' */}
+        <div className="absolute inset-4">
+          {/* Court Lines */}
+          <div className="absolute inset-0 pointer-events-none">
             {sport === SportType.BASKETBALL ? (
-              <div className="w-full h-full border-2 border-slate-400 m-2 rounded-lg">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1/4 border-2 border-slate-400" />
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-48 h-48 border-2 border-slate-400 rounded-full" />
+              <div className="w-full h-full border-2 border-white/60 rounded-lg overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[160%] aspect-square border-2 border-white/40 rounded-full" style={{ top: '-40%' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1/3 border-x-2 border-b-2 border-white/50" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-24 h-24 border-2 border-white/50 rounded-full" />
               </div>
             ) : (
-              <div className="w-full h-full border-2 border-slate-400 m-2 rounded-lg flex flex-col">
-                <div className="h-1/2 border-b-2 border-slate-400" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-slate-400 rounded-full" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-2 border-slate-400" />
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-2 border-slate-400" />
+              <div className="w-full h-full border-2 border-white/50 rounded-lg flex flex-col relative">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/40 -translate-y-1/2" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/50 rounded-full" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x-2 border-b-2 border-white/50 rounded-b-sm" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x-2 border-t-2 border-white/50 rounded-t-sm" />
               </div>
             )}
           </div>
-        </div>
 
-        {activeMenuPos && (
-          <div className="absolute inset-0 z-20" onClick={() => setActiveMenuPos(null)} />
-        )}
+          {/* Position Menu Backdrop */}
+          {activeMenuPos && (
+            <div className="absolute inset-0 z-20" onClick={() => setActiveMenuPos(null)} />
+          )}
 
-        <div className="absolute inset-0 z-30">
-          {positions.map((pos) => {
-            const status = getStatus(pos.id);
-            const isMenuOpen = activeMenuPos === pos.id;
+          {/* Player Position Dots */}
+          <div className="absolute inset-0 z-30">
+            {positions.map((pos) => {
+              const status = getStatus(pos.id);
+              const isMenuOpen = activeMenuPos === pos.id;
 
-            return (
-              <div
-                key={pos.id}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex flex-col items-center justify-center ${isMenuOpen ? 'z-[100]' : 'z-30'}`}
-                style={{ left: pos.x, top: pos.y }}
-              >
-                {isMenuOpen && (
-                  <div className="absolute bottom-full mb-3 p-1 bg-white dark:bg-slate-900 rounded-full animate-in zoom-in-50 fade-in duration-200 origin-bottom flex items-center gap-1.5 min-w-max pointer-events-auto shadow-xl border border-slate-100 dark:border-slate-800">
-                    {[
-                      { l: 1, v: '100' },
-                      { l: 2, v: '75' },
-                      { l: 3, v: '50' },
-                      { l: 'X', v: 'X' }
-                    ].map((item) => (
-                      <button
-                        key={item.v}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          handleSelectSuitability(pos.id, item.l as any);
-                        }}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-black text-white transition-all active:scale-90 select-none ${item.l === 1 ? 'bg-emerald-500' :
-                          item.l === 2 ? 'bg-yellow-400' :
-                            item.l === 3 ? 'bg-orange-400' :
-                              'bg-rose-500'
-                          }`}
-                      >
-                        {item.v}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setActiveMenuPos(isMenuOpen ? null : pos.id); }}
-                  className={`w-full h-full rounded-full transition-all duration-300 flex flex-col items-center justify-center gap-0.5 ${status.color} hover:scale-110 active:scale-95 shadow-md`}
+              return (
+                <div
+                  key={pos.id}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex flex-col items-center justify-center transition-all ${isMenuOpen ? 'z-[100]' : 'z-30'}`}
+                  style={{ left: pos.x, top: pos.y }}
                 >
-                  <span className="text-[9px] font-black text-white drop-shadow-sm">{pos.id}</span>
-                  {status.label && <span className="text-[8px] font-black text-white/90 leading-none">{status.label}</span>}
-                </button>
-              </div>
-            );
-          })}
+                  {isMenuOpen && (
+                    <div className="absolute bottom-full mb-3 p-1 bg-white dark:bg-slate-900 rounded-full animate-in zoom-in-50 fade-in duration-200 origin-bottom flex items-center gap-1.5 min-w-max pointer-events-auto shadow-xl border border-slate-100 dark:border-slate-800">
+                      {[
+                        { l: 1, v: '100' },
+                        { l: 2, v: '75' },
+                        { l: 3, v: '50' },
+                        { l: 'X', v: 'X' }
+                      ].map((item) => (
+                        <button
+                          key={item.v}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleSelectSuitability(pos.id, item.l as any);
+                          }}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-black text-white transition-all active:scale-90 select-none ${item.l === 1 ? 'bg-emerald-500' :
+                            item.l === 2 ? 'bg-yellow-400' :
+                              item.l === 3 ? 'bg-orange-400' :
+                                'bg-rose-500'
+                            }`}
+                        >
+                          {item.v}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setActiveMenuPos(isMenuOpen ? null : pos.id); }}
+                    className={`w-full h-full rounded-full transition-all duration-300 flex flex-col items-center justify-center gap-0.5 ${status.color} hover:scale-110 active:scale-95 shadow-md border border-white/30`}
+                  >
+                    <span className="text-[9px] font-black text-white drop-shadow-sm">{pos.id}</span>
+                    {status.label && <span className="text-[8px] font-black text-white/90 leading-none">{status.label}</span>}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
       <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 italic font-medium px-4 mt-2">
@@ -624,7 +673,7 @@ const PlayerItem: React.FC<PlayerItemProps> = ({
       onMouseLeave={() => {
         setIsConfirmingDelete(false);
       }}
-      className={`flex flex-col p-2.5 rounded-2xl transition-all duration-200 bg-white dark:bg-slate-950 group ${isSelectionMode && isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`flex flex-col p-2.5 rounded-2xl transition-all duration-200 group ${player.isActive ? 'bg-slate-100/80 dark:bg-slate-900/40 opacity-80' : 'bg-white dark:bg-slate-950'} ${isSelectionMode && isSelected ? 'ring-2 ring-blue-500' : ''}`}
       onClick={() => isSelectionMode && onSelect && onSelect(player.id)}
     >
       <div className="flex items-center justify-between mb-1">
@@ -767,7 +816,7 @@ const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; darkMode:
   const icon = activeTab === SportType.BASKETBALL ? '🏀' : activeTab === SportType.SOCCER ? '⚽' : activeTab === SportType.FUTSAL ? '🥅' : '🏆';
 
   return (
-    <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-950/90' : 'bg-white/95'} backdrop-blur-xl animate-in duration-300`}>
+    <div className={`fixed inset-0 z-[5000] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-950/90' : 'bg-white/95'} backdrop-blur-xl animate-in duration-300`}>
       <div className="relative flex flex-col items-center max-w-sm w-full px-6">
         <div className="text-5xl mb-6 animate-bounce">
           {icon}
@@ -1045,32 +1094,62 @@ const ReviewPrompt: React.FC<{
   );
 };
 
-const LoginModal: React.FC<{
+const LoginPage: React.FC<{
   isOpen: boolean; onLater: () => void; onLogin: () => void; lang: Language; darkMode: boolean;
 }> = ({ isOpen, onLater, onLogin, lang, darkMode }) => {
   const t = (key: keyof typeof TRANSLATIONS['ko']): string => (TRANSLATIONS[lang] as any)[key] || key;
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1500] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in duration-300">
-      <div className={`w-full max-w-sm rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 shadow-2xl border border-slate-800' : 'bg-white shadow-2xl'}`}>
-        <div className="w-16 h-16 bg-blue-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-          </svg>
+    <div className="fixed inset-0 z-[2000] flex flex-col items-center justify-end bg-white dark:bg-slate-950 px-5" style={{ paddingBottom: '180px' }}>
+      {/* 메인 콘텐츠 컨테이너 - 하단에서 60px 위에 배치 (광고배너 높이 약 60px 고려) */}
+      <div className="flex flex-col items-center w-full max-w-sm">
+        {/* 로고 + 타이틀 영역 */}
+        <div className="flex flex-col items-center" style={{ marginBottom: '8vh' }}>
+          {/* 로고 */}
+          <img
+            src="/assets/logo.png"
+            alt="BELO Logo"
+            style={{ width: '150px', height: '180px', objectFit: 'contain' }}
+          />
+          {/* 타이틀 */}
+          <div className="text-center" style={{ marginTop: '-30px' }}>
+            <p className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 leading-relaxed" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+              편하게, 공정하게, 재미있게
+            </p>
+            <p className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 mt-1" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+              BELO
+            </p>
+          </div>
         </div>
 
-        <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>
-          {t('loginTitle')}
-        </h3>
-        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'} mb-8 px-2 leading-relaxed`}>
-          {t('loginMsg')}
-        </p>
+        {/* 설명 영역 */}
+        <div className="w-full text-center" style={{ marginBottom: '4vh' }}>
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+            로그인을 하면 선수 데이터와 설정을 모든 기기에서
+            <br />
+            안전하게 동기화 할 수 있습니다.
+          </p>
+        </div>
 
-        <div className="space-y-3">
+        {/* 버튼 영역 */}
+        <div className="w-full flex flex-col items-center gap-4">
+          {/* 구글로 로그인 버튼 */}
           <button
             onClick={onLogin}
-            className="w-full py-4 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl transition-all active:scale-95 shadow-md flex items-center justify-center gap-3 border border-slate-200"
+            className="w-full flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
+            style={{
+              maxWidth: '295px',
+              height: '56px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E5E5EC',
+              borderRadius: '12px',
+              boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)',
+              fontFamily: 'Pretendard Variable, Pretendard, sans-serif',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#111111',
+            }}
           >
             <svg className="w-5 h-5" viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -1080,9 +1159,23 @@ const LoginModal: React.FC<{
             </svg>
             {t('googleLogin')}
           </button>
+
+          {/* 다음에 하기 버튼 */}
           <button
             onClick={onLater}
-            className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
+            className="w-full flex items-center justify-center active:scale-[0.98] transition-transform"
+            style={{
+              maxWidth: '295px',
+              height: '56px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E5E5EC',
+              borderRadius: '12px',
+              boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)',
+              fontFamily: 'Pretendard Variable, Pretendard, sans-serif',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#777777',
+            }}
           >
             {t('loginLater')}
           </button>
@@ -1411,24 +1504,24 @@ const HostRoomModal: React.FC<{
   /* 날짜/시간 초기값 및 상태 관리 */
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours(), 0, 0, 0); // 현재 시간 정각
+    d.setHours(d.getHours() + 1, 0, 0, 0); // 현재+1시간 정각
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [startTime, setStartTime] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours(), 0, 0, 0);
+    d.setHours(d.getHours() + 1, 0, 0, 0);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
 
-  // 종료 시간은 시작 시간 + 1시간 기본값
+  // 종료 시간은 시작 시간 + 2시간 기본값
   const [endDate, setEndDate] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours() + 1, 0, 0, 0); // Start + 1 hour
+    d.setHours(d.getHours() + 3, 0, 0, 0); // Start(+1h) + 2 hours = Current + 3h
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [endTime, setEndTime] = useState(() => {
     const d = new Date();
-    d.setHours(d.getHours() + 1, 0, 0, 0);
+    d.setHours(d.getHours() + 3, 0, 0, 0);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
 
@@ -1440,7 +1533,8 @@ const HostRoomModal: React.FC<{
     return String(translation || key);
   };
 
-  const [title, setTitle] = useState(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} ${t('meeting')}`);
+  const [selectedSport, setSelectedSport] = useState<SportType>(activeTab === SportType.ALL ? SportType.GENERAL : activeTab);
+  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
@@ -1451,7 +1545,7 @@ const HostRoomModal: React.FC<{
     if (isOpen && !activeRoom) {
       // 모달이 열릴 때(새 방 생성 모드인 경우) 날짜와 시간을 현재 기준으로 리셋
       const d = new Date();
-      d.setHours(d.getHours(), 0, 0, 0); // 현재 시간의 정각
+      d.setHours(d.getHours() + 1, 0, 0, 0); // 현재 시간+1의 정각
 
       const newStartDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const newStartTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -1459,13 +1553,15 @@ const HostRoomModal: React.FC<{
       setStartDate(newStartDate);
       setStartTime(newStartTime);
 
-      // 종료 시간은 시작 + 1시간
-      const endD = new Date(d.getTime() + 60 * 60 * 1000);
+      // 종료 시간은 시작 + 2시간
+      const endD = new Date(d.getTime() + 2 * 60 * 60 * 1000); // 2 hours after start
       setEndDate(`${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`);
       setEndTime(`${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}`);
 
-      // 제목도 현재 탭에 맞춰 초기화
-      setTitle(`${TRANSLATIONS[lang][activeTab.toLowerCase() as any]} ${t('meeting')}`);
+      const initialSport = activeTab === SportType.ALL ? SportType.GENERAL : activeTab;
+      setSelectedSport(initialSport);
+      // 제목 자동 초기화 제거하여 플레이스홀더 노출 유도
+      setTitle("");
     }
 
     if (activeRoom?.id && isOpen) {
@@ -1512,9 +1608,9 @@ const HostRoomModal: React.FC<{
     setStartDate(newDate);
     setStartTime(newTime);
 
-    // 종료 시간 자동 계산 (시작 시간 + 1시간)
+    // 종료 시간 자동 계산 (시작 시간 + 2시간)
     const start = new Date(`${newDate}T${newTime}`);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
     // 날짜 포맷팅
     const eYear = end.getFullYear();
@@ -1536,7 +1632,7 @@ const HostRoomModal: React.FC<{
         hostId: currentUserId,
         hostName: userNickname,
         title: title,
-        sport: activeTab,
+        sport: selectedSport,
         matchDate: startDate,
         matchTime: startTime,
         matchEndDate: endDate,
@@ -1610,42 +1706,79 @@ const HostRoomModal: React.FC<{
   if (!isOpen || activeRoom) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 space-y-4">
-          <div className="flex justify-end items-center">
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-200 transition-colors"><CloseIcon /></button>
-          </div>
+    <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
+      {/* 상단 바 */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
+        <button onClick={onClose} className="p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <h2 className="text-base font-black text-slate-900 dark:text-white">{activeRoom ? t('manageMatchDetail' as any) : t('recruitParticipants')}</h2>
+        <div className="w-10" />
+      </div>
 
-
-
-          {!activeRoom ? (
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('roomTitle')}</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('inputRoomTitle')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-3 py-2.5 focus:outline-none dark:text-white font-bold text-sm" />
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4 pb-[148px]">
+        {!activeRoom ? (
+          <div className="space-y-4">
+            <div className="space-y-4">
+              {/* 종목 선택 */}
+              <div className="flex items-center gap-4">
+                <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('sport' as any)}</label>
+                <div className="flex-1 flex overflow-x-auto no-scrollbar gap-2 py-1">
+                  {[SportType.GENERAL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        setSelectedSport(s);
+                        // 종목 변경 시 제목 자동 입력 제거 (플레이스홀더 노출용)
+                      }}
+                      className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border shrink-0 ${selectedSport === s
+                        ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                        : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'
+                        }`}
+                    >
+                      {t(s.toLowerCase() as any)}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-2">
+
+              {/* 팀명 입력 */}
+              <div className="flex items-center gap-4">
+                <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder={t('inputRoomTitle')}
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                />
+              </div>
+            </div>
+
+            <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+            <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  {/* ... 일정 렌더링 유지 ... */}
                   <div
                     onClick={() => setActivePicker('START')}
-                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-50'}`}
+                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-40'}`}
                   >
-                    <span className="text-[9px] font-black uppercase text-blue-500 mb-0.5">{t('startTime')}</span>
-                    <span className={`text-sm font-bold ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
+                    <span className="text-[16px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
+                    <span className={`text-[16px] font-black ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500'}`}>
                       {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
                     </span>
                   </div>
-                  <div className="text-slate-300 dark:text-slate-600 pb-3">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  <div className="text-slate-200 dark:text-slate-800">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                   </div>
                   <div
                     onClick={() => setActivePicker('END')}
-                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-50'}`}
+                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-40'}`}
                   >
-                    <span className="text-[9px] font-black uppercase text-rose-500 mb-0.5">{t('endTime')}</span>
-                    <span className={`text-sm font-bold ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                    <span className="text-[16px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
+                    <span className={`text-[16px] font-black ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
                       {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
                     </span>
                   </div>
@@ -1671,9 +1804,14 @@ const HostRoomModal: React.FC<{
                   )}
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('limitApplicants')}</label>
+            </div>
+
+            <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-3">
+                  <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('limitApplicants')}</label>
                   <button
                     onClick={() => setUseLimit(!useLimit)}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
@@ -1683,55 +1821,72 @@ const HostRoomModal: React.FC<{
                 </div>
 
                 {useLimit && (
-                  <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('maxApplicants')}</label>
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950 rounded-2xl px-4 py-2">
-                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><MinusIcon /></button>
-                      <span className="flex-1 text-center font-black dark:text-white text-sm">{t('peopleCount', maxApplicants)}</span>
-                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400"><PlusIcon /></button>
-                    </div>
+                  <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-xl px-2 py-1 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-right-2">
+                    <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" /></svg>
+                    </button>
+                    <span className="text-center font-black dark:text-white text-[12px] min-w-[40px]">{t('peopleCount', maxApplicants)}</span>
+                    <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                    </button>
                   </div>
                 )}
               </div>
-
-              {/* 등급 체계 선택 섹션 */}
-              <div className="space-y-2 pt-2 border-t border-slate-50 dark:border-slate-800">
-                <div className="flex items-center justify-between px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tierMode')}</label>
-                  <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
-                    <button
-                      onClick={() => setTierMode('5TIER')}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${tierMode === '5TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
-                    >
-                      {t('tierMode5')}
-                    </button>
-                    <button
-                      onClick={() => setTierMode('3TIER')}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${tierMode === '3TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
-                    >
-                      {t('tierMode3')}
-                    </button>
-                  </div>
-                </div>
-                {tierMode === '3TIER' && (
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 px-1 italic">
-                    ※ {t('tierModeDesc')}
-                  </p>
-                )}
-              </div>
-
-              {!isPickerSelectionMode && (
-                <div className="flex justify-end mt-2">
-                  <button onClick={handleCreate} disabled={loading} className="w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95">{loading ? '...' : t('create')}</button>
-                </div>
-              )}
             </div>
-          ) : (
-            null
-          )}
-        </div>
+
+            <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('tierMode')}</label>
+                <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <button
+                    onClick={() => setTierMode('5TIER')}
+                    className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${tierMode === '5TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
+                  >
+                    {t('tierMode5')}
+                  </button>
+                  <button
+                    onClick={() => setTierMode('3TIER')}
+                    className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${tierMode === '3TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
+                  >
+                    {t('tierMode3')}
+                  </button>
+                </div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                <p className="text-[11px] text-blue-600 dark:text-blue-400 font-bold leading-relaxed">
+                  💡 {tierMode === '3TIER' ? t('tierModeDesc') : t('tierMode5Desc' as any)}
+                </p>
+              </div>
+
+              {/* 추가된 즉시 생성 버튼: 오른쪽 하단 정렬, 소형화 */}
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleCreate}
+                  disabled={loading}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.95] shadow-md shadow-blue-500/20"
+                >
+                  {loading ? '...' : t('create' as any)}
+                </button>
+              </div>
+            </div>
+
+            {!isPickerSelectionMode && (
+              <div className="fixed bottom-0 left-0 right-0 p-5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={handleCreate}
+                  disabled={loading}
+                  className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black text-base rounded-3xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] flex items-center justify-center"
+                >
+                  {loading ? '...' : t('completeRegistration' as any)}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
-    </div >
+    </div>
   );
 };
 
@@ -1794,6 +1949,18 @@ enum BottomTabType {
   SETTINGS = 'SETTINGS'
 }
 
+enum AppPageType {
+  HOME = 'HOME',
+  DETAIL = 'DETAIL',
+  EDIT_ROOM = 'EDIT_ROOM',
+  BALANCE = 'BALANCE'
+}
+
+enum DetailPageTab {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED'
+}
+
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(getInitialLang());
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -1806,10 +1973,15 @@ const App: React.FC = () => {
     return (saved as SportType) || SportType.GENERAL;
   });
   const [currentBottomTab, setCurrentBottomTab] = useState<BottomTabType>(BottomTabType.HOME);
+  const [currentPage, setCurrentPage] = useState<AppPageType>(AppPageType.HOME);
+  const [detailTab, setDetailTab] = useState<DetailPageTab>(DetailPageTab.PENDING);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [isNavigatingFromDetail, setIsNavigatingFromDetail] = useState<boolean>(false);
   const changeTab = (tab: SportType) => {
     setActiveTab(tab);
     setResult(null);
-    setShowRoomDetail(false);
+    setShowRoomDetail(false); // 기존 상태 유지(호환성)
+    setCurrentPage(AppPageType.HOME);
     localStorage.setItem('last_active_tab', tab);
   };
   const [players, setPlayers] = useState<Player[]>([]);
@@ -1824,12 +1996,16 @@ const App: React.FC = () => {
   const [pastResults, setPastResults] = useState<Set<string>>(new Set()); // 이력 관리
   const [isSharing, setIsSharing] = useState<string | null>(null);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editingApplicantId, setEditingApplicantId] = useState<string | null>(null);
+  const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<'name' | 'tier'>('name');
 
   const [quotas, setQuotas] = useState<Partial<Record<Position, number | null>>>({});
   const [showQuotaSettings, setShowQuotaSettings] = useState(false);
+  const [isQuotaSettingsExpanded, setIsQuotaSettingsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
+  const [countdown, setCountdown] = useState(isAdFree ? 1 : 5);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
@@ -1849,14 +2025,13 @@ const App: React.FC = () => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedTeamColors, setSelectedTeamColors] = useState<string[]>(['#ef4444', '#3b82f6']);
 
-  const activePlayers = useMemo(() => players.filter(p => p.isActive && p.sportType === activeTab), [players, activeTab]);
-  const inactivePlayers = useMemo(() => {
-    const currentPlayers = players.filter(p => p.sportType === activeTab);
-    const inactive = currentPlayers.filter(p => !p.isActive);
+  const activePlayers = useMemo(() => players.filter(p => p.isActive && (activeTab === SportType.ALL || p.sportType === activeTab)), [players, activeTab]);
+  const memberPlayers = useMemo(() => {
+    const currentPlayers = players.filter(p => activeTab === SportType.ALL || p.sportType === activeTab);
     if (sortMode === 'name') {
-      return [...inactive].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      return [...currentPlayers].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     } else {
-      return [...inactive].sort((a, b) => {
+      return [...currentPlayers].sort((a, b) => {
         const tierA = isNaN(Number(a.tier)) ? (Tier as any)[a.tier] : Number(a.tier);
         const tierB = isNaN(Number(b.tier)) ? (Tier as any)[b.tier] : Number(b.tier);
         if (tierB !== tierA) return tierB - tierA;
@@ -1866,6 +2041,7 @@ const App: React.FC = () => {
   }, [players, activeTab, sortMode]);
   const [useRandomMix, setUseRandomMix] = useState(false);
   const [editingResultTeamIdx, setEditingResultTeamIdx] = useState<number | null>(null);
+  const [lastGenContext, setLastGenContext] = useState<{ players: Player[]; sport?: SportType } | null>(null);
 
   const [alertState, setAlertState] = useState<{ isOpen: boolean; title?: string; message: string }>({
     isOpen: false,
@@ -1910,6 +2086,39 @@ const App: React.FC = () => {
 
   // 최종 유저 식별자 (로그인 정보가 있으면 id, 없으면 guestId)
   const currentUserId = user?.id || guestId;
+
+  const handleUpdateRoom = async () => {
+    if (!currentActiveRoom) return;
+    setIsProcessing(true);
+    try {
+      const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+      const updateData = {
+        title: hostRoomTitle,
+        sport: hostRoomSelectedSport,
+        matchDate: hostRoomDate,
+        matchTime: hostRoomTime,
+        matchEndDate: hostRoomEndDate,
+        matchEndTime: hostRoomEndTime,
+        maxApplicants: hostRoomUseLimit ? hostRoomMaxApplicants : 0,
+        tierMode: hostRoomTierMode
+      };
+      await updateDoc(roomRef, updateData);
+
+      // 로컬 상태 즉시 갱신
+      setCurrentActiveRoom(prev => prev ? {
+        ...prev,
+        ...updateData
+      } : null);
+
+      setCurrentPage(AppPageType.DETAIL);
+      showAlert(t('editComplete' as any));
+    } catch (error) {
+      console.error('Error updating room:', error);
+      showAlert('Update failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLater, setLoginLater] = useState(false); // 앱 실행 시마다 초기화 (localStorage 제거)
@@ -1960,7 +2169,6 @@ const App: React.FC = () => {
     checkVersion();
   }, []); // 앱 시작 시 1회 실행
 
-  const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
   const isUnlimitedPos = true; // 항목 4: 전면 무료화
   const isPro = isAdFree;
 
@@ -1969,6 +2177,9 @@ const App: React.FC = () => {
   const filteredRooms = useMemo(() => {
     return activeRooms.filter(r => {
       try {
+        // 종목 필터링 추가
+        if (activeTab !== SportType.ALL && r.sport !== activeTab) return false;
+
         const [y, m, d] = r.matchDate.split('-').map(Number);
         const [hh, mm] = r.matchTime.split(':').map(Number);
         const matchTime = new Date(y, m - 1, d, hh, mm);
@@ -1976,10 +2187,24 @@ const App: React.FC = () => {
         const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
         return expiryLimit > new Date() && r.status !== 'DELETED';
       } catch { return true; }
+    }).sort((a, b) => {
+      // 날짜 임박순 정렬 (가까운 경기가 먼저)
+      try {
+        const [ay, am, ad] = a.matchDate.split('-').map(Number);
+        const [ahh, amm] = a.matchTime.split(':').map(Number);
+        const aTime = new Date(ay, am - 1, ad, ahh, amm).getTime();
+
+        const [by, bm, bd] = b.matchDate.split('-').map(Number);
+        const [bhh, bmm] = b.matchTime.split(':').map(Number);
+        const bTime = new Date(by, bm - 1, bd, bhh, bmm).getTime();
+
+        return aTime - bTime; // 오름차순: 임박한 경기가 먼저
+      } catch { return 0; }
     });
-  }, [activeRooms]);
+  }, [activeRooms, activeTab]);
 
   const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
+  const [memberSuggestion, setMemberSuggestion] = useState<{ isOpen: boolean; applicant: Applicant | null }>({ isOpen: false, applicant: null });
 
   const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'FULL' | null>(null);
 
@@ -2030,7 +2255,19 @@ const App: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false); // 결제/로그인 중복 클릭 방지
 
   const [showHostRoomModal, setShowHostRoomModal] = useState(false);
+  const [hostRoomSelectedSport, setHostRoomSelectedSport] = useState<SportType>(SportType.GENERAL);
+  const [hostRoomTitle, setHostRoomTitle] = useState('');
+  const [hostRoomDate, setHostRoomDate] = useState('');
+  const [hostRoomTime, setHostRoomTime] = useState('');
+  const [hostRoomEndDate, setHostRoomEndDate] = useState('');
+  const [hostRoomEndTime, setHostRoomEndTime] = useState('');
+  const [hostRoomUseLimit, setHostRoomUseLimit] = useState(false);
+  const [hostRoomMaxApplicants, setHostRoomMaxApplicants] = useState(0);
+  const [hostRoomTierMode, setHostRoomTierMode] = useState<'5TIER' | '3TIER'>('5TIER');
+  const [hostRoomActivePicker, setHostRoomActivePicker] = useState<'START' | 'END'>('START');
+  const [hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode] = useState(false);
   const [showApplyRoomModal, setShowApplyRoomModal] = useState(false);
+  const [isBalanceSettingsOpen, setIsBalanceSettingsOpen] = useState(false);
   const prevApplicantsCount = useRef<Record<string, number>>({});
 
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
@@ -2174,7 +2411,6 @@ const App: React.FC = () => {
         if (prevCount !== undefined && room.applicants.length > prevCount) {
           const newPlayer = room.applicants[room.applicants.length - 1];
           const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
-          // showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`); 
           // 상단바 알림으로 대체 (확인 버튼 필요 없게)
           if (Capacitor.isNativePlatform()) {
             LocalNotifications.schedule({
@@ -2307,56 +2543,78 @@ const App: React.FC = () => {
 
     return () => {
       PushNotifications.removeAllListeners();
-      CapApp.removeAllListeners();
     };
   }, [currentActiveRoom?.id, lang]);
 
-  // 뒤로 가기 버튼 핸들링
   useEffect(() => {
-    CapApp.addListener('backButton', ({ canGoBack }) => {
-      // 1순위: 알림/메시지 창 닫기
-      if (alertState.isOpen) {
-        setAlertState(prev => ({ ...prev, isOpen: false }));
-        return;
-      }
+    let backHandler: any = null;
 
-      // 2순위: 각종 모달형 팝업 닫기 (우선순위에 따라 배치)
-      if (showRewardAd) { setShowRewardAd(false); return; }
-      if (showLoginModal) { setShowLoginModal(false); return; }
-      if (showLoginRecommendModal) { setShowLoginRecommendModal(false); return; }
-      if (showUpgradeModal) { setShowUpgradeModal(false); return; }
-      if (showLimitModal) { setShowLimitModal(false); return; }
-      if (showReviewPrompt) { setShowReviewPrompt(false); return; }
-      if (showInfoModal) { setShowInfoModal(false); return; }
-      if (showApplyRoomModal) { setShowApplyRoomModal(false); return; }
-      if (showHostRoomModal) { setShowHostRoomModal(false); return; }
+    const setupListener = async () => {
+      backHandler = await CapApp.addListener('backButton', ({ canGoBack }) => {
+        // 1순위: 알림/메시지 창 닫기
+        if (alertState.isOpen) {
+          setAlertState(prev => ({ ...prev, isOpen: false }));
+          return;
+        }
 
-      // 3순위: 화면 내 모드/설정 창 닫기
-      if (showColorPicker) { setShowColorPicker(false); return; }
-      if (showQuotaSettings) { setShowQuotaSettings(false); return; }
-      if (selectionMode !== null) { setSelectionMode(null); setSelectedPlayerIds([]); return; }
+        // 2순위: 각종 모달형 팝업 닫기 (우선순위에 따라 배치)
+        if (showRewardAd) { setShowRewardAd(false); return; }
+        if (showLoginModal) { setShowLoginModal(false); return; }
+        if (showLoginRecommendModal) { setShowLoginRecommendModal(false); return; }
+        if (showUpgradeModal) { setShowUpgradeModal(false); return; }
+        if (showLimitModal) { setShowLimitModal(false); return; }
+        if (showReviewPrompt) { setShowReviewPrompt(false); return; }
+        if (showInfoModal) { setShowInfoModal(false); return; }
+        if (showApplyRoomModal) { setShowApplyRoomModal(false); return; }
+        if (showHostRoomModal) { setShowHostRoomModal(false); return; }
 
-      // 4순위: 앱 종료
-      // 웹 히스토리가 있다면 뒤로가기를 시도하고 싶을 수도 있지만, 
-      // 현재 단일 페이지 앱(SPA) 구조이므로 바로 종료가 자연스러울 수 있음.
-      // 만약 라우터 사용 시 history.goBack() 등을 고려해야 함.
-      // 여기서는 즉시 종료 또는 사용자 확인 후 종료 처리.
-      CapApp.exitApp();
-    });
+        // 3순위: 화면 내 모드/설정 창 닫기
+        if (showColorPicker) { setShowColorPicker(false); return; }
+        if (showQuotaSettings) { setShowQuotaSettings(false); return; }
+        if (selectionMode !== null) { setSelectionMode(null); setSelectedPlayerIds([]); return; }
+
+        // 4순위: 상세 페이지 닫기 (홈으로 이동)
+        if (currentPage === AppPageType.EDIT_ROOM) {
+          setCurrentPage(AppPageType.DETAIL);
+          return;
+        }
+        if (currentPage === AppPageType.BALANCE) { // BALANCE 페이지에서 뒤로가기 시 상세 페이지로 이동
+          setCurrentPage(AppPageType.DETAIL);
+          return;
+        }
+        if (currentPage === AppPageType.DETAIL) {
+          setCurrentPage(AppPageType.HOME);
+          setCurrentBottomTab(BottomTabType.HOME); // 하단 탭도 함께 복구
+          setShowRoomDetail(false);
+          setIsNavigatingFromDetail(false);
+          return;
+        }
+
+        // 5순위: 상세페이지에서 참가자 추가하러 왔을 때 경기정보로 복귀
+        if (isNavigatingFromDetail && currentBottomTab === BottomTabType.MEMBERS) {
+          setCurrentPage(AppPageType.DETAIL);
+          setIsNavigatingFromDetail(false);
+          return;
+        }
+
+        // 6순위: 앱 종료
+        CapApp.exitApp();
+      });
+    };
+
+    setupListener();
 
     return () => {
-      // Remove specifically if possible or rely on global removeAllListeners in cleanup above if conflicts arise.
-      // But typically safely adding/removing here is good practice.
-      // Since removeAllListeners is called in another effect, we should be careful.
-      // Let's just rely on the fact that this effect won't re-run often.
-      // But to be safe, we don't remove all listeners here to avoid clearing Push/Url listeners.
-      // CapApp.removeAllListeners(); // DON'T do this here if it clears others.
+      if (backHandler) {
+        backHandler.remove();
+      }
     };
   }, [
     alertState.isOpen,
     showRewardAd, showLoginModal, showLoginRecommendModal, showUpgradeModal, showLimitModal, showReviewPrompt,
     showInfoModal, showApplyRoomModal, showHostRoomModal,
-    showColorPicker, showQuotaSettings, selectionMode
+    showColorPicker, showQuotaSettings, selectionMode,
+    currentPage, isNavigatingFromDetail, currentBottomTab
   ]);
 
   // 딥링크 진입 시 신청 모달 자동 오픈
@@ -2567,7 +2825,7 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    const SAMPLE_DATA_VERSION = 'v3';
+    const SAMPLE_DATA_VERSION = 'v4';
     const stored = localStorage.getItem(STORAGE_KEY);
     const storedVersion = localStorage.getItem('app_sample_version');
 
@@ -2633,7 +2891,7 @@ const App: React.FC = () => {
       }
     }
 
-    const activeCount = players.filter(p => p.isActive && p.sportType === activeTab).length;
+    const activeCount = players.filter(p => p.isActive && (activeTab === SportType.ALL || p.sportType === activeTab)).length;
     const perTeam = teamCount > 0 ? Math.floor(activeCount / teamCount) : 0;
 
     if (activeTab === SportType.SOCCER) {
@@ -2641,7 +2899,7 @@ const App: React.FC = () => {
         GK: 1,
         LB: null, DF: Math.max(1, Math.round((perTeam - 1) * 0.4)), RB: null,
         MF: null,
-        LW: null, FW: null, RW: null
+        LW: null, ST: null, RW: null
       });
     } else if (activeTab === SportType.FUTSAL) {
       setQuotas({
@@ -2699,10 +2957,11 @@ const App: React.FC = () => {
 
   /* 팀 생성 및 참가 선수 목록 렌더링 함수 */
   const renderTeamGenerationSection = () => {
+    if (activeTab === SportType.ALL) return null;
     return (
       <div className="space-y-6">
         <section id="participation-capture-section" className="bg-slate-50 dark:bg-slate-900 flex flex-col rounded-2xl overflow-hidden min-h-[100px]">
-          <div className="p-4 border-b border-transparent flex justify-between items-center bg-transparent">
+          <div className="px-5 py-4 border-b border-transparent flex justify-between items-center bg-transparent">
             <div className="flex items-center gap-2">
               <div className="text-emerald-500"><UserCheckIcon /></div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('participantList' as any)} <span className="text-slate-900 dark:text-slate-100 font-normal ml-1">({activePlayers.length})</span></h2>
@@ -2710,7 +2969,7 @@ const App: React.FC = () => {
             <button
               onClick={() => {
                 if (unselectAllConfirm) {
-                  setPlayers(prev => prev.map(p => p.sportType === activeTab ? { ...p, isActive: false } : p));
+                  setPlayers(prev => prev.map(p => (activeTab === SportType.ALL || p.sportType === activeTab) ? { ...p, isActive: false } : p));
                   setUnselectAllConfirm(false);
                 } else {
                   setUnselectAllConfirm(true);
@@ -2722,7 +2981,34 @@ const App: React.FC = () => {
               {unselectAllConfirm ? t('confirmRetry' as any) : t('unselectAll' as any)}
             </button>
           </div>
-          <div className="px-4 pb-2 flex gap-1.5">
+
+          {/* Active Team Constraints List */}
+          {teamConstraints.length > 0 && (
+            <div className="px-5 py-2 space-y-2">
+              <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t('activeConstraints' as any)}</h3>
+              <div className="flex flex-wrap gap-2">
+                {teamConstraints.map((c) => {
+                  const playerNames = c.playerIds.map(id => players.find(p => p.id === id)?.name || id).join(', ');
+                  return (
+                    <div key={c.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-1.5 shadow-sm">
+                      <div className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-black text-white ${c.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`}>
+                        {c.type === 'MATCH' ? 'M' : 'S'}
+                      </div>
+                      <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 max-w-[150px] truncate">{playerNames}</span>
+                      <button
+                        onClick={() => setTeamConstraints(prev => prev.filter(x => x.id !== c.id))}
+                        className="p-1 text-slate-300 hover:text-rose-500 transition-colors"
+                      >
+                        <Icons.CloseIcon />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="px-5 pb-2 flex gap-1.5">
             <button
               onClick={() => setShowTier(!showTier)}
               className={`px-3 py-1.5 rounded-xl border transition-all flex items-center justify-center text-[11px] font-black ${showTier ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400'}`}
@@ -2744,7 +3030,7 @@ const App: React.FC = () => {
               {t('splitTeams' as any)}
             </button>
           </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[100px]">
+          <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[100px]">
             {activePlayers.length === 0 ? (<div className="col-span-full py-10 opacity-40 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('selectParticipating')}</div>) :
               activePlayers.map(p => (
                 <PlayerItem
@@ -2792,7 +3078,7 @@ const App: React.FC = () => {
                 <button
                   onClick={handleGenerate}
                   disabled={activePlayers.length < teamCount || isGenerating}
-                  className="px-10 h-14 bg-white dark:bg-slate-900 text-slate-950 dark:text-white font-black rounded-2xl transition-all active:scale-95 text-sm shadow-xl shadow-white/5 disabled:opacity-30 disabled:pointer-events-none"
+                  className="px-10 h-14 bg-white dark:bg-slate-900 text-slate-950 dark:text-white font-black rounded-2xl transition-all active:scale-95 text-sm tracking-tight shadow-xl shadow-white/5 disabled:opacity-30 disabled:pointer-events-none"
                 >
                   {t('generateTeams')}
                 </button>
@@ -2828,83 +3114,128 @@ const App: React.FC = () => {
   const renderMembersTabContent = () => {
     return (
       <div className="space-y-8 pb-32">
-        {/* 선수 등록 */}
-        <section className="bg-slate-50 dark:bg-slate-900 w-full rounded-2xl overflow-hidden">
-          <div
-            className="flex items-center justify-between p-4 cursor-pointer select-none"
-            onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}
-          >
-            <div className="flex items-center gap-2">
-              <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
-              <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+        {/* 선수 등록 - 전체 탭에서는 숨김 */}
+        {activeTab !== SportType.ALL && (
+          <section className="bg-slate-50 dark:bg-slate-900 w-full rounded-2xl overflow-hidden">
+            <div
+              className="flex items-center justify-between p-4 cursor-pointer select-none"
+              onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}
+            >
+              <div className="flex items-center gap-2">
+                <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
+                <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </div>
               </div>
             </div>
-          </div>
-          {isPlayerRegistrationOpen && (
-            <form onSubmit={addPlayer} className="px-6 pb-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
-                <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-white dark:bg-slate-950 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('skillTier')}</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {(Object.entries(Tier).filter(([k]) => isNaN(Number(k))) as [string, Tier][]).map(([key, val]) => (
-                    <button key={key} type="button" onClick={e => { e.preventDefault(); setNewTier(val); }} className={`py-2 rounded-xl text-[11px] font-semibold transition-all ${newTier === val ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500'}`}>
-                      {key}
+            {isPlayerRegistrationOpen && (
+              <form onSubmit={addPlayer} className="px-5 pb-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
+                  <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-white dark:bg-slate-950 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('skillTier')}</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {(Object.entries(Tier).filter(([k]) => isNaN(Number(k))) as [string, Tier][]).map(([key, val]) => (
+                      <button key={key} type="button" onClick={e => { e.preventDefault(); setNewTier(val); }} className={`py-2 rounded-xl text-[11px] font-semibold transition-all ${newTier === val ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500'}`}>
+                        {key}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {activeTab !== SportType.GENERAL && (
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPlayerFormation(!showNewPlayerFormation)}
+                      className={`w-full h-12 rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${showNewPlayerFormation
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 active:scale-95'
+                        : 'bg-white text-slate-400 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:hover:bg-slate-900'
+                        }`}
+                    >
+                      <EditIcon /> {t('visualPositionEditor')}
                     </button>
-                  ))}
-                </div>
-              </div>
-              {activeTab !== SportType.GENERAL && (
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPlayerFormation(!showNewPlayerFormation)}
-                    className={`w-full h-12 rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${showNewPlayerFormation
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 active:scale-95'
-                      : 'bg-white text-slate-400 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:hover:bg-slate-900'
-                      }`}
-                  >
-                    <EditIcon /> {t('visualPositionEditor')}
-                  </button>
-                  {showNewPlayerFormation && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                      <FormationPicker
-                        sport={activeTab}
-                        primaryP={newP1s}
-                        secondaryP={newP2s}
-                        tertiaryP={newP3s}
-                        forbiddenP={newForbidden}
-                        lang={lang}
-                        onChange={(p, s, t, f) => { setNewP1s(p); setNewP2s(s); setNewP3s(t); setNewForbidden(f); }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-              <button type="submit" className="w-full bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-semibold h-12 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs mt-2">
-                <PlusIcon /> {t('addToList')}
-              </button>
-            </form>
-          )}
-        </section>
+                    {showNewPlayerFormation && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <FormationPicker
+                          sport={activeTab}
+                          primaryP={newP1s}
+                          secondaryP={newP2s}
+                          tertiaryP={newP3s}
+                          forbiddenP={newForbidden}
+                          lang={lang}
+                          onChange={(p, s, t, f) => { setNewP1s(p); setNewP2s(s); setNewP3s(t); setNewForbidden(f); }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <button type="submit" className="w-full bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-semibold h-12 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs mt-2">
+                  <PlusIcon /> {t('addToList')}
+                </button>
+              </form>
+            )}
+          </section>
+        )}
 
         {/* 회원 목록 및 참가 목록 */}
         <div className="grid grid-cols-1 gap-6 items-start">
           <section className="bg-slate-50 dark:bg-slate-900 flex flex-col rounded-2xl overflow-hidden min-h-[100px]">
-            <div className="p-4 border-b border-transparent flex justify-between items-center bg-transparent">
+            <div className="px-5 py-4 border-b border-transparent flex justify-between items-center bg-transparent">
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList' as any)} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({inactivePlayers.length})</span></h2>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList' as any)} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({memberPlayers.length})</span></h2>
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (selectAllConfirm) {
-                      setPlayers(prev => prev.map(p => p.sportType === activeTab ? { ...p, isActive: true } : p));
+                      const updatedPlayers = players.map(p => (activeTab === SportType.ALL || p.sportType === activeTab) ? { ...p, isActive: true } : p);
+                      setPlayers(updatedPlayers);
+
+                      // Sync with Match if needed
+                      if (isNavigatingFromDetail && currentActiveRoom) {
+                        try {
+                          const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+                          const currentApps = [...(currentActiveRoom.applicants || [])];
+                          const targetPlayers = updatedPlayers.filter(p => p.isActive && (activeTab === SportType.ALL || p.sportType === activeTab));
+
+                          targetPlayers.forEach(p => {
+                            const exists = currentApps.find(a => a.name === p.name);
+                            const joinedPos = (p.primaryPositions && p.primaryPositions.length > 0)
+                              ? p.primaryPositions.join('/')
+                              : (p.primaryPosition || 'NONE');
+
+                            if (!exists) {
+                              currentApps.push({
+                                id: 'app_' + Math.random().toString(36).substr(2, 9),
+                                name: p.name,
+                                tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === p.tier) || 'B',
+                                isApproved: true,
+                                position: joinedPos,
+                                primaryPositions: p.primaryPositions || [],
+                                secondaryPositions: p.secondaryPositions || [],
+                                tertiaryPositions: p.tertiaryPositions || [],
+                                forbiddenPositions: p.forbiddenPositions || [],
+                                appliedAt: new Date().toISOString()
+                              });
+                            } else {
+                              const idx = currentApps.findIndex(a => a.name === p.name);
+                              currentApps[idx].isApproved = true;
+                              currentApps[idx].position = joinedPos;
+                              (currentApps[idx] as any).primaryPositions = p.primaryPositions || [];
+                              (currentApps[idx] as any).secondaryPositions = p.secondaryPositions || [];
+                              (currentApps[idx] as any).tertiaryPositions = p.tertiaryPositions || [];
+                              (currentApps[idx] as any).forbiddenPositions = p.forbiddenPositions || [];
+                            }
+                          });
+                          await updateDoc(roomRef, { applicants: currentApps });
+                        } catch (e) {
+                          console.error("Select All sync error:", e);
+                        }
+                      }
                       setSelectAllConfirm(false);
                     } else {
                       setSelectAllConfirm(true);
@@ -2917,11 +3248,11 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[100px]">
-              {inactivePlayers.length === 0 ? (
+            <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[100px]">
+              {memberPlayers.length === 0 ? (
                 <div className="col-span-full py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
               ) : (
-                inactivePlayers.map(p => (
+                memberPlayers.map(p => (
                   <PlayerItem
                     key={p.id}
                     player={p}
@@ -2945,11 +3276,16 @@ const App: React.FC = () => {
     );
   };
 
-  const addPlayer = (e: React.FormEvent) => {
+  const addPlayer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
+
+    // In "Add Participant" flow, new players should be active by default and synced
+    const shouldBeActive = isNavigatingFromDetail && !!currentActiveRoom;
+
     const player: Player = {
-      id: crypto.randomUUID(), name: newName.trim(), tier: newTier, isActive: false,
+      id: crypto.randomUUID(), name: newName.trim(), tier: newTier,
+      isActive: shouldBeActive,
       sportType: activeTab,
       primaryPosition: newP1s[0] || 'NONE',
       secondaryPosition: newP2s[0] || 'NONE',
@@ -2959,7 +3295,36 @@ const App: React.FC = () => {
       tertiaryPositions: newP3s,
       forbiddenPositions: newForbidden,
     };
+
     setPlayers(prev => [player, ...prev]);
+
+    if (shouldBeActive && currentActiveRoom) {
+      try {
+        const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+        const currentApps = [...(currentActiveRoom.applicants || [])];
+
+        const joinedPos = (player.primaryPositions && player.primaryPositions.length > 0)
+          ? player.primaryPositions.join('/')
+          : (player.primaryPosition || 'NONE');
+
+        currentApps.push({
+          id: 'app_' + Math.random().toString(36).substr(2, 9),
+          name: player.name,
+          tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === player.tier) || 'B',
+          isApproved: true,
+          position: joinedPos,
+          primaryPositions: player.primaryPositions || [],
+          secondaryPositions: player.secondaryPositions || [],
+          tertiaryPositions: player.tertiaryPositions || [],
+          forbiddenPositions: player.forbiddenPositions || [],
+          appliedAt: new Date().toISOString()
+        });
+        await updateDoc(roomRef, { applicants: currentApps });
+      } catch (e) {
+        console.error("Add player sync error:", e);
+      }
+    }
+
     setNewName(''); setNewP1s([]); setNewP2s([]); setNewP3s([]); setNewForbidden([]);
     setShowNewPlayerFormation(false);
     AnalyticsService.logEvent('add_player', { sport: activeTab, tier: newTier });
@@ -2974,9 +3339,56 @@ const App: React.FC = () => {
     setPlayers(prev => prev.filter(p => p.id !== id));
   };
 
-  const toggleParticipation = (id: string) => {
+  const toggleParticipation = async (id: string) => {
     if (editingPlayerId) return;
-    setPlayers(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
+    const player = players.find(p => p.id === id);
+    if (!player) return;
+
+    const nextIsActive = !player.isActive;
+    setPlayers(prev => prev.map(p => p.id === id ? { ...p, isActive: nextIsActive } : p));
+
+    // Sync with Recruitment Room if in "Add Participant" flow
+    if (isNavigatingFromDetail && currentActiveRoom) {
+      try {
+        const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+        const currentApps = [...(currentActiveRoom.applicants || [])];
+        const joinedPos = (player.primaryPositions && player.primaryPositions.length > 0)
+          ? player.primaryPositions.join('/')
+          : (player.primaryPosition || 'NONE');
+
+        if (nextIsActive) {
+          const exists = currentApps.find(a => a.name === player.name);
+          if (!exists) {
+            currentApps.push({
+              id: 'app_' + Math.random().toString(36).substr(2, 9),
+              name: player.name,
+              tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === player.tier) || 'B',
+              isApproved: true,
+              position: joinedPos,
+              primaryPositions: player.primaryPositions || [],
+              secondaryPositions: player.secondaryPositions || [],
+              tertiaryPositions: player.tertiaryPositions || [],
+              forbiddenPositions: player.forbiddenPositions || [],
+              appliedAt: new Date().toISOString()
+            });
+          } else {
+            const idx = currentApps.findIndex(a => a.name === player.name);
+            currentApps[idx].isApproved = true;
+            currentApps[idx].position = joinedPos;
+            (currentApps[idx] as any).primaryPositions = player.primaryPositions || [];
+            (currentApps[idx] as any).secondaryPositions = player.secondaryPositions || [];
+            (currentApps[idx] as any).tertiaryPositions = player.tertiaryPositions || [];
+            (currentApps[idx] as any).forbiddenPositions = player.forbiddenPositions || [];
+          }
+        } else {
+          const idx = currentApps.findIndex(a => a.name === player.name);
+          if (idx > -1) currentApps.splice(idx, 1);
+        }
+        await updateDoc(roomRef, { applicants: currentApps });
+      } catch (e) {
+        console.error("Sync match player error:", e);
+      }
+    }
   };
 
   // --- 통합 모집 관리 로직 ---
@@ -3006,6 +3418,7 @@ const App: React.FC = () => {
             primaryPositions: p1,
             secondaryPosition: s1[0] || 'NONE',
             secondaryPositions: s1,
+            tertiaryPosition: t1[0] || 'NONE',
             tertiaryPositions: t1,
             forbiddenPositions: f1
           };
@@ -3023,6 +3436,7 @@ const App: React.FC = () => {
           primaryPositions: p1,
           secondaryPosition: s1[0] || 'NONE',
           secondaryPositions: s1,
+          tertiaryPosition: t1[0] || 'NONE',
           tertiaryPositions: t1,
           forbiddenPositions: f1
         };
@@ -3030,6 +3444,55 @@ const App: React.FC = () => {
       });
     } catch (e) {
       console.error("Approval Error:", e);
+    }
+  };
+
+  const handleUpdateApplicant = async (room: RecruitmentRoom, applicantId: string, updates: Partial<Applicant>) => {
+    try {
+      const roomRef = doc(db, 'rooms', room.id);
+      const updatedApplicants = room.applicants.map(app => {
+        if (app.id === applicantId) {
+          const newApp = { ...app, ...updates };
+
+          // Sync with local players if exists
+          setPlayers(prev => prev.map(p => {
+            if (p.name === app.name) {
+              const playerUpdates: Partial<Player> = {};
+              if (updates.tier !== undefined) {
+                playerUpdates.tier = (Tier as any)[updates.tier] || Tier.B;
+              }
+              if (updates.primaryPositions !== undefined) {
+                playerUpdates.primaryPositions = updates.primaryPositions as Position[];
+                playerUpdates.primaryPosition = (updates.primaryPositions[0] || 'NONE') as Position;
+              }
+              if (updates.secondaryPositions !== undefined) {
+                playerUpdates.secondaryPositions = updates.secondaryPositions as Position[];
+                playerUpdates.secondaryPosition = (updates.secondaryPositions[0] || 'NONE') as Position;
+              }
+              if (updates.tertiaryPositions !== undefined) {
+                playerUpdates.tertiaryPositions = updates.tertiaryPositions as Position[];
+                playerUpdates.tertiaryPosition = (updates.tertiaryPositions[0] || 'NONE') as Position;
+              }
+              if (updates.position !== undefined) {
+                // For backward compatibility (summary string)
+                const posArr = updates.position.split('/') as Position[];
+                if (!updates.primaryPositions) {
+                  playerUpdates.primaryPositions = posArr;
+                  playerUpdates.primaryPosition = posArr[0] || 'NONE';
+                }
+              }
+              return { ...p, ...playerUpdates };
+            }
+            return p;
+          }));
+
+          return newApp;
+        }
+        return app;
+      });
+      await updateDoc(roomRef, { applicants: updatedApplicants });
+    } catch (e) {
+      console.error("Update applicant error:", e);
     }
   };
 
@@ -3058,6 +3521,7 @@ const App: React.FC = () => {
               primaryPositions: p1,
               secondaryPosition: s1[0] || 'NONE',
               secondaryPositions: s1,
+              tertiaryPosition: t1[0] || 'NONE',
               tertiaryPositions: t1,
               forbiddenPositions: f1
             };
@@ -3073,6 +3537,7 @@ const App: React.FC = () => {
               primaryPositions: p1,
               secondaryPosition: s1[0] || 'NONE',
               secondaryPositions: s1,
+              tertiaryPosition: t1[0] || 'NONE',
               tertiaryPositions: t1,
               forbiddenPositions: f1
             });
@@ -3130,21 +3595,60 @@ const App: React.FC = () => {
     });
   };
 
-  const handleGenerate = async () => {
-    const participating = players.filter(p => p.isActive && p.sportType === activeTab);
+  const handleGenerate = async (manualPlayers?: Player[] | any, manualSport?: SportType) => {
+    let participating: Player[] = [];
+    let targetSport: SportType | undefined;
+
+    // 인자가 배열이면 수동 전달(모집방 등), 아니면(이벤트 객체 등) 기존/마지막 문맥 사용
+    if (Array.isArray(manualPlayers)) {
+      participating = manualPlayers;
+      targetSport = manualSport;
+    } else if (lastGenContext && !manualPlayers?.target) {
+      // '다시 나누기' 등에서 인자 없이 호출된 경우 마지막 성공 문맥 재사용
+      participating = lastGenContext.players;
+      targetSport = lastGenContext.sport;
+    } else {
+      // 일반 메인 화면 생성
+      participating = players.filter(p => p.isActive && (activeTab === SportType.ALL || p.sportType === activeTab));
+      targetSport = (activeTab === SportType.ALL ? undefined : activeTab);
+    }
+
     if (participating.length < teamCount) {
       showAlert(t('minPlayersAlert', teamCount, participating.length));
       return;
     }
 
+    // [CRITICAL] 쿼터 정합성 체크 (사후 알림)
+    const perTeamCount = Math.floor(participating.length / teamCount);
+    const validPosForSport =
+      targetSport === SportType.SOCCER ? ['ST', 'LW', 'RW', 'MF', 'DF', 'LB', 'RB', 'GK'] :
+        targetSport === SportType.FUTSAL ? ['PIV', 'ALA', 'FIX', 'GK'] :
+          targetSport === SportType.BASKETBALL ? ['PG', 'SG', 'SF', 'PF', 'C'] :
+            ['NONE'];
+
+    const filteredQuotas: Partial<Record<Position, number | null>> = {};
+    Object.entries(quotas).forEach(([pos, v]) => {
+      if (validPosForSport.includes(pos as any)) {
+        filteredQuotas[pos as any] = v;
+      }
+    });
+
+    const totalQuotaSum = Object.values(filteredQuotas).reduce((sum, v) => (sum as number) + (Number(v) || 0), 0);
+
+    if (totalQuotaSum > perTeamCount) {
+      showAlert(`팀당 인원(${perTeamCount}명)보다 설정된 포지션 합계(${totalQuotaSum}명)가 많습니다.\n설정을 확인해 주세요.`);
+      return;
+    }
+
     // 포지션 인원 설정이 하나라도 있는지 확인 (있으면 고급 기능 사용)
-    const isAdvanced = Object.values(quotas).some(v => v !== null);
+    const isAdvanced = Object.values(filteredQuotas).some(v => v !== null);
 
     // 항목 4: 포지션 인원 설정 유료 제한 삭제 (X)
 
+    setResult(null);
     setIsGenerating(true);
-    // 광고 제거 전은 1.5초(연출), 광고 제거 후는 0.5초(빠름)
-    const waitTime = isAdFree ? 500 : 1500;
+    // 광고 제거 전은 5초(연출), 광고 제거 후는 1초(빠름)
+    const waitTime = isAdFree ? 1000 : 5000;
     setCountdown(isAdFree ? 1 : 5);
 
     const timer = setInterval(() => {
@@ -3171,78 +3675,88 @@ const App: React.FC = () => {
       });
     }, 1000);
 
-    // 밸런스 생성 시 제약 조건 포함 (activeTab에 해당하는 제약만 필터링)
+    // 밸런스 생성 시 제약 조건 포함 (targetSport에 해당하는 제약만 필터링)
     const activeConstraints = teamConstraints.filter(c => {
-      const p = players.find(p => c.playerIds.includes(p.id)); // Check if any player in constraint belongs to activeTab
-      return p && p.sportType === activeTab;
+      const p = players.find(p => c.playerIds.includes(p.id));
+      return p && (!targetSport || p.sportType === targetSport);
     });
 
 
 
     setTimeout(() => {
-      const res = generateBalancedTeams(participating, teamCount, quotas, activeConstraints, useRandomMix, Array.from(pastResults));
+      try {
+        const res = generateBalancedTeams(participating, teamCount, filteredQuotas, activeConstraints, useRandomMix, Array.from(pastResults), targetSport);
 
-      setResult(res);
+        setResult(res);
 
-      // 개별 팀 해시 저장 (중복 방지용)
-      setPastResults(prev => {
-        const next = new Set(prev);
-        res.teams.forEach(t => {
-          const teamHash = t.players.map(p => p.id).sort().join(',');
-          next.add(teamHash);
+        // 개별 팀 해시 저장 (중복 방지용)
+        setPastResults(prev => {
+          const next = new Set(prev);
+          res.teams.forEach(t => {
+            const teamHash = t.players.map(p => p.id).sort().join(',');
+            next.add(teamHash);
+          });
+          return next;
         });
-        return next;
-      });
 
-      // 팀 색상 할당
-      if (useTeamColors) {
-        res.teams.forEach((team, idx) => {
-          const colorValue = selectedTeamColors[idx] || TEAM_COLORS[idx % TEAM_COLORS.length].value;
-          const colorObj = TEAM_COLORS.find(c => c.value === colorValue);
-          team.color = colorValue;
-          team.colorName = colorObj?.name || 'color_gray';
-        });
-      }
-
-      setResult(res);
-      setIsGenerating(false);
-      setShowQuotaSettings(false);
-
-      // 제약 조건 준수 여부 및 실력 차이 알림
-      if (!res.isValid) {
-        if (res.isConstraintViolated) {
-          showAlert(t('validationErrorConstraint'));
-        } else if (res.isQuotaViolated) {
-          showAlert(t('validationErrorQuota'));
+        // 팀 색상 할당
+        if (useTeamColors) {
+          res.teams.forEach((team, idx) => {
+            const colorValue = selectedTeamColors[idx] || TEAM_COLORS[idx % TEAM_COLORS.length].value;
+            const colorObj = TEAM_COLORS.find(c => c.value === colorValue);
+            team.color = colorValue;
+            team.colorName = colorObj?.name || 'color_gray';
+          });
         }
-      } else if (res.maxDiff && res.maxDiff > 10) {
-        // 실력 격차가 10점(필터링 기준) 이상인 경우 하드 제약 준수로 인한 밸런스 붕괴 경고
-        showAlert(t('balanceWarning', res.maxDiff));
-      }
 
-      // 팀 생성 횟수 기반 리뷰 유도 (10회 이상)
-      const genCount = parseInt(localStorage.getItem('app_gen_count') || '0', 10) + 1;
-      localStorage.setItem('app_gen_count', genCount.toString());
+        setResult(res);
+        setShowQuotaSettings(false);
+        setCurrentPage(AppPageType.BALANCE);
 
-      if (genCount >= 10) {
-        const cooldown = localStorage.getItem('app_review_cooldown');
-        if (cooldown !== 'DONE') {
-          const now = new Date();
-          if (!cooldown || now > new Date(cooldown)) {
-            setTimeout(() => setShowReviewPrompt(true), 2000);
+        // 제약 조건 준수 여부 및 실력 차이 알림
+        if (!res.isValid) {
+          if (res.isConstraintViolated) {
+            showAlert(t('validationErrorConstraint'));
+          } else if (res.isQuotaViolated) {
+            showAlert(t('validationErrorQuota'));
+          }
+        } else if (res.maxDiff && res.maxDiff > 10) {
+          // 실력 격차가 10점(필터링 기준) 이상인 경우 하드 제약 준수로 인한 밸런스 붕괴 경고
+          showAlert(t('balanceWarning', res.maxDiff));
+        }
+
+        // 팀 생성 횟수 기반 리뷰 유도 (10회 이상)
+        const genCount = parseInt(localStorage.getItem('app_gen_count') || '0', 10) + 1;
+        localStorage.setItem('app_gen_count', genCount.toString());
+
+        if (genCount >= 10) {
+          const cooldown = localStorage.getItem('app_review_cooldown');
+          if (cooldown !== 'DONE') {
+            const now = new Date();
+            if (!cooldown || now > new Date(cooldown)) {
+              setTimeout(() => setShowReviewPrompt(true), 2000);
+            }
           }
         }
+
+        setTimeout(() => {
+          document.getElementById('results-capture-section')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+
+        AnalyticsService.logEvent('generate_teams', {
+          sport: activeTab,
+          player_count: participating.length,
+          team_count: teamCount
+        });
+
+        // 성공한 생성 문맥 저장 (다시 나누기용)
+        setLastGenContext({ players: participating, sport: targetSport });
+      } catch (e) {
+        console.error('Generation Error:', e);
+        showAlert(t('errorOccurred' as any));
+      } finally {
+        setIsGenerating(false);
       }
-
-      setTimeout(() => {
-        document.getElementById('results-capture-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-
-      AnalyticsService.logEvent('generate_teams', {
-        sport: activeTab,
-        player_count: participating.length,
-        team_count: teamCount
-      });
     }, waitTime);
   };
 
@@ -3430,7 +3944,7 @@ const App: React.FC = () => {
   const getSortedTeamPlayers = (teamPlayers: Player[]) => {
     if (activeTab === SportType.GENERAL) return teamPlayers;
     const priority: any = activeTab === SportType.SOCCER
-      ? { GK: 1, DF: 2, MF: 3, FW: 4, NONE: 5 }
+      ? { GK: 1, DF: 2, MF: 3, ST: 4, NONE: 5 }
       : activeTab === SportType.FUTSAL
         ? { GK: 1, FIX: 2, ALA: 3, PIV: 4, NONE: 5 }
         : { PG: 1, SG: 2, SF: 3, PF: 4, C: 5, NONE: 6 };
@@ -3457,7 +3971,17 @@ const App: React.FC = () => {
     });
   };
 
-  const currentQuotaTotal = Object.values(quotas).reduce<number>((acc, val) => acc + (typeof val === 'number' ? val : 0), 0);
+  const currentQuotaTotal = Object.entries(quotas).reduce<number>((acc, [pos, val]) => {
+    const validPosForSport =
+      activeTab === SportType.SOCCER ? ['ST', 'LW', 'RW', 'MF', 'DF', 'LB', 'RB', 'GK'] :
+        activeTab === SportType.FUTSAL ? ['PIV', 'ALA', 'FIX', 'GK'] :
+          activeTab === SportType.BASKETBALL ? ['PG', 'SG', 'SF', 'PF', 'C'] :
+            ['NONE'];
+    if (validPosForSport.includes(pos as any)) {
+      return acc + (typeof val === 'number' ? val : 0);
+    }
+    return acc;
+  }, 0);
   const handleUpdateResultTeamColor = (idx: number, colorValue: string, colorName: string) => {
     if (!result) return;
     const nextResult = { ...result };
@@ -3475,398 +3999,1468 @@ const App: React.FC = () => {
       style={{
         paddingTop: 'calc(1rem + env(safe-area-inset-top))',
         paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))'
-      }}>
+      }}
+    >
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isPro={isPro} />}
 
-      <header className="w-full flex flex-col items-center mb-0">
-        <div className="w-full flex justify-between items-center mb-1 bg-white dark:bg-slate-950 p-1.5">
-          <div className="flex gap-2">
-            {/* 광고 제거 버튼 주석 처리
-            <button
-              onClick={() => setShowUpgradeModal(true)}
-              className={`px-3 py-1 rounded-xl transition-all flex items-center gap-1.5 group relative ${isPro
-                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                : 'bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30'}`}
-            >
-              <div className="relative">
-                <span className={`text-sm block transition-transform group-active:scale-90 ${isPro ? 'animate-pulse' : ''}`}>
-                  {isPro ? '✨' : '💎'}
-                </span>
-                {!isPro && (
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white dark:border-slate-950" />
-                )}
-              </div>
-              <span className="text-[10px] font-black tracking-widest uppercase">
-                {isPro ? 'PRO' : t('removeAds' as any)}
-              </span>
-            </button>
-            */}
+      {/* Header - Only on HOME page */}
+      {currentPage === AppPageType.HOME && (
+        <header className="w-full flex flex-col items-center mb-0">
+          <div className="w-full flex justify-between items-center bg-white dark:bg-slate-950 px-5 py-1.5 min-h-[56px]">
+            <div className="flex gap-2">
+              {isNavigatingFromDetail && currentBottomTab === BottomTabType.MEMBERS && (
+                <button
+                  onClick={() => {
+                    setCurrentPage(AppPageType.DETAIL);
+                    setIsNavigatingFromDetail(false);
+                  }}
+                  className="p-2 -ml-2 text-slate-900 dark:text-white transition-all active:scale-90"
+                >
+                  <ArrowLeftIcon size={24} />
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1 items-center">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? <SunIcon /> : <MoonIcon />}
+              </button>
+              <LanguageMenu
+                lang={lang}
+                onLangChange={handleManualLangChange}
+                t={t}
+              />
+              <button
+                onClick={() => setShowGuideModal(true)}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+                aria-label="Show app Help"
+              >
+                <HelpCircleIcon />
+              </button>
+              <button
+                onClick={() => setShowInfoModal(true)}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+                aria-label="Show app Info"
+              >
+                <InfoIcon />
+              </button>
+            </div>
           </div>
-          <div className="flex gap-1 items-center">
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? <SunIcon /> : <MoonIcon />}
-            </button>
-            <LanguageMenu
-              lang={lang}
-              onLangChange={handleManualLangChange}
-              t={t}
-            />
-            <button
-              onClick={() => setShowGuideModal(true)}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
-              aria-label="Show app Help"
-            >
-              <HelpCircleIcon />
-            </button>
-            <button
-              onClick={() => setShowInfoModal(true)}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
-              aria-label="Show app Info"
-            >
-              <InfoIcon />
-            </button>
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <nav className="flex gap-1.5 bg-white dark:bg-slate-950 p-1.5 mb-3 w-full">
-        {(Object.entries(SportType) as [string, SportType][]).map(([key, value]) => (
-          <button key={value} onClick={() => {
-            setActiveTab(value);
-            setResult(null);
-            setEditingPlayerId(null);
-            AnalyticsService.logEvent('tab_change', { sport: value });
-          }} className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === value ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'}`}>
-            {t(value.toLowerCase() as any)}
-          </button>
-        ))}
-      </nav>
+      {currentPage === AppPageType.HOME && (
+        <nav className="flex gap-[10px] bg-white dark:bg-slate-950 px-5 pb-2 mb-3 w-full overflow-x-auto no-scrollbar whitespace-nowrap">
+          {(Object.entries(SportType) as [string, SportType][]).map(([key, value]) => (
+            <button
+              key={value}
+              onClick={() => {
+                setActiveTab(value);
+                setResult(null);
+                setEditingPlayerId(null);
+                AnalyticsService.logEvent('tab_change', { sport: value });
+              }}
+              className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border ${activeTab === value
+                ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'
+                }`}
+            >
+              {t(value.toLowerCase() as any)}
+            </button>
+          ))}
+        </nav>
+      )}
 
       {currentBottomTab === BottomTabType.HOME && (
-        <section className="w-full px-4 mb-5" data-capture-ignore="true">
-          <div className="flex justify-between items-center mb-2 px-1">
-            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('recruitParticipants')}</h3>
-          </div>
+        <section className="w-full px-5 mb-5" data-capture-ignore="true">
           <div className="space-y-4">
             {filteredRooms.length === 0 ? (
               <button
                 onClick={() => { setCurrentActiveRoom(null); setShowHostRoomModal(true); }}
-                className="w-full aspect-[2/1] min-h-[160px] rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all active:scale-[0.98] group"
+                className="w-full h-[120px] rounded-[24px] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all active:scale-[0.98] group"
               >
-                <div className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 shadow-xl group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 shadow-xl group-hover:scale-110 transition-transform">
                   <PlusIcon />
                 </div>
-                <p className="text-sm font-black text-slate-400 dark:text-slate-500">{t('noScheduledMatch' as any)}</p>
+                <p className="text-[12px] font-black text-slate-400 dark:text-slate-500 px-8 text-center leading-relaxed">{t('noScheduledMatch' as any)}</p>
               </button>
             ) : (
-              (() => {
-                const room = filteredRooms[0];
-                const pendingApplicants = room.applicants.filter(a => !a.isApproved);
-
-                if (!showRoomDetail) {
+              <>
+                {/* Match Cards List */}
+                {filteredRooms.map((room) => {
+                  const pendingApplicants = room.applicants.filter(a => !a.isApproved);
                   return (
-                    <button
-                      onClick={() => setShowRoomDetail(true)}
-                      className={`w-full rounded-3xl py-6 px-8 shadow-2xl border transition-all text-left flex items-center justify-between animate-in zoom-in-95 duration-300 ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 shadow-blue-500/20 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}
+                    <div
+                      key={room.id}
+                      onClick={() => { setCurrentActiveRoom(room); setCurrentPage(AppPageType.DETAIL); }}
+                      className="w-full h-[120px] rounded-[24px] overflow-hidden relative group active:scale-[0.98] transition-all shadow-xl animate-in zoom-in-95 duration-500 cursor-pointer"
                     >
-                      <div className="flex flex-col gap-2 overflow-hidden flex-1 mr-4">
-                        <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'}`}>{room.title}</p>
-                        <p className="text-2xl font-black truncate">{room.matchDate} {room.matchTime}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${currentActiveRoom?.id === room.id ? 'bg-blue-500/30 border-blue-400/30 text-white' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'}`}>
-                            {t('clickForDetail' as any)}
-                          </div>
-                          {pendingApplicants.length > 0 && (
-                            <div className="bg-rose-500 text-white px-2 py-0.5 rounded-full text-[9px] font-black animate-pulse">
-                              NEW {pendingApplicants.length}
+                      {/* Full Background Image */}
+                      <img
+                        src={(() => {
+                          const seed = room.id ? room.id.charCodeAt(room.id.length - 1) % 2 + 1 : 1;
+                          const sport = room.sport.toLowerCase();
+                          const name = sport === 'general' ? 'tennis' : sport;
+                          return `/images/${name}-${seed}.jpeg`;
+                        })()}
+                        alt={room.sport}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      {/* Dark Overlay for Readability */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
+
+                      {/* Content Overlay */}
+                      <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+                        {/* Top Row: Sport Badge, Title & Actions */}
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="bg-white/95 px-3 py-0 rounded-xl shrink-0">
+                              <span className="text-black text-[12px] font-medium uppercase tracking-[-0.025em] leading-none">
+                                {t(room.sport.toLowerCase() as any)}
+                              </span>
                             </div>
-                          )}
+                            <h4 className="text-[16px] font-black tracking-[-0.025em] drop-shadow-md truncate">
+                              {room.title}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {/* Pending Applicants Badge/Icon */}
+                            <div className="relative p-1.5 transition-colors">
+                              <Icons.UsersIcon size={18} className="text-white/90" />
+                              {pendingApplicants.length > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-black/50 animate-pulse">
+                                  {pendingApplicants.length}
+                                </span>
+                              )}
+                            </div>
+                            {/* Share Action */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleShareRecruitLink(room); }}
+                              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                            >
+                              <Icons.ShareIcon size={18} className="text-white/90" />
+                            </button>
+                            {/* Delete Action */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleCloseRecruitRoom(room); }}
+                              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/90 hover:text-rose-400"
+                            >
+                              <Icons.TrashIcon size={18} className="text-white/90" />
+                            </button>
+                          </div>
+                        </div>
+
+
+                        {/* Middle Row: Recruitment Badge (Centering for balance) */}
+                        <div className="flex-1 flex flex-col justify-center items-end">
+                          {(() => {
+                            const activeCount = players.filter(p => p.isActive && p.sportType === room.sport).length;
+                            const isFull = room.maxApplicants > 0 && activeCount >= room.maxApplicants;
+                            return (
+                              <div className={`text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl tracking-[-0.025em] ${isFull ? 'bg-[#F43F5E]' : 'bg-[#53B175]'}`}>
+                                {isFull ? '모집마감' : '모집중'}
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Bottom Row: Date/Time & Count */}
+                        <div className="flex justify-between items-end gap-2">
+                          <div className="space-y-0.5">
+                            <p className="text-[12px] font-medium uppercase tracking-[-0.025em]" style={{ color: '#FFFFFF' }}>경기 날짜 & 시간</p>
+                            <p className="text-[16px] font-medium tracking-[-0.025em] leading-none">{room.matchDate} {room.matchTime}</p>
+                          </div>
+
+                          <div className="text-right leading-none flex flex-col items-end">
+                            <span className="text-[20px] font-black tracking-[-0.025em] tabular-nums leading-none">
+                              {players.filter(p => p.isActive && p.sportType === room.sport).length}
+                              <span className="text-white/40 mx-1 text-[16px]">/</span>
+                              {room.maxApplicants > 0 ? room.maxApplicants : '무제한'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 shrink-0 border-l border-white/20 dark:border-slate-800 pl-6">
-                        <div className="flex flex-col items-end">
-                          <span className="text-4xl font-black leading-none tracking-tighter">
-                            {players.filter(p => p.isActive && p.sportType === room.sport).length}
-                          </span>
-                          <span className="text-[11px] font-black opacity-60 mt-1">
-                            / {room.maxApplicants > 0 ? `${room.maxApplicants}${t('peopleSuffix')}` : t('unlimited')}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
+                    </div>
                   );
-                }
+                })}
 
-                return (
-                  <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
-                    {/* 상세 화면 상단 바 */}
-                    <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
-                      <button onClick={() => setShowRoomDetail(false)} className="p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                      </button>
-                      <h2 className="text-base font-black text-slate-900 dark:text-white">{t('manageMatchDetail' as any)}</h2>
-                      <div className="w-10" /> {/* 밸런스용 */}
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-40">
-                      {/* 카드 요약 정보 (상세 화면 내) */}
-                      <div className={`w-full rounded-3xl py-5 px-6 shadow-lg border ${currentActiveRoom?.id === room.id ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white'}`}>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${currentActiveRoom?.id === room.id ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'} mb-1`}>{room.title}</p>
-                        <p className="text-xl font-black">{room.matchDate} {room.matchTime}</p>
-                      </div>
-
-                      {/* 공유 버튼 */}
-                      <button
-                        onClick={() => handleShareRecruitLink(room)}
-                        className="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all"
-                      >
-                        <ShareIcon />
-                        {t('shareRecruitLink' as any)}
-                      </button>
-
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        <button
-                          onClick={() => handleApproveAllApplicants(room)}
-                          disabled={pendingApplicants.length === 0}
-                          className={`py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border-2 transition-all ${pendingApplicants.length > 0 ? 'border-blue-600 bg-blue-50 text-blue-600 dark:bg-blue-900/10 dark:text-blue-400' : 'border-slate-100 text-slate-300 dark:border-slate-700 opacity-50'}`}
-                        >
-                          <UserCheckIcon />
-                          {t('approveAll' as any)}
-                          {pendingApplicants.length > 0 && <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded-full text-[9px]">{pendingApplicants.length}</span>}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCloseRecruitRoom(room);
-                            setShowRoomDetail(false);
-                          }}
-                          className="py-3.5 rounded-2xl border-2 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold text-xs flex items-center justify-center gap-2 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-100 dark:hover:bg-rose-950/20 dark:hover:border-rose-900/30 transition-all"
-                        >
-                          <TrashIcon />
-                          {t('deleteRoomTitle' as any)}
-                        </button>
-                      </div>
-
-                      {pendingApplicants.length > 0 && (
-                        <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden">
-                          <div className="p-3 space-y-2">
-                            <div className="flex items-center gap-2 mb-1 px-1">
-                              <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('pendingApplicants' as any)}</h4>
-                            </div>
-                            <div className="grid grid-cols-1 gap-1.5 max-h-none overflow-visible">
-                              {pendingApplicants.map(app => {
-                                const tierVal = isNaN(Number(app.tier)) ? (Tier as any)[app.tier] : Number(app.tier);
-                                const tierLabel = isNaN(Number(app.tier)) ? app.tier : (Tier as any)[Number(app.tier)];
-
-                                return (
-                                  <div key={app.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
-                                    <div className="flex flex-col gap-1 flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${TIER_COLORS[tierVal as Tier] || TIER_COLORS[Tier.B]} pt-1 shrink-0`}>
-                                          {tierLabel}
-                                        </span>
-                                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{app.name}</span>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 ml-2">
-                                      <button onClick={() => cancelApplication(room.id, app)} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><TrashIcon /></button>
-                                      <button onClick={() => handleApproveApplicant(room, app)} className="bg-blue-600 text-white text-[10px] font-black px-3 py-2 rounded-lg active:scale-95 transition-all whitespace-nowrap">{t('approve' as any)}</button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 명단 관리 및 팀 생성 섹션 - 상세 화면 복원 */}
-                      <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                        {renderTeamGenerationSection()}
-                      </div>
-                    </div>
+                {/* Always Show "Create Match" button at the bottom of the list */}
+                <button
+                  onClick={() => { setCurrentActiveRoom(null); setShowHostRoomModal(true); }}
+                  className="w-full h-[120px] rounded-[24px] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all active:scale-[0.98] group mt-2"
+                >
+                  <div className="w-12 h-12 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 shadow-lg group-hover:scale-110 transition-transform">
+                    <PlusIcon />
                   </div>
-                );
-              })()
+                </button>
+              </>
             )}
           </div>
         </section>
       )}
 
-      {/* 회원목록 탭 내용 */}
-      {currentBottomTab === BottomTabType.MEMBERS && (
-        <div className="w-full px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex justify-between items-center mb-4 px-1">
-            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('memberList' as any)}</h3>
-          </div>
-          {renderMembersTabContent()}
-        </div>
-      )}
-
-      {/* 설정 탭 (추후 구현) */}
-      {currentBottomTab === BottomTabType.SETTINGS && (
-        <div className="w-full px-4 py-20 text-center animate-in fade-in duration-500">
-          <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-300">
-            <SettingsIcon />
-          </div>
-          <p className="text-sm font-bold text-slate-400">{t('comingSoon')}</p>
-        </div>
-      )}
-
-      {result && (
-        <div id="results-capture-section" className="fixed inset-0 z-[3000] bg-white dark:bg-slate-950 flex flex-col p-4 animate-in fade-in duration-300 overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
-            <div data-capture-ignore="true" className="flex gap-2">
-              <button
-                onClick={() => setResult(null)}
-                className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold px-4 py-2 rounded-xl text-xs hover:bg-slate-300 transition-all"
-              >
-                {t('backToRoster')}
-              </button>
-              <button
-                onClick={() => handleShare('results-capture-section', 'team-balance-result')}
-                disabled={!!isSharing}
-                className="bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2"
-              >
-                {isSharing ? t('generatingImage') : <><ShareIcon /> {t('shareResult')}</>}
-              </button>
-            </div>
+      {currentPage === AppPageType.EDIT_ROOM && currentActiveRoom && (
+        <div className="fixed inset-0 z-[3000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
+          {/* 상단 바 */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
+            <button
+              onClick={() => setCurrentPage(AppPageType.DETAIL)}
+              className="p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors"
+            >
+              <ArrowLeftIcon size={24} />
+            </button>
+            <h2 className="text-base font-black text-slate-900 dark:text-white">{t('editMatch' as any)}</h2>
+            <div className="w-10" />
           </div>
 
-          <div className={`backdrop-blur-sm ${darkMode ? 'bg-slate-900/80 text-slate-100' : 'bg-slate-100/80 text-slate-900'} rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 w-full`}>
-            <div className="flex flex-col">
-              <span className={`text-[9px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('standardDeviation')}</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black font-mono">{result.standardDeviation.toFixed(2)}</span>
-                <span className="text-[9px] opacity-40 italic">({t('lowerFairer')})</span>
-              </div>
-            </div>
-            {/* DEBUG INFO - 페널티 합계 표시 (일반 탭이 아닐 때만) */}
-            {activeTab !== SportType.GENERAL && (
-              <div className="flex flex-col items-center">
-                <span className={`text-[8px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-0.5 tracking-widest`}>{t('penaltyScore' as any)}</span>
-                <div className="flex flex-col items-center leading-tight">
-                  <span className={`text-xl font-semibold font-mono ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                    {result.teams.reduce((sum, t) =>
-                      sum + t.players.reduce((pSum, p) => {
-                        const assigned = p.assignedPosition || 'NONE';
-                        const isP1 = (p.primaryPositions || []).includes(assigned) || p.primaryPosition === assigned;
-                        const isP2 = (p.secondaryPositions || []).includes(assigned) || p.secondaryPosition === assigned;
-                        const isP3 = (p.tertiaryPositions || []).includes(assigned) || p.tertiaryPosition === assigned;
-                        return pSum + (isP1 ? 0 : (isP2 ? 0.5 : (isP3 ? 1.0 : 2.0)));
-                      }, 0)
-                      , 0).toFixed(1)}
-                  </span>
-                  <span className={`text-[7px] font-medium italic ${darkMode ? 'text-slate-500' : 'text-slate-400'} mt-0.5 whitespace-nowrap`}>({t('penaltyScoreDesc' as any)})</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-48">
-            {result.teams.map((team, idx) => (
-              <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800">
-                <div className="bg-white dark:bg-slate-950 p-5 flex items-center justify-between" style={{ borderTop: team.color ? `6px solid ${team.color}` : 'none' }}>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg bg-slate-100 dark:bg-slate-800"
-                      style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: darkMode ? '#e2e8f0' : '#0f172a', color: darkMode ? '#0f172a' : 'white' }}
-                      onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
-                      data-capture-ignore="true"
-                    >
-                      {idx + 1}
-                    </div>
-                    <h4 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase">{team.colorName ? t('teamNameWithColor', t(team.colorName as any)) : `TEAM ${idx + 1}`}</h4>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">{t('squadSum')}</span>
-                    <span className="text-2xl font-black font-mono">{team.totalSkill}</span>
-                  </div>
-                </div>
-                {/* 결과용 색상 피커 */}
-                {editingResultTeamIdx === idx && (
-                  <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200" data-capture-ignore="true">
-                    {TEAM_COLORS.map(color => (
+          <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4 pb-[148px]">
+            <div className="space-y-4">
+              <div className="space-y-4">
+                {/* 종목 선택 (수정 모드에서도 변경 가능하도록 유지) */}
+                <div className="flex items-center gap-4">
+                  <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('sport' as any)}</label>
+                  <div className="flex-1 flex overflow-x-auto no-scrollbar gap-2 py-1">
+                    {[SportType.GENERAL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL].map((s) => (
                       <button
-                        key={color.value}
-                        onClick={() => handleUpdateResultTeamColor(idx, color.value, color.name)}
-                        className={`w-6 h-6 rounded-lg transition-all ring-offset-2 dark:ring-offset-slate-950 ${team.color === color.value ? 'ring-2 ring-slate-900 dark:ring-slate-100 scale-110 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
-                        style={{ backgroundColor: color.value, border: color.value === '#ffffff' ? '1px solid #e2e8f0' : 'none' }}
-                        title={t(color.name as any)}
-                      />
+                        key={s}
+                        onClick={() => setHostRoomSelectedSport(s)}
+                        className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border ${hostRoomSelectedSport === s
+                          ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                          : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'
+                          }`}
+                      >
+                        {t(s.toLowerCase() as any)}
+                      </button>
                     ))}
                   </div>
-                )}
-                <div className="p-4 space-y-2">
-                  {getSortedTeamPlayers(team.players).map(p => (
-                    <div key={p.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-950 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-slate-900 dark:text-slate-100 text-sm">{p.name}</span>
-                        {showTier && <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${TIER_COLORS[p.tier]}`}>{Tier[p.tier]}</span>}
-                      </div>
-                      {activeTab !== SportType.GENERAL && p.assignedPosition && <span className="text-[10px] font-black text-slate-400 uppercase">{p.assignedPosition}</span>}
-                    </div>
-                  ))}
+                </div>
+
+                {/* 팀명 입력 */}
+                <div className="flex items-center gap-4">
+                  <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
+                  <input
+                    type="text"
+                    value={hostRoomTitle}
+                    onChange={(e) => setHostRoomTitle(e.target.value)}
+                    placeholder={t('inputRoomTitle')}
+                    className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                  />
                 </div>
               </div>
-            ))}
+
+              <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+              <div className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div
+                      onClick={() => setHostRoomActivePicker('START')}
+                      className={`flex flex-col items-center cursor-pointer transition-all ${hostRoomActivePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-40'}`}
+                    >
+                      <span className="text-[16px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
+                      <span className={`text-[16px] font-black ${hostRoomActivePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500'}`}>
+                        {hostRoomDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(hostRoomDate).getDay()]}) {hostRoomTime}
+                      </span>
+                    </div>
+                    <div className="text-slate-200 dark:text-slate-800">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                    <div
+                      onClick={() => setHostRoomActivePicker('END')}
+                      className={`flex flex-col items-center cursor-pointer transition-all ${hostRoomActivePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-40'}`}
+                    >
+                      <span className="text-[16px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
+                      <span className={`text-[16px] font-black ${hostRoomActivePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
+                        {hostRoomEndDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(hostRoomEndDate).getDay()]}) {hostRoomEndTime}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center transition-all duration-300">
+                    {hostRoomActivePicker === 'START' ? (
+                      <DateTimePicker
+                        date={hostRoomDate}
+                        time={hostRoomTime}
+                        onChange={(d, t) => {
+                          setHostRoomDate(d);
+                          setHostRoomTime(t);
+                          // 수정 페이지에서는 자동 연동 로직 제거 (독립적으로 수정 가능)
+                        }}
+                        lang={lang}
+                        onViewModeChange={(mode) => setHostRoomIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                      />
+                    ) : (
+                      <DateTimePicker
+                        date={hostRoomEndDate}
+                        time={hostRoomEndTime}
+                        onChange={(d, t) => {
+                          setHostRoomEndDate(d);
+                          setHostRoomEndTime(t);
+                        }}
+                        lang={lang}
+                        onViewModeChange={(mode) => setHostRoomIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('limitApplicants')}</label>
+                    <button
+                      onClick={() => setHostRoomUseLimit(!hostRoomUseLimit)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${hostRoomUseLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${hostRoomUseLimit ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+
+                  {hostRoomUseLimit && (
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-xl px-2 py-1 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-right-2">
+                      <button onClick={() => setHostRoomMaxApplicants(Math.max(2, hostRoomMaxApplicants - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12H4" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </button>
+                      <span className="text-center font-black dark:text-white text-[12px] min-w-[40px]">{t('peopleCount', hostRoomMaxApplicants)}</span>
+                      <button onClick={() => setHostRoomMaxApplicants(hostRoomMaxApplicants + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('tierMode')}</label>
+                  <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <button
+                      onClick={() => setHostRoomTierMode('5TIER')}
+                      className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${hostRoomTierMode === '5TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      {t('tierMode5')}
+                    </button>
+                    <button
+                      onClick={() => setHostRoomTierMode('3TIER')}
+                      className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${hostRoomTierMode === '3TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      {t('tierMode3')}
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                  <p className="text-[11px] text-blue-600 dark:text-blue-400 font-bold leading-relaxed">
+                    💡 {hostRoomTierMode === '3TIER' ? t('tierModeDesc') : t('tierMode5Desc' as any)}
+                  </p>
+                </div>
+              </div>
+
+              {/* 추가된 즉시 수정/취소 버튼: 오른쪽 하단 정렬, 소형화 (HostRoomModal과 동일) */}
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={() => setCurrentPage(AppPageType.DETAIL)}
+                  className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm rounded-xl transition-all active:scale-[0.95]"
+                >
+                  {t('cancel' as any)}
+                </button>
+                <button
+                  onClick={handleUpdateRoom}
+                  disabled={isProcessing}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.95] shadow-md shadow-blue-500/20"
+                >
+                  {isProcessing ? '...' : t('editComplete' as any)}
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="hidden px-2 pt-2" data-promo-footer="true">
-            <PromotionFooter lang={lang} darkMode={darkMode} />
+
+          {/* 고정 하단 버튼 제거 (사용자 요청) */}
+        </div>
+      )}
+
+      {currentPage === AppPageType.BALANCE && currentActiveRoom && (
+        <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-y-auto">
+          <header className="sticky top-0 z-50 bg-white dark:bg-slate-950 px-4 pt-[40px] pb-[8px] border-b border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center w-full">
+              <button
+                onClick={() => {
+                  setCurrentPage(AppPageType.DETAIL);
+                  setResult(null);
+                }}
+                className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"
+              >
+                <ArrowLeftIcon size={24} />
+              </button>
+              <h1 className="text-[20px] font-semibold text-slate-900 dark:text-white tracking-[-0.025em]">
+                {result ? t('resultsTitle' as any) : t('generateTeams' as any)}
+              </h1>
+              <div className="w-8" />
+            </div>
+          </header>
+
+          <div className="flex-1 px-6 py-6 max-w-lg mx-auto w-full">
+            <div className="space-y-6">
+              {!result && (
+                <>
+                  {/* 포지션별 인원 설정 버튼 */}
+                  <section>
+                    <button
+                      onClick={() => setIsQuotaSettingsExpanded(!isQuotaSettingsExpanded)}
+                      className="w-full bg-slate-900 dark:bg-slate-100 py-2 rounded-[24px] flex items-center justify-center text-white dark:text-slate-900 text-[16px] font-semibold shadow-2xl shadow-slate-900/40 dark:shadow-white/20 transition-all active:scale-[0.98] active:brightness-95"
+                      style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                    >
+                      {t('positionSettings')}
+                    </button>
+
+                    {isQuotaSettingsExpanded && (
+                      <div className="mt-4 p-4 rounded-[24px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <QuotaFormationPicker
+                          sport={currentActiveRoom.sport as SportType}
+                          quotas={quotas}
+                          lang={lang}
+                          onUpdate={updateQuota}
+                          onToggleMode={toggleQuotaMode}
+                          darkMode={darkMode}
+                        />
+                        {currentActiveRoom.sport !== SportType.GENERAL && (
+                          <p className="mt-4 text-[11px] text-slate-400 leading-relaxed italic px-2">
+                            {t('quotaInfoMsg')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* 티어무시 무작위 팀 나누기 */}
+                  <section
+                    onClick={() => setUseRandomMix(!useRandomMix)}
+                    className="flex items-center gap-3 px-2 py-1 cursor-pointer group"
+                  >
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${useRandomMix ? 'bg-slate-900 border-slate-900 dark:bg-white dark:border-white' : 'border-slate-300 dark:border-slate-700 group-hover:border-slate-400'}`}>
+                      {useRandomMix && <CheckIcon size={14} className="text-white dark:text-slate-900" />}
+                    </div>
+                    <span className="text-[14px] font-bold text-slate-600 dark:text-slate-300">{t('randomMix')}</span>
+                  </section>
+
+                  <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1" />
+
+                  {/* 팀수 설정 */}
+                  <section className="flex items-center justify-between px-2 h-12">
+                    <span className="text-[14px] font-bold text-slate-900 dark:text-slate-100">{t('teamCountLabel')}</span>
+                    <div className="flex items-center gap-6">
+                      <button
+                        onClick={() => setTeamCount(Math.max(2, teamCount - 1))}
+                        className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 active:scale-90 transition-all"
+                      >
+                        <MinusIcon size={20} />
+                      </button>
+                      <span className="text-lg font-black font-mono w-4 text-center">{teamCount}</span>
+                      <button
+                        onClick={() => setTeamCount(Math.min(10, teamCount + 1))}
+                        className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 active:scale-90 transition-all"
+                      >
+                        <PlusIcon size={20} />
+                      </button>
+                    </div>
+                  </section>
+
+                  {/* 팀나누기 실행 버튼 */}
+                  <button
+                    onClick={() => handleGenerate()}
+                    disabled={isGenerating}
+                    className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2 rounded-[24px] text-[16px] font-semibold tracking-tight shadow-2xl shadow-slate-900/40 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
+                    style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                  >
+                    {t('generateTeams')}
+                  </button>
+                </>
+              )}
+
+              {result && (
+                <div id="results-capture-section" className="mt-8 pb-32 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
+                    <div data-capture-ignore="true" className="flex gap-2">
+                      <button
+                        onClick={() => handleShare('results-capture-section', 'team-balance-result')}
+                        disabled={!!isSharing}
+                        className="bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2"
+                      >
+                        {isSharing ? t('generatingImage') : <><ShareIcon /> {t('shareResult')}</>}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stats Grid - 2 Columns as per image */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className={`${darkMode ? 'bg-slate-800' : 'bg-slate-50'} rounded-[24px] p-4 flex flex-col items-center text-center shadow-sm`}>
+                      <span className={`text-[10px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('standardDeviation')}</span>
+                      <span className="text-3xl font-black font-mono leading-none">{result.standardDeviation.toFixed(2)}</span>
+                      <span className={`text-[9px] ${darkMode ? 'text-slate-500' : 'text-slate-400'} mt-1`}>({t('lowerFairer')})</span>
+                    </div>
+                    <div className={`${darkMode ? 'bg-slate-800' : 'bg-slate-50'} rounded-[24px] p-4 flex flex-col items-center text-center shadow-sm`}>
+                      <span className={`text-[10px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('penaltyScore')}</span>
+                      <span className="text-3xl font-black font-mono leading-none text-blue-500">{(result as any).positionSatisfaction?.toFixed(1) || '0.0'}</span>
+                      <span className={`text-[9px] ${darkMode ? 'text-slate-500' : 'text-slate-400'} mt-1`}>({t('penaltyScoreDesc')})</span>
+                    </div>
+                  </div>
+
+                  {/* Auto Color Checkbox as per image */}
+                  <div className="flex items-center gap-2 mb-6 px-2 group cursor-pointer">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-300 bg-white group-hover:border-slate-400'}`}>
+                      {/* Unchecked box */}
+                    </div>
+                    <span className="text-[14px] font-bold text-slate-900 dark:text-white tracking-tight">전체 팀색 자동 설정</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {result.teams.map((team, idx) => (
+                      <div key={team.id} className="overflow-hidden">
+                        <div className="flex items-center justify-between mb-4 px-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-[#111111] text-white flex items-center justify-center font-bold text-sm">
+                              {idx + 1}
+                            </div>
+                            <h4 className="text-[18px] font-bold text-[#111111] dark:text-white tracking-tight uppercase">
+                              {team.colorName ? t('teamNameWithColor', t(team.colorName as any)) : `TEAM ${String.fromCharCode(65 + idx)}`} ({team.players.length})
+                            </h4>
+
+                            {/* Team Color Setting - Moved next to the team name */}
+                            <div
+                              onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
+                              className="flex items-center gap-1.5 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
+                            >
+                              <div className="w-4 h-4 rounded border border-slate-300 bg-white" style={team.color ? { backgroundColor: team.color } : {}} />
+                              <span className="text-[12px] font-medium text-slate-400">팀색 설정</span>
+                            </div>
+                          </div>
+
+                          {/* Team Total Skill - Positioned on the right */}
+                          <div className="text-right">
+                            <span className="block text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">{t('squadSum')}</span>
+                            <span className="text-[20px] font-black font-mono leading-none text-slate-900 dark:text-white">{team.totalSkill}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          {getSortedTeamPlayers(team.players).map(p => (
+                            <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm transition-all">
+                              {/* Profile Circle - Same as Participant List */}
+                              <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] flex items-center justify-center text-[12px] font-medium text-[#777777] shrink-0">
+                                BELO
+                              </div>
+
+                              {/* Assigned Position - SINGLE Label between profile and name */}
+                              <div className="w-10 text-[14px] font-bold text-slate-400 shrink-0 text-center">
+                                {p.assignedPosition || '--'}
+                              </div>
+
+                              {/* Player Info Area */}
+                              <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                                {/* Tier + Name Row - Matches Participant List */}
+                                <div className="flex items-center gap-2">
+                                  {showTier && (
+                                    <span className={`px-1.5 py-0.5 rounded-md text-[12px] font-medium tracking-tight ${TIER_COLORS[p.tier]}`}>
+                                      {Tier[p.tier]}
+                                    </span>
+                                  )}
+                                  <span className="text-[16px] font-medium text-slate-900 dark:text-white truncate tracking-tight">
+                                    {p.name}
+                                  </span>
+                                </div>
+
+                                {/* Preferred Positions (Dots) - Plural Arrays from Mapping */}
+                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                  {/* Primary Positions (Emerald) */}
+                                  {p.primaryPositions?.map((pos, pIdx) => (
+                                    <div key={`p-${pIdx}`} className="flex items-center gap-0.5 shrink-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
+                                      <span className="text-[11px] font-medium text-[#10B982] uppercase tracking-tight">{pos}</span>
+                                    </div>
+                                  ))}
+                                  {/* Secondary Positions (Amber) */}
+                                  {p.secondaryPositions?.map((pos, sIdx) => (
+                                    <div key={`s-${sIdx}`} className="flex items-center gap-0.5 shrink-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#FACC16]" />
+                                      <span className="text-[11px] font-medium text-[#FACC16] uppercase tracking-tight">{pos}</span>
+                                    </div>
+                                  ))}
+                                  {/* Tertiary Positions (Orange) */}
+                                  {p.tertiaryPositions?.map((pos, tIdx) => (
+                                    <div key={`t-${tIdx}`} className="flex items-center gap-0.5 shrink-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#FB933C]" />
+                                      <span className="text-[11px] font-medium text-[#FB933C] uppercase tracking-tight">{pos}</span>
+                                    </div>
+                                  ))}
+                                  {/* Fallback for legacy items */}
+                                  {!p.primaryPositions && p.primaryPosition && (
+                                    <div className="flex items-center gap-0.5 shrink-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
+                                      <span className="text-[11px] font-medium text-[#10B982] uppercase tracking-tight">{p.primaryPosition}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Re-generate Button - Black as per image */}
+                  <button
+                    onClick={() => handleGenerate()}
+                    className="w-full bg-[#111111] text-white py-4 rounded-[24px] text-[18px] font-bold tracking-tight shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-10"
+                    style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                  >
+                    팀 다시 나누기
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Ad Space for Balance Page */}
+          <div className="sticky bottom-0 bg-white dark:bg-slate-950 p-2 border-t border-slate-100 dark:border-slate-800" data-capture-ignore="true">
+            <div className="w-full h-[50px] bg-slate-50 dark:bg-slate-900/50 rounded-xl flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t('adPlacementSlot')}</span>
+            </div>
           </div>
         </div>
       )}
 
-      {/* 선택 모드 하단 제어 바 */}
-      {selectionMode && (
-        <div
-          className="fixed left-0 right-0 z-[1001] bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 animate-in slide-in-from-bottom duration-300"
-          style={{
-            bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
-            paddingBottom: '1rem'
-          }}
-        >
-          <div className="max-w-4xl mx-auto flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full animate-pulse ${selectionMode === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{t('selectionModeActive' as any)}</span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">({selectedPlayerIds.length})</span>
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('constraintDescription' as any)}</p>
-            </div>
-            <div className="flex gap-2">
+      {currentPage === AppPageType.DETAIL && currentActiveRoom && (
+        <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
+          {/* 상세 화면 상단 바 - 여백 정밀 조정 (상단 40px, 하단 8px) */}
+          <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex justify-between items-center px-4 w-full">
               <button
-                disabled={selectedPlayerIds.length < 2}
                 onClick={() => {
-                  const newConstraint: TeamConstraint = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    playerIds: selectedPlayerIds,
-                    type: selectionMode
-                  };
-                  setTeamConstraints(prev => [...prev, newConstraint]);
-                  setSelectionMode(null);
+                  setCurrentPage(AppPageType.HOME);
+                  setCurrentBottomTab(BottomTabType.HOME); // 하단 탭도 함께 복구
                 }}
-                className={`flex-1 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all ${selectedPlayerIds.length >= 2 ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600'}`}
+                className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"
               >
-                {t('apply' as any)}
+                <ArrowLeftIcon size={24} />
               </button>
-              <button
-                onClick={() => setSelectionMode(null)}
-                className="flex-1 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all"
-              >
-                {t('cancel' as any)}
-              </button>
+              <h3 className="text-[20px] font-semibold text-slate-900 dark:text-white tracking-[-0.025em]">
+                {t('manageMatchDetail' as any)}
+              </h3>
+              <div className="w-8" /> {/* Spacer for centering */}
             </div>
+          </header>
+
+          <div className="flex-1 overflow-y-auto px-5 pt-0 pb-4 space-y-6 pb-40">
+            {(() => {
+              const room = currentActiveRoom;
+              const pendingApplicants = room.applicants.filter(a => !a.isApproved);
+              const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
+              const bgImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
+
+              return (
+                <div className="w-full">
+                  {/* Styled Match Card (Same as Home Screen) */}
+                  <div className="w-full h-[120px] rounded-[24px] overflow-hidden relative shadow-xl border border-slate-100 dark:border-slate-800 shrink-0">
+                    <img src={bgImg} alt={room.sport} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+                      {/* Top Row: Sport Badge, Title & Actions */}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="bg-white/95 px-3 py-0 rounded-xl shrink-0">
+                            <span className="text-black text-[12px] font-medium uppercase tracking-[-0.025em] leading-none">
+                              {t(room.sport.toLowerCase() as any)}
+                            </span>
+                          </div>
+                          <h4 className="text-[16px] font-medium tracking-[-0.025em] drop-shadow-md truncate">
+                            {room.title}
+                          </h4>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="relative p-1.5 transition-colors">
+                            <Icons.UsersIcon size={18} className="text-white/90" />
+                            {pendingApplicants.length > 0 && (
+                              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-black/50 animate-pulse">
+                                {pendingApplicants.length}
+                              </span>
+                            )}
+                          </div>
+                          {/* Share Icon removed from here as it's now a button below */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHostRoomSelectedSport(room.sport as SportType);
+                              setHostRoomTitle(room.title);
+                              setHostRoomDate(room.matchDate);
+                              setHostRoomTime(room.matchTime);
+                              setHostRoomEndDate(room.matchEndDate || room.matchDate);
+                              setHostRoomEndTime(room.matchEndTime || room.matchTime);
+                              setHostRoomUseLimit(room.maxApplicants > 0);
+                              setHostRoomMaxApplicants(room.maxApplicants || 12);
+                              setHostRoomTierMode(room.tierMode || '5TIER');
+                              setHostRoomActivePicker('START');
+                              setHostRoomIsPickerSelectionMode(false);
+                              setCurrentPage(AppPageType.EDIT_ROOM);
+                            }}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/90"
+                          >
+                            <Icons.SettingsIcon size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCloseRecruitRoom(room);
+                              setCurrentPage(AppPageType.HOME);
+                            }}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/90 hover:text-rose-400"
+                          >
+                            <Icons.TrashIcon size={18} className="text-white/90" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Middle Row: Join Link Button (Centered for balance like home card) */}
+                      <div className="flex-1 flex flex-col justify-center items-end">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleShareRecruitLink(room); }}
+                          className="text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl bg-[#53B175] tracking-[-0.025em] active:scale-95 transition-transform"
+                        >
+                          참가링크
+                        </button>
+                      </div>
+
+                      {/* Bottom Row: Date/Time & Count */}
+                      <div className="flex justify-between items-end gap-2">
+                        <div className="space-y-0.5">
+                          <p className="text-[12px] font-medium uppercase tracking-tighter" style={{ color: '#FFFFFF' }}>경기 날짜 & 시간</p>
+                          <p className="text-[16px] font-medium tracking-tight leading-none">{room.matchDate} {room.matchTime}</p>
+                        </div>
+
+                        <div className="text-right leading-none">
+                          <span className="text-[20px] font-medium tracking-tighter tabular-nums leading-none">
+                            {room.applicants.filter(a => a.isApproved).length}
+                            <span className="text-white/40 mx-1 text-[16px]">/</span>
+                            {room.maxApplicants > 0 ? room.maxApplicants : '∞'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tab Bar (Refined - Underline Style) */}
+                  <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 gap-8 mt-4">
+                    <button
+                      onClick={() => setDetailTab(DetailPageTab.PENDING)}
+                      className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.PENDING
+                        ? 'text-slate-900 dark:text-white font-bold'
+                        : 'text-slate-400 dark:text-slate-500 font-medium'
+                        }`}
+                    >
+                      <span>{t('pendingApplicantsList' as any)}</span>
+                      <span className="text-[11px] opacity-60">({pendingApplicants.length})</span>
+                      {detailTab === DetailPageTab.PENDING && (
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setDetailTab(DetailPageTab.APPROVED)}
+                      className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.APPROVED
+                        ? 'text-slate-900 dark:text-white font-bold'
+                        : 'text-slate-400 dark:text-slate-500 font-medium'
+                        }`}
+                    >
+                      <span>{t('approvedParticipantsList' as any)}</span>
+                      <span className="text-[11px] opacity-60">({room.applicants.filter(a => a.isApproved).length})</span>
+                      {detailTab === DetailPageTab.APPROVED && (
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Unified List Container (Simplified - No Background) */}
+                  <div
+                    className="flex flex-col gap-6 relative mt-3 flex-1 min-h-[400px]"
+                    onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+                    onTouchEnd={(e) => {
+                      if (touchStartX === null) return;
+                      const touchEndX = e.changedTouches[0].clientX;
+                      const diff = touchStartX - touchEndX;
+                      const threshold = 60; // 스와이프 민감도 조정
+
+                      if (Math.abs(diff) > threshold) {
+                        if (diff > 0 && detailTab === DetailPageTab.PENDING) {
+                          // -> (오른쪽으로 스와이프 하는 감각이지만 손가락은 왼쪽으로 이동) : 다음 탭 (APPROVED)
+                          setDetailTab(DetailPageTab.APPROVED);
+                        } else if (diff < 0 && detailTab === DetailPageTab.APPROVED) {
+                          // <- : 이전 탭 (PENDING)
+                          setDetailTab(DetailPageTab.PENDING);
+                        }
+                      }
+                      setTouchStartX(null);
+                    }}
+                  >
+                    {/* Action Bar inside Container - Updated Alignment & Styles */}
+                    <div className="flex justify-between items-center w-full">
+                      <button
+                        onClick={() => setShowTier(!showTier)}
+                        className={`px-[8px] h-[28px] flex items-center justify-center rounded-xl text-[12px] font-medium transition-all active:scale-95 border ${showTier ? 'bg-[#111111] text-[#FFFFFF] border-[#111111]' : 'bg-[#FFFFFF] dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                      >
+                        {showTier ? t('hideTier' as any) : t('showTier' as any)}
+                      </button>
+
+                      <div className="flex gap-[8px] items-center mx-3">
+                        {detailTab === DetailPageTab.APPROVED && (
+                          <>
+                            <button
+                              onClick={() => { setSelectionMode(prev => prev === 'MATCH' ? null : 'MATCH'); setSelectedPlayerIds([]); }}
+                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'MATCH' ? 'bg-[#111111] text-[#FFFFFF] border-[#111111]' : 'bg-[#FFFFFF] dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                            >
+                              <div className="w-[16px] h-[16px] rounded bg-blue-500 text-white flex items-center justify-center text-[9px] font-black">M</div>
+                              {t('matchTeams' as any)}
+                            </button>
+                            <button
+                              onClick={() => { setSelectionMode(prev => prev === 'SPLIT' ? null : 'SPLIT'); setSelectedPlayerIds([]); }}
+                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'SPLIT' ? 'bg-[#111111] text-[#FFFFFF] border-[#111111]' : 'bg-[#FFFFFF] dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                            >
+                              <div className="w-[16px] h-[16px] rounded bg-rose-500 text-white flex items-center justify-center text-[9px] font-black">S</div>
+                              {t('splitTeams' as any)}
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex items-center">
+                        {detailTab === DetailPageTab.APPROVED && (
+                          <button
+                            onClick={() => {
+                              setCurrentPage(AppPageType.HOME);
+                              setCurrentBottomTab(BottomTabType.MEMBERS);
+                              setIsNavigatingFromDetail(true);
+                            }}
+                            className="bg-[#4685EB] text-white rounded-xl text-[12px] font-medium px-[8px] h-[28px] flex items-center justify-center transition-all active:scale-95 mr-2"
+                          >
+                            {t('addParticipant' as any)}
+                          </button>
+                        )}
+
+                        {detailTab === DetailPageTab.PENDING && pendingApplicants.length > 0 && (
+                          <button
+                            onClick={() => handleApproveAllApplicants(room)}
+                            className="bg-blue-600 text-white rounded-xl text-[12px] font-medium px-6 py-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                          >
+                            {t('approveAll' as any)}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Active Team Constraints List (Detail Page) */}
+                    {teamConstraints.length > 0 && (
+                      <div className="flex flex-col gap-2 mb-2 p-1">
+                        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t('activeConstraints' as any)}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {teamConstraints.map((c) => {
+                            const playerNames = c.playerIds.map(id => {
+                              const app = room.applicants.find(a => a.id === id);
+                              return app ? app.name : (players.find(p => p.id === id)?.name || id);
+                            }).join(', ');
+                            return (
+                              <div key={c.id} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-transparent rounded-xl px-3 py-1.5 shadow-sm">
+                                <div className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-black text-white ${c.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`}>
+                                  {c.type === 'MATCH' ? 'M' : 'S'}
+                                </div>
+                                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 max-w-[150px] truncate">{playerNames}</span>
+                                <button
+                                  onClick={() => setTeamConstraints(prev => prev.filter(x => x.id !== c.id))}
+                                  className="p-1 text-slate-300 hover:text-rose-500 transition-colors"
+                                >
+                                  <Icons.CloseIcon />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Member List */}
+                    <div className="space-y-1">
+                      {(detailTab === DetailPageTab.PENDING ? pendingApplicants : room.applicants.filter(a => a.isApproved)).map((app) => {
+                        const tierVal = isNaN(Number(app.tier)) ? (Tier as any)[app.tier] : Number(app.tier);
+                        const tierLabel = isNaN(Number(app.tier)) ? app.tier : (Tier as any)[Number(app.tier)];
+
+                        // Use canonical ID (from master players list if match exists) to avoid constraint mismatch
+                        const member = players.find(p => p.name === app.name);
+                        const effectiveId = member ? member.id : app.id;
+                        const isSelected = selectedPlayerIds.includes(effectiveId);
+                        const playerConstraint = teamConstraints.find(c => c.playerIds.includes(effectiveId));
+
+                        return (
+                          <React.Fragment key={app.id}>
+                            <div
+                              onClick={() => {
+                                if (selectionMode && detailTab === DetailPageTab.APPROVED) {
+                                  setSelectedPlayerIds(prev =>
+                                    prev.includes(effectiveId) ? prev.filter(x => x !== effectiveId) : [...prev, effectiveId]
+                                  );
+                                }
+                              }}
+                              className={`bg-white dark:bg-slate-950 flex items-center justify-between px-2 py-1 rounded-2xl transition-all ${selectionMode && detailTab === DetailPageTab.APPROVED ? 'cursor-pointer active:scale-[0.98]' : ''} ${selectionMode && isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                            >
+                              <div className="flex items-center gap-4">
+                                {selectionMode && detailTab === DetailPageTab.APPROVED && (
+                                  <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}`}>
+                                    {isSelected && <CheckIcon />}
+                                  </div>
+                                )}
+                                {/* Profile Circle - Updated to #EEEEEE, #777777, 12px, 'BELO' */}
+                                <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] flex items-center justify-center text-[12px] font-medium text-[#777777] shrink-0">
+                                  BELO
+                                </div>
+
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="flex items-center gap-2">
+                                    {showTier && (
+                                      <span className={`px-1.5 py-0.5 rounded-md text-[12px] font-medium ${TIER_COLORS[tierVal as Tier] || TIER_COLORS[Tier.B]}`}>
+                                        {tierLabel}
+                                      </span>
+                                    )}
+                                    <span className="text-[16px] font-medium text-slate-900 dark:text-white">
+                                      {app.name}
+                                    </span>
+                                    {/* 제약 조건 뱃지 표시 */}
+                                    {playerConstraint && (
+                                      <div className={`w-4 h-4 rounded flex items-center justify-center text-[8px] font-black text-white ${playerConstraint.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`}>
+                                        {playerConstraint.type === 'MATCH' ? 'M' : 'S'}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {/* Position Dots & Labels */}
+                                  <div className="flex items-center gap-1.5">
+                                    {/* Primary Positions (100% - #10B982) */}
+                                    {app.primaryPositions?.map((pos, idx) => (
+                                      <div key={`p-${idx}`} className="flex items-center gap-0.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
+                                        <span className="text-[12px] font-medium text-[#10B982] uppercase">{pos}</span>
+                                      </div>
+                                    ))}
+                                    {/* Secondary Positions (75% - #FACC16) */}
+                                    {app.secondaryPositions?.map((pos, idx) => (
+                                      <div key={`s-${idx}`} className="flex items-center gap-0.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#FACC16]" />
+                                        <span className="text-[12px] font-medium text-[#FACC16] uppercase">{pos}</span>
+                                      </div>
+                                    ))}
+                                    {/* Tertiary Positions (50% - #FB933C) */}
+                                    {app.tertiaryPositions?.map((pos, idx) => (
+                                      <div key={`t-${idx}`} className="flex items-center gap-0.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#FB933C]" />
+                                        <span className="text-[12px] font-medium text-[#FB933C] uppercase">{pos}</span>
+                                      </div>
+                                    ))}
+                                    {/* Fallback for old data or simpler summary - Updated to use #10B982 instead of gray */}
+                                    {!app.primaryPositions && !app.secondaryPositions && !app.tertiaryPositions && (
+                                      app.position ? app.position.split('/').map((pos, idx) => (
+                                        <div key={idx} className="flex items-center gap-0.5">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
+                                          <span className="text-[12px] font-medium text-[#10B982] uppercase">{pos.trim()}</span>
+                                        </div>
+                                      )) : (
+                                        <span className="text-[10px] font-medium text-slate-300 italic">{t('notSet' as any)}</span>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                {detailTab === DetailPageTab.PENDING ? (
+                                  <>
+                                    <button
+                                      onClick={() => cancelApplication(room.id, app)}
+                                      className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-[12px] font-medium transition-all active:scale-95"
+                                    >
+                                      {t('reject' as any)}
+                                    </button>
+                                    <button
+                                      onClick={() => handleApproveApplicant(room, app)}
+                                      className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-[12px] font-medium transition-all active:scale-95"
+                                    >
+                                      {t('approve' as any)}
+                                    </button>
+                                  </>
+                                ) : (
+                                  <div className="flex items-center gap-2 relative">
+                                    {activeActionMenuId === app.id ? (
+                                      <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
+                                        <button
+                                          onClick={() => {
+                                            const isCurrentlyEditing = editingApplicantId === app.id;
+                                            setEditingApplicantId(isCurrentlyEditing ? null : app.id);
+                                            if (isCurrentlyEditing) {
+                                              setActiveActionMenuId(null);
+                                            }
+                                          }}
+                                          className={`text-[14px] font-medium text-[#FFFFFF] px-2 py-0.5 rounded-md transition-all active:scale-95 ${editingApplicantId === app.id ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-[#EDAE73]'}`}
+                                        >
+                                          {editingApplicantId === app.id ? t('confirm' as any) : '수정'}
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const isMember = players.some(p => p.name === app.name);
+                                            cancelApplication(room.id, app);
+                                            if (!isMember) {
+                                              setMemberSuggestion({ isOpen: true, applicant: app });
+                                            }
+                                            setActiveActionMenuId(null);
+                                          }}
+                                          className="text-[14px] font-medium text-[#FFFFFF] px-2 py-0.5 bg-[#53B175] rounded-md transition-all active:scale-95"
+                                        >
+                                          제외
+                                        </button>
+                                        <button
+                                          onClick={() => setActiveActionMenuId(null)}
+                                          className="p-1 text-slate-300 dark:text-slate-600"
+                                        >
+                                          <Icons.CloseIcon />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => setActiveActionMenuId(app.id)}
+                                        className="p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors"
+                                      >
+                                        <Icons.MoreIcon />
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Inline Editor for Approved Participants */}
+                            {editingApplicantId === app.id && detailTab === DetailPageTab.APPROVED && (
+                              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[24px] p-4 mt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="grid grid-cols-5 gap-1.5">
+                                  {(room.tierMode === '3TIER' ? ['S', 'A', 'B'] : ['S', 'A', 'B', 'C', 'D']).map(v => (
+                                    <button
+                                      key={v}
+                                      onClick={() => handleUpdateApplicant(room, app.id, { tier: v })}
+                                      className={`py-2 rounded-xl font-medium text-[11px] transition-all ${app.tier === v ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400'}`}
+                                    >
+                                      {v}
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-2">
+                                  <FormationPicker
+                                    sport={room.sport as SportType}
+                                    primaryP={app.primaryPositions || (app.position ? app.position.split('/') as Position[] : [])}
+                                    secondaryP={app.secondaryPositions || []}
+                                    tertiaryP={app.tertiaryPositions || []}
+                                    forbiddenP={app.forbiddenPositions || []}
+                                    lang={lang}
+                                    onChange={(p, s, t, f) => handleUpdateApplicant(room, app.id, {
+                                      primaryPositions: p,
+                                      secondaryPositions: s,
+                                      tertiaryPositions: t,
+                                      forbiddenPositions: f,
+                                      position: p.join('/') // Keep for backward compatibility
+                                    })}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+
+                      {/* Empty State */}
+                      {(detailTab === DetailPageTab.PENDING ? pendingApplicants : room.applicants.filter(a => a.isApproved)).length === 0 && (
+                        <div className="py-16 text-center space-y-4 animate-in fade-in zoom-in-95 duration-500">
+                          <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto">
+                            <Icons.UsersIcon size={24} className="text-slate-200 dark:text-slate-800" />
+                          </div>
+                          <p className="text-[13px] font-medium text-slate-300 dark:text-slate-700 tracking-tight">{t('noPlayers' as any)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Backdrop for Balance Settings Overlay */}
+                  {isBalanceSettingsOpen && (
+                    <div
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+                      onClick={() => {
+                        setIsBalanceSettingsOpen(false);
+                        setIsQuotaSettingsExpanded(false);
+                      }}
+                    />
+                  )}
+
+                  <div
+                    className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bottom-0 bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : ''}`}
+                    style={{
+                      bottom: isBalanceSettingsOpen
+                        ? 0
+                        : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))'),
+                      paddingBottom: isBalanceSettingsOpen
+                        ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))')
+                        : 0
+                    }}
+                  >
+                    <div className={`w-full max-w-lg px-5 ${isBalanceSettingsOpen ? 'pt-5' : ''}`}>
+                      {/* Settings Overlay - Content inside the Bottom Sheet */}
+                      {isBalanceSettingsOpen && (
+                        <div className="w-full mb-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                          {/* Position Quotas Accordion */}
+                          <div className="overflow-hidden">
+                            <button
+                              onClick={() => setIsQuotaSettingsExpanded(!isQuotaSettingsExpanded)}
+                              className="w-full py-3 relative flex items-center justify-center bg-[#eeeeee] rounded-[24px] text-[#111111] font-medium text-[16px] tracking-tight active:scale-[0.98] transition-all"
+                            >
+                              <span style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>
+                                {t('positionSettings')}
+                              </span>
+                              <div className={`absolute right-6 transition-transform duration-300 ${isQuotaSettingsExpanded ? 'rotate-180' : ''} text-[#111111]/50`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                              </div>
+                            </button>
+
+                            {isQuotaSettingsExpanded && (
+                              <div className="pt-4 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <QuotaFormationPicker
+                                  sport={room.sport as SportType}
+                                  quotas={quotas}
+                                  lang={lang}
+                                  onUpdate={updateQuota}
+                                  onToggleMode={toggleQuotaMode}
+                                  darkMode={darkMode}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Random Mix & Team Count Divided Rows */}
+                          <div className="space-y-3 mt-1">
+                            <div className="py-3 bg-white rounded-[24px] px-5 flex items-center">
+                              <button
+                                onClick={() => setUseRandomMix(!useRandomMix)}
+                                className="w-full flex items-center justify-between transition-all text-[#111111]"
+                              >
+                                <span className="text-[16px] font-medium tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('randomMix')}</span>
+                                <div className={`w-[18px] h-[18px] rounded-sm flex items-center justify-center border-[1.5px] transition-all ${useRandomMix ? 'bg-[#777777] border-[#777777]' : 'border-[#777777]'}`}>
+                                  {useRandomMix && <Icons.CheckIcon size={12} className="text-white" />}
+                                </div>
+                              </button>
+                            </div>
+
+                            <div className="py-3 bg-white rounded-[24px] px-5 flex items-center justify-between">
+                              <span className="text-[16px] font-medium text-[#111111] tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('teamCountLabel')}</span>
+                              <div className="flex items-center gap-4">
+                                <button onClick={() => setTeamCount(Math.max(2, teamCount - 1))} className="p-1 text-[#111111] hover:opacity-60 active:scale-90 transition-all"><Icons.MinusIcon size={16} /></button>
+                                <span className="text-[16px] font-medium text-[#111111] tracking-tight tabular-nums w-4 text-center" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{teamCount}</span>
+                                <button onClick={() => setTeamCount(Math.min(10, teamCount + 1))} className="p-1 text-[#111111] hover:opacity-60 active:scale-90 transition-all"><Icons.PlusIcon size={16} /></button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          if (!isBalanceSettingsOpen) {
+                            setIsBalanceSettingsOpen(true);
+                            return;
+                          }
+
+                          const approvedApps = room.applicants.filter(a => a.isApproved);
+                          if (approvedApps.length < 2) {
+                            showAlert(t('minPlayersAlert', 2, approvedApps.length));
+                            return;
+                          }
+
+                          // Prepare manual players list for immediate generation
+                          const manualPlayers: Player[] = approvedApps.map(app => {
+                            const tierVal = isNaN(Number(app.tier)) ? (Tier as any)[app.tier] : Number(app.tier);
+                            return {
+                              id: 'temp_' + app.name + '_' + Math.random().toString(36).substr(2, 5),
+                              name: app.name,
+                              tier: tierVal,
+                              isActive: true,
+                              sportType: room.sport as SportType,
+                              primaryPositions: (app.primaryPositions as Position[]) || (app.position ? [app.position as Position] : []),
+                              secondaryPositions: (app.secondaryPositions as Position[]) || [],
+                              tertiaryPositions: (app.tertiaryPositions as Position[]) || []
+                            };
+                          });
+
+                          // [CRITICAL] 쿼터 정합성 체크 (사후 알림)
+                          const perTeamCount = Math.floor(manualPlayers.length / teamCount);
+
+                          // 현재 종목의 유효 포지션만 필터링하여 쿼터 합계 계산
+                          const targetSportSub = room.sport as SportType;
+                          const validPosForSport =
+                            targetSportSub === SportType.SOCCER ? ['ST', 'LW', 'RW', 'MF', 'DF', 'LB', 'RB', 'GK'] :
+                              targetSportSub === SportType.FUTSAL ? ['PIV', 'ALA', 'FIX', 'GK'] :
+                                targetSportSub === SportType.BASKETBALL ? ['PG', 'SG', 'SF', 'PF', 'C'] :
+                                  ['NONE'];
+
+                          const totalQuotaSum = Object.entries(quotas).reduce((sum, [pos, v]) => {
+                            if (validPosForSport.includes(pos as any)) {
+                              return (sum as number) + (Number(v) || 0);
+                            }
+                            return sum as number;
+                          }, 0);
+
+                          if ((totalQuotaSum as number) > (perTeamCount as number)) {
+                            showAlert(t('quotaOverMaxAlert' as any, perTeamCount, totalQuotaSum));
+                            return;
+                          }
+
+                          // Update main state in background
+                          setPlayers(prev => {
+                            const newList = [...prev];
+                            approvedApps.forEach(app => {
+                              const existing = newList.find(p => p.name === app.name);
+                              if (existing) {
+                                existing.isActive = true;
+                              } else {
+                                const tierVal = isNaN(Number(app.tier)) ? (Tier as any)[app.tier] : Number(app.tier);
+                                newList.push({
+                                  id: 'p_' + Math.random().toString(36).substr(2, 9),
+                                  name: app.name,
+                                  tier: tierVal,
+                                  isActive: true,
+                                  sportType: room.sport as SportType,
+                                  primaryPosition: (app.position as Position) || 'NONE',
+                                  primaryPositions: (app.primaryPositions as Position[]) || [],
+                                  secondaryPositions: (app.secondaryPositions as Position[]) || [],
+                                  tertiaryPositions: (app.tertiaryPositions as Position[]) || []
+                                });
+                              }
+                            });
+                            return newList;
+                          });
+
+                          setResult(null);
+                          setSelectedPlayerIds([]);
+                          setSelectionMode(null);
+
+                          // Execute generation with direct data to avoid async state issues
+                          handleGenerate(manualPlayers, room.sport as SportType);
+
+                          setIsBalanceSettingsOpen(false);
+                        }}
+                        className={`w-full py-3 rounded-[24px] text-[16px] font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 ${isBalanceSettingsOpen ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl shadow-slate-900/40 dark:shadow-white/20'}`}
+                        style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                      >
+                        {t('generateTeams' as any)}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
-      )}
+      )
+      }
+
+      {/* Bottom Tabs Content (Home page context) */}
+
+      {/* 회원목록 탭 내용 */}
+      {
+        currentBottomTab === BottomTabType.MEMBERS && (
+          <div className="w-full px-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex justify-between items-center mb-4 px-1">
+              <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('memberList' as any)}</h3>
+            </div>
+            {renderMembersTabContent()}
+          </div>
+        )
+      }
+
+      {/* 설정 탭 (추후 구현) */}
+      {
+        currentBottomTab === BottomTabType.SETTINGS && (
+          <div className="w-full px-5 py-20 text-center animate-in fade-in duration-500">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+              <SettingsIcon />
+            </div>
+            <p className="text-sm font-bold text-slate-400">{t('comingSoon')}</p>
+          </div>
+        )
+      }
+
+      {
+        result && currentPage !== AppPageType.BALANCE && (
+          <div id="results-capture-section" className="fixed inset-0 z-[3000] bg-white dark:bg-slate-950 flex flex-col px-5 py-4 animate-in fade-in duration-300 overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
+              <div data-capture-ignore="true" className="flex gap-2">
+                <button
+                  onClick={() => setResult(null)}
+                  className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold px-4 py-2 rounded-xl text-xs hover:bg-slate-300 transition-all"
+                >
+                  {t('backToRoster')}
+                </button>
+                <button
+                  onClick={() => handleShare('results-capture-section', 'team-balance-result')}
+                  disabled={!!isSharing}
+                  className="bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2"
+                >
+                  {isSharing ? t('generatingImage') : <><ShareIcon /> {t('shareResult')}</>}
+                </button>
+              </div>
+            </div>
+
+            <div className={`backdrop-blur-sm ${darkMode ? 'bg-slate-900/80 text-slate-100' : 'bg-slate-100/80 text-slate-900'} rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 w-full`}>
+              <div className="flex flex-col">
+                <span className={`text-[9px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('standardDeviation')}</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black font-mono">{result.standardDeviation.toFixed(2)}</span>
+                  <span className="text-[9px] opacity-40 italic">({t('lowerFairer')})</span>
+                </div>
+              </div>
+              {/* DEBUG INFO - 페널티 합계 표시 (일반 탭이 아닐 때만) */}
+              {activeTab !== SportType.GENERAL && (
+                <div className="flex flex-col items-center">
+                  <span className={`text-[8px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-0.5 tracking-widest`}>{t('penaltyScore' as any)}</span>
+                  <div className="flex flex-col items-center leading-tight">
+                    <span className={`text-xl font-semibold font-mono ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      {result.teams.reduce((sum, t) =>
+                        sum + t.players.reduce((pSum, p) => {
+                          const assigned = p.assignedPosition || 'NONE';
+                          const isP1 = (p.primaryPositions || []).includes(assigned) || p.primaryPosition === assigned;
+                          const isP2 = (p.secondaryPositions || []).includes(assigned) || p.secondaryPosition === assigned;
+                          const isP3 = (p.tertiaryPositions || []).includes(assigned) || p.tertiaryPosition === assigned;
+                          return pSum + (isP1 ? 0 : (isP2 ? 0.5 : (isP3 ? 1.0 : 2.0)));
+                        }, 0)
+                        , 0).toFixed(1)}
+                    </span>
+                    <span className={`text-[7px] font-medium italic ${darkMode ? 'text-slate-500' : 'text-slate-400'} mt-0.5 whitespace-nowrap`}>({t('penaltyScoreDesc' as any)})</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-48">
+              {result.teams.map((team, idx) => (
+                <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                  <div className="bg-white dark:bg-slate-950 p-5 flex items-center justify-between" style={{ borderTop: team.color ? `6px solid ${team.color}` : 'none' }}>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg bg-slate-100 dark:bg-slate-800"
+                        style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: darkMode ? '#e2e8f0' : '#0f172a', color: darkMode ? '#0f172a' : 'white' }}
+                        onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
+                        data-capture-ignore="true"
+                      >
+                        {idx + 1}
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase">{team.colorName ? t('teamNameWithColor', t(team.colorName as any)) : `TEAM ${idx + 1}`}</h4>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">{t('squadSum')}</span>
+                      <span className="text-2xl font-black font-mono">{team.totalSkill}</span>
+                    </div>
+                  </div>
+                  {/* 결과용 색상 피커 */}
+                  {editingResultTeamIdx === idx && (
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200" data-capture-ignore="true">
+                      {TEAM_COLORS.map(color => (
+                        <button
+                          key={color.value}
+                          onClick={() => handleUpdateResultTeamColor(idx, color.value, color.name)}
+                          className={`w-6 h-6 rounded-lg transition-all ring-offset-2 dark:ring-offset-slate-950 ${team.color === color.value ? 'ring-2 ring-slate-900 dark:ring-slate-100 scale-110 shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                          style={{ backgroundColor: color.value, border: color.value === '#ffffff' ? '1px solid #e2e8f0' : 'none' }}
+                          title={t(color.name as any)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <div className="p-4 space-y-2">
+                    {getSortedTeamPlayers(team.players).map(p => (
+                      <div key={p.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-950 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
+                        <div className="flex items-center gap-3">
+                          <span className="font-black text-slate-900 dark:text-slate-100 text-sm">{p.name}</span>
+                          {showTier && <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${TIER_COLORS[p.tier]}`}>{Tier[p.tier]}</span>}
+                        </div>
+                        {activeTab !== SportType.GENERAL && p.assignedPosition && <span className="text-[10px] font-black text-slate-400 uppercase">{p.assignedPosition}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden px-2 pt-2" data-promo-footer="true">
+              <PromotionFooter lang={lang} darkMode={darkMode} />
+            </div>
+          </div>
+        )
+      }
+
+      {/* 선택 모드 하단 제어 바 */}
+      {
+        selectionMode && (
+          <div
+            className="fixed left-0 right-0 z-[2100] bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 animate-in slide-in-from-bottom duration-300"
+            style={{
+              bottom: currentPage === AppPageType.DETAIL
+                ? (isAdFree ? 'env(safe-area-inset-bottom, 0px)' : 'calc(90px + env(safe-area-inset-bottom, 0px))')
+                : 'calc(60px + env(safe-area-inset-bottom, 0px))',
+              paddingBottom: currentPage === AppPageType.DETAIL
+                ? (isAdFree ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : '1rem')
+                : '1rem'
+            }}
+          >
+            <div className="max-w-4xl mx-auto flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${selectionMode === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{t('selectionModeActive' as any)}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">({selectedPlayerIds.length})</span>
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('constraintDescription' as any)}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  disabled={selectedPlayerIds.length < 2}
+                  onClick={() => {
+                    const newConstraint: TeamConstraint = {
+                      id: Math.random().toString(36).substr(2, 9),
+                      playerIds: selectedPlayerIds,
+                      type: selectionMode
+                    };
+                    setTeamConstraints(prev => [...prev, newConstraint]);
+                    setSelectionMode(null);
+                  }}
+                  className={`flex-1 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all ${selectedPlayerIds.length >= 2 ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600'}`}
+                >
+                  {t('apply' as any)}
+                </button>
+                <button
+                  onClick={() => setSelectionMode(null)}
+                  className="flex-1 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all"
+                >
+                  {t('cancel' as any)}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
 
       <InfoModal
@@ -3898,6 +5492,42 @@ const App: React.FC = () => {
         darkMode={darkMode}
       />
       <ConfirmModal
+        isOpen={memberSuggestion.isOpen}
+        title={t('suggestMemberTitle' as any)}
+        message={t('suggestMemberMsg' as any, memberSuggestion.applicant?.name || '')}
+        confirmText={t('register' as any)}
+        cancelText={t('skip' as any)}
+        onConfirm={() => {
+          if (memberSuggestion.applicant) {
+            const app = memberSuggestion.applicant;
+            const p1 = (app as any).primaryPositions || [app.position || 'NONE'];
+            const s1 = (app as any).secondaryPositions || [];
+            const t1 = (app as any).tertiaryPositions || [];
+            const f1 = (app as any).forbiddenPositions || [];
+
+            const newPlayer: Player = {
+              id: 'p_' + Math.random().toString(36).substr(2, 9),
+              name: app.name,
+              tier: (Tier as any)[app.tier] || Tier.B,
+              isActive: false, // Don't make them active in match sense, just in list
+              sportType: currentActiveRoom?.sport as SportType || activeTab,
+              primaryPosition: p1[0] || 'NONE',
+              primaryPositions: p1,
+              secondaryPosition: s1[0] || 'NONE',
+              secondaryPositions: s1,
+              tertiaryPosition: t1[0] || 'NONE',
+              tertiaryPositions: t1,
+              forbiddenPositions: f1
+            };
+            setPlayers(prev => [...prev, newPlayer]);
+          }
+          setMemberSuggestion({ isOpen: false, applicant: null });
+        }}
+        onCancel={() => setMemberSuggestion({ isOpen: false, applicant: null })}
+        lang={lang}
+        darkMode={darkMode}
+      />
+      <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.title}
         message={confirmState.message}
@@ -3908,7 +5538,7 @@ const App: React.FC = () => {
         confirmText={confirmState.confirmText}
         cancelText={confirmState.cancelText}
       />
-      <LoginModal
+      <LoginPage
         isOpen={showLoginModal}
         onLater={handleLoginLater}
         onLogin={handleGoogleLogin}
@@ -4054,58 +5684,64 @@ const App: React.FC = () => {
           />
         )
       }
-      <div className="h-[160px]" />
-      {/* Bottom Tab Bar (KakaoTalk Style) - Always visible at the bottom */}
-      <div className="fixed left-0 right-0 bottom-0 z-[4000] bg-[#F9F9F9] dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_10px_rgba(0,0,0,0.05)]"
-        style={{
-          height: 'calc(50px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
-        <div className="flex h-[50px] max-w-lg mx-auto">
-          <button
-            onClick={() => setCurrentBottomTab(BottomTabType.HOME)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
+      <div className="h-[180px]" />
+      {/* Bottom Tab Bar - Positioned above the Ad Banner */}
+      {
+        currentPage === AppPageType.HOME && (
+          <div className="fixed left-0 right-0 z-[4000] bg-[#F9F9F9] dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300 shadow-[0_-1px_10px_rgba(0,0,0,0.05)]"
+            style={{
+              bottom: isAdFree ? '0px' : '56px',
+              height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
+              paddingBottom: isAdFree ? 'env(safe-area-inset-bottom, 0px)' : '0px'
+            }}
           >
-            <div className={currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
-              <HomeIcon />
-            </div>
-            <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-              {t('homeTab' as any)}
-            </span>
-          </button>
+            <div className="flex h-[60px] max-w-lg mx-auto">
+              <button
+                onClick={() => setCurrentBottomTab(BottomTabType.HOME)}
+                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
+              >
+                <div className={currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
+                  {currentBottomTab === BottomTabType.HOME ? <HomeFilledIcon /> : <HomeIcon />}
+                </div>
+                <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {t('homeTab' as any)}
+                </span>
+              </button>
 
-          <button
-            onClick={() => setCurrentBottomTab(BottomTabType.MEMBERS)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
-          >
-            <div className={currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
-              <Icons.UserPlusIcon />
-            </div>
-            <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-              {t('membersTab' as any)}
-            </span>
-          </button>
+              <button
+                onClick={() => setCurrentBottomTab(BottomTabType.MEMBERS)}
+                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
+              >
+                <div className={currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
+                  {currentBottomTab === BottomTabType.MEMBERS ? <UserPlusFilledIcon /> : <UserPlusIcon />}
+                </div>
+                <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {t('membersTab' as any)}
+                </span>
+              </button>
 
-          <button
-            onClick={() => setCurrentBottomTab(BottomTabType.SETTINGS)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
-          >
-            <div className={currentBottomTab === BottomTabType.SETTINGS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
-              <SettingsIcon />
+              <button
+                onClick={() => setCurrentBottomTab(BottomTabType.SETTINGS)}
+                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
+              >
+                <div className={currentBottomTab === BottomTabType.SETTINGS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>
+                  {currentBottomTab === BottomTabType.SETTINGS ? <MoreFilledIcon /> : <MoreIcon />}
+                </div>
+                <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.SETTINGS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {t('settingsTab' as any)}
+                </span>
+              </button>
             </div>
-            <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.SETTINGS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-              {t('settingsTab' as any)}
-            </span>
-          </button>
-        </div>
-      </div>
+          </div>
+        )
+      }
 
       {/* AdBanner placed above Bottom Tab Bar */}
       <AdBanner
         lang={lang}
         darkMode={darkMode}
         isAdFree={isAdFree}
-        bottomOffset="calc(50px + env(safe-area-inset-bottom, 0px))"
+        bottomOffset="0px"
       />
     </div >
   );

@@ -39,6 +39,10 @@ export interface Applicant {
     name: string;
     tier: string;
     position: string;
+    primaryPositions?: string[];
+    secondaryPositions?: string[];
+    tertiaryPositions?: string[];
+    forbiddenPositions?: string[];
     timestamp: string;
     fcmToken?: string;
     isWaiting?: boolean; // 항목 9: 대기자 여부

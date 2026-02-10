@@ -18,15 +18,21 @@ export const TIER_COLORS: Record<Tier, string> = {
 };
 
 export const SPORT_LABELS: Record<SportType, string> = {
+  [SportType.ALL]: '전체',
   [SportType.GENERAL]: '일반',
-  [SportType.SOCCER]: '축구/풋살',
+  [SportType.SOCCER]: '축구',
+  [SportType.FUTSAL]: '풋살',
   [SportType.BASKETBALL]: '농구',
 };
 
 export const SOCCER_POSITIONS: Record<SoccerPosition, string> = {
-  FW: '공격 (FW)',
+  ST: '공격 (ST)',
+  LW: '윙포워드 (LW)',
+  RW: '윙포워드 (RW)',
   MF: '미드필더 (MF)',
   DF: '수비 (DF)',
+  LB: '사이드백 (LB)',
+  RB: '사이드백 (RB)',
   GK: '골키퍼 (GK)',
   NONE: '없음',
 };

@@ -14,3 +14,13 @@
     - [x] Replace hardcoded strings in `ApplyRoomModal`
     - [x] Replace hardcoded strings in alert messages and main UI
 - [x] 안드로이드 에뮬레이터 공유 링크 접속 문제 해결 (localhost -> 10.0.2.2 변환)
+- [x] 종목 선택 바 리팩토링 및 종목 추가
+    - [x] '전체(ALL)' 카테고리 추가 및 다국어 번역 (`translations.ts`, `types.ts`)
+    - [x] 종목 바 디자인 수정 (폰트 14px, 패딩, 보더, 선택 상태 구현)
+    - [x] 가로 스크롤 및 반응형 레이아웃 적용
+    - [x] '전체' 탭 선택 시 모든 종목의 선수 및 경기 목록 필터링 로직 구현 (`App.tsx`)
+    - [x] '전체' 탭에서의 UI 예외 처리 (선수 등록 및 경기 생성 제한)
+- [x] 하단 탭 바 개선
+    - [x] 활성화 탭에 따른 Filled 아이콘 적용 (Home, UserPlus, Settings)
+    - [x] 설정 탭 아이콘을 More 아이콘으로 변경
+- [x] 경기 모집/관리 모달(`HostRoomModal`) 전체 페이지 전환

@@ -19,7 +19,7 @@ const WheelPicker: React.FC<{
     itemHeight?: number; // Custom item height
     height?: number; // Custom total height
     fontSize?: string; // Custom font size
-}> = ({ items, selected, onSelect, width = 'w-16', itemHeight = 26, height = 78, fontSize = 'text-[10px]' }) => {
+}> = ({ items, selected, onSelect, width = 'w-16', itemHeight = 32, height = 96, fontSize = 'text-[14px]' }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -183,7 +183,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     const selectMonths = Array.from({ length: 12 }, (_, i) => String(i + 1));
 
     return (
-        <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300">
+        <div className="flex flex-col w-full overflow-hidden transition-all duration-300">
             {/* Header (Refined) */}
             <div className="flex items-center justify-center py-2 relative">
                 <button
@@ -203,7 +203,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
             {/* Content Area */}
             <div className="relative overflow-hidden">
                 {viewMode === 'YEAR_MONTH_SELECT' ? (
-                    <div className="flex flex-col items-center justify-center h-[181px] animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex flex-col items-center justify-center h-[210px] animate-in fade-in zoom-in-95 duration-200">
                         {/* Wheel Area */}
                         <div className="flex items-center justify-center gap-4 mb-3 w-full px-8">
                             {/* Year Wheel */}
@@ -245,22 +245,22 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                 ) : (
                     <div className="animate-in fade-in zoom-in-95 duration-200">
                         {/* Days */}
-                        <div className="grid grid-cols-7 px-3 mb-0.5">
+                        <div className="grid grid-cols-7 px-3 mb-2">
                             {t('days').map((day: string, i: number) => (
-                                <div key={i} className="text-center text-[9px] font-bold text-slate-400 dark:text-slate-600">
+                                <div key={i} className="text-center text-[14px] font-bold text-slate-400 dark:text-slate-600">
                                     {day}
                                 </div>
                             ))}
                         </div>
 
                         {/* Dates */}
-                        <div className="grid grid-cols-7 px-3 gap-y-0.5 mb-1.5">
+                        <div className="grid grid-cols-7 px-3 gap-y-1 mb-2">
                             {calendarDays.map((d, i) => (
                                 <div key={i} className="aspect-square flex items-center justify-center p-0.5">
                                     {d && (
                                         <button
                                             onClick={() => handleDateSelect(d)}
-                                            className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all
+                                            className={`w-8 h-8 rounded-full text-[14px] font-bold transition-all
                                                 ${isSelected(d)
                                                     ? 'bg-blue-600 text-white shadow-sm'
                                                     : isToday(d)
@@ -279,10 +279,10 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
 
                         {/* Time Wheel (Ultra Compact) */}
                         <div className="flex justify-center items-center px-3 mb-1 gap-1.5">
-                            <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-12" />
-                            <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-9" />
-                            <div className="text-slate-300 dark:text-slate-700 font-bold text-[10px] pb-0.5">:</div>
-                            <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-9" />
+                            <WheelPicker items={ampmItems} selected={ampmStr} onSelect={(v) => handleTimeChange('AMPM', v)} width="w-16" />
+                            <WheelPicker items={hourItems} selected={displayHourStr} onSelect={(v) => handleTimeChange('HOUR', v)} width="w-12" />
+                            <div className="text-slate-300 dark:text-slate-700 font-bold text-[14px] pb-0.5">:</div>
+                            <WheelPicker items={minuteItems} selected={minuteStr} onSelect={(v) => handleTimeChange('MINUTE', v)} width="w-12" />
                         </div>
                     </div>
                 )}

@@ -169,7 +169,8 @@ function initialDistribute(
 
 function optimizeTeamPositions(
     team: Team,
-    allPositions: Position[]
+    allPositions: Position[],
+    customQuotas?: Partial<Record<Position, number | null>>
 ): void {
     const players = team.players;
     const positions = [...allPositions];
@@ -223,17 +224,30 @@ function optimizeTeamPositions(
     // 점수 내림차순, 같으면 티어 높은 순(우선권)
     options.sort((a, b) => b.score - a.score || players[b.pIdx].tier - players[a.pIdx].tier);
 
+    // 1. 쿼터가 설정된 포지션 우선 배정 (절대 규칙)
+    if (customQuotas) {
+        Object.entries(customQuotas).forEach(([pos, quota]) => {
+            if (typeof quota === 'number' && quota > 0) {
+                let filled = 0;
+                // 해당 포지션을 선호하는 선수들 중 점수 높은 순으로 채움
+                const posOptions = options.filter(o => o.pos === pos && !playerAssigned.has(players[o.pIdx].id));
+                for (const opt of posOptions) {
+                    if (filled >= quota) break;
+                    players[opt.pIdx].assignedPosition = opt.pos;
+                    playerAssigned.add(players[opt.pIdx].id);
+                    assignedCount[opt.pos] = (assignedCount[opt.pos] || 0) + 1;
+                    filled++;
+                }
+            }
+        });
+    }
+
+    // 2. 남은 선수들 일반 배정 (포지션 쏠림 방지 유지)
     options.forEach(opt => {
         if (playerAssigned.has(players[opt.pIdx].id)) return; // 이미 배정됨
 
-        // 포지션 쏠림 체크 (옵션)
         const currentCount = assignedCount[opt.pos] || 0;
-        // 특정 포지션 꽉 찼으면 다음 옵션으로 (단, 마지막 선수라 갈 곳 없으면 허용)
-        // 여기서는 강제 제한보다는 점수로 해결되길 기대하지만, 최소한의 분산을 위해
-        // 일단 제한 없이 Best로 채우고, 나중에 조정? 
-        // -> 사용자: "저티어도 만족해야 함". 
-        // -> 점수 합 최대화이므로, 고티어가 선호 가져가고 저티어도 선호(다른거) 가져가면 OK.
-
+        // 남은 자리 배정
         players[opt.pIdx].assignedPosition = opt.pos;
         playerAssigned.add(players[opt.pIdx].id);
         assignedCount[opt.pos] = currentCount + 1;
@@ -253,7 +267,8 @@ function optimizeTeamPositions(
 function optimizeTeams(
     teams: Team[],
     constraints: TeamConstraint[],
-    allPositions: Position[]
+    allPositions: Position[],
+    customQuotas?: Partial<Record<Position, number | null>>
 ): Team[] {
     let currentTeams = cloneTeams(teams);
     let bestTeams = cloneTeams(teams);
@@ -370,8 +385,8 @@ function optimizeTeams(
         newTeams[t2Idx].totalSkill = calculateTeamSkillReal(newTeams[t2Idx]);
 
         // 5. 포지션 재최적화 (이동했으니 포지션 다시 맞춰야 함)
-        optimizeTeamPositions(newTeams[t1Idx], allPositions);
-        optimizeTeamPositions(newTeams[t2Idx], allPositions);
+        optimizeTeamPositions(newTeams[t1Idx], allPositions, customQuotas);
+        optimizeTeamPositions(newTeams[t2Idx], allPositions, customQuotas);
 
         // 6. 평가 (Cost Function)
         const newSD = calcSD(newTeams);
@@ -416,14 +431,16 @@ export const generateBalancedTeams = (
     customQuotas?: Partial<Record<Position, number | null>>,
     constraints: TeamConstraint[] = [],
     ignoreTier: boolean = false,
-    previousHashes: string[] = []
+    previousHashes: string[] = [],
+    sportType?: SportType // 명시적 스포츠 타입 추가
 ): BalanceResult => {
     const activePlayers = [...players.filter(p => p.isActive)];
     if (activePlayers.length === 0) return { teams: [], standardDeviation: 0, maxDiff: 0, imbalanceScore: 0, isValid: true, isConstraintViolated: false, isQuotaViolated: false };
 
-    const sport = activePlayers[0].sportType;
+    // sportType 매개변수가 있으면 그것을 우선 사용, 없으면 첫 번째 플레이어 데이터에서 유추
+    const sport = sportType || (activePlayers.length > 0 ? activePlayers[0].sportType : SportType.GENERAL);
     const allPositions: Position[] =
-        sport === SportType.SOCCER ? ['FW', 'LW', 'RW', 'MF', 'DF', 'LB', 'RB', 'GK'] :
+        sport === SportType.SOCCER ? ['ST', 'LW', 'RW', 'MF', 'DF', 'LB', 'RB', 'GK'] :
             sport === SportType.FUTSAL ? ['PIV', 'ALA', 'FIX', 'GK'] :
                 sport === SportType.BASKETBALL ? ['PG', 'SG', 'SF', 'PF', 'C'] :
                     ['NONE'];
@@ -435,10 +452,10 @@ export const generateBalancedTeams = (
     initialTeams.forEach(t => t.totalSkill = calculateTeamSkillReal(t));
 
     // 3. 초기 포지션 최적화
-    initialTeams.forEach(t => optimizeTeamPositions(t, allPositions));
+    initialTeams.forEach(t => optimizeTeamPositions(t, allPositions, customQuotas));
 
     // 4. Swap 최적화 (Gemini Core)
-    const optimizedTeams = optimizeTeams(initialTeams, constraints, allPositions);
+    const optimizedTeams = optimizeTeams(initialTeams, constraints, allPositions, customQuotas);
 
     // 최종 결과 계산
     const totalSkills = optimizedTeams.map(t => calculateTeamSkillReal(t));
@@ -452,13 +469,26 @@ export const generateBalancedTeams = (
     // 혹시 초기 배정에서 실패했을 경우를 대비해 다시 계산 안하고 false 처리하거나, 간단 체크 가능.
     // 여기서는 항상 지켜졌다고 가정 (알고리즘 특성상)
 
+    // 최종 쿼터 위반 체크
+    let isQuotaViolated = false;
+    if (customQuotas) {
+        Object.entries(customQuotas).forEach(([pos, quota]) => {
+            if (typeof quota === 'number') {
+                optimizedTeams.forEach(t => {
+                    const actual = t.players.filter(p => p.assignedPosition === pos).length;
+                    if (actual !== quota) isQuotaViolated = true;
+                });
+            }
+        });
+    }
+
     return {
         teams: optimizedTeams,
         standardDeviation,
         maxDiff,
-        imbalanceScore: standardDeviation, // 간단히 SD를 점수로 사용
-        isValid: true,
+        imbalanceScore: standardDeviation,
+        isValid: !isQuotaViolated,
         isConstraintViolated: false,
-        isQuotaViolated: false
+        isQuotaViolated
     };
 };
