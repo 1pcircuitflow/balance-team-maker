@@ -44,6 +44,7 @@ export interface Applicant {
     tertiaryPositions?: string[];
     forbiddenPositions?: string[];
     timestamp: string;
+    appliedAt?: string;
     fcmToken?: string;
     isWaiting?: boolean; // 항목 9: 대기자 여부
     isApproved?: boolean; // 개별 승인 여부

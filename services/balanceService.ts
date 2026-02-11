@@ -10,6 +10,14 @@ import { Player, Team, BalanceResult, SportType, Position, Tier, TeamConstraint 
 
 // ========== 1. 헬퍼 함수 ==========
 
+/** 팀 구성의 해시 생성 (팀별 선수 ID 정렬 후 결합) */
+const computeTeamHash = (teams: Team[]): string => {
+    return teams
+        .map(t => t.players.map(p => p.id).sort().join(','))
+        .sort()
+        .join('|');
+};
+
 const shuffle = <T>(array: T[]): T[] => {
     const result = [...array];
     for (let i = result.length - 1; i > 0; i--) {
@@ -60,7 +68,8 @@ function initialDistribute(
     players: Player[],
     teamCount: number,
     constraints: TeamConstraint[]
-): Team[] {
+): { teams: Team[], constraintViolated: boolean } {
+    let constraintViolated = false;
     const teams: Team[] = Array.from({ length: teamCount }, (_, i) => ({
         id: i + 1,
         name: `Team ${String.fromCharCode(65 + i)}`,
@@ -147,10 +156,8 @@ function initialDistribute(
 
         // 가능한 팀 중 TotalSkill이 가장 낮은 팀 선택
         if (possibleTeams.length === 0) {
-            // 비상! 들어갈 곳이 없음 (제약 충돌). 
-            // 어쩔 수 없이 가장 인원 적은 곳에 넣거나 무시? 
-            // 여기서는 밸런스 위해 스킬 최저 팀 강제 배정 (제약 깨짐 감수)
-            // 사용자에게 알릴 방법이 없으므로 최선 배정
+            // 모든 팀이 SPLIT 제약과 충돌 — 제약을 무시하고 강제 배정
+            constraintViolated = true;
             possibleTeams = Array.from({ length: teamCount }, (_, k) => k);
         }
 
@@ -161,7 +168,7 @@ function initialDistribute(
         teams[targetIdx].totalSkill += unit.totalSkill;
     }
 
-    return teams;
+    return { teams, constraintViolated };
 }
 
 
@@ -176,16 +183,60 @@ function optimizeTeamPositions(
     const positions = [...allPositions];
     if (positions.includes('NONE')) return; // 포지션 없는 종목은 패스
 
-    // 필요한 포지션 슬롯 생성
-    // 5명 농구라면 PG, SG, SF, PF, C 각 1개씩이 이상적 (쿼터)
-    // 하지만 현재 인원이 다를 수 있으므로, 인원수에 맞춰 슬롯 생성
-    // 예: 6명이면 기본 5개 + 랜덤 1개? 
-    // 여기서는 "최적 매칭"을 위해 
-    // 1. 모든 선수가 가능한 포지션 중 가장 높은 점수를 받는 곳을 찾아야 함
-    // 2. 단, 포지션 쏠림을 막기 위해 팀 전체 포지션 분포도 고려해야 함.
+    // 쿼터 합계 == 팀 인원인 경우: 백트래킹으로 최적 매칭 (정확한 포지션 배정 보장)
+    if (customQuotas) {
+        const totalQuota = Object.entries(customQuotas)
+            .reduce((sum, [_, q]) => sum + (typeof q === 'number' ? q : 0), 0);
 
-    // 간소화된 헝가리안 접근:
-    // 가능한 모든 (선수, 포지션) 조합 점수 계산 후 그리디 매칭
+        if (totalQuota === players.length && totalQuota > 0) {
+            // 포지션 슬롯 생성: PG×1, SG×1, SF×1, PF×1, C×1 → ['PG','SG','SF','PF','C']
+            const slots: Position[] = [];
+            Object.entries(customQuotas).forEach(([pos, q]) => {
+                if (typeof q === 'number') {
+                    for (let i = 0; i < q; i++) slots.push(pos as Position);
+                }
+            });
+
+            // 백트래킹: 모든 선수를 슬롯에 배정, 총 점수 최대화
+            let bestAssignment: (Position | null)[] = new Array(players.length).fill(null);
+            let bestScore = -Infinity;
+
+            const backtrack = (pIdx: number, usedSlots: boolean[], currentScore: number, assignment: (Position | null)[]) => {
+                if (pIdx === players.length) {
+                    if (currentScore > bestScore) {
+                        bestScore = currentScore;
+                        bestAssignment = [...assignment];
+                    }
+                    return;
+                }
+                // 가지치기: 남은 모든 선수가 최대 100점이라도 현재 최고보다 낮으면 skip
+                const remaining = (players.length - pIdx) * 100;
+                if (currentScore + remaining <= bestScore) return;
+
+                for (let s = 0; s < slots.length; s++) {
+                    if (usedSlots[s]) continue;
+                    const score = getPositionPoint(players[pIdx], slots[s]);
+                    if (score <= -5000) continue; // 금지 포지션 skip
+
+                    usedSlots[s] = true;
+                    assignment[pIdx] = slots[s];
+                    backtrack(pIdx + 1, usedSlots, currentScore + score, assignment);
+                    usedSlots[s] = false;
+                    assignment[pIdx] = null;
+                }
+            };
+
+            backtrack(0, new Array(slots.length).fill(false), 0, new Array(players.length).fill(null));
+
+            // 결과 적용
+            players.forEach((p, i) => {
+                p.assignedPosition = bestAssignment[i] || 'NONE';
+            });
+            return; // 완전 배정 완료, 이후 로직 skip
+        }
+    }
+
+    // 필요한 포지션 슬롯 생성 (쿼터 합 != 팀 인원인 일반 케이스)
 
     type Assignment = { pIdx: number, pos: Position, score: number };
     let candidates: Assignment[] = [];
@@ -242,12 +293,16 @@ function optimizeTeamPositions(
         });
     }
 
-    // 2. 남은 선수들 일반 배정 (포지션 쏠림 방지 유지)
+    // 2. 남은 선수들 일반 배정 (포지션 쏠림 방지 적용)
     options.forEach(opt => {
         if (playerAssigned.has(players[opt.pIdx].id)) return; // 이미 배정됨
 
         const currentCount = assignedCount[opt.pos] || 0;
-        // 남은 자리 배정
+        const maxForThisPos = (customQuotas && typeof customQuotas[opt.pos] === 'number')
+            ? customQuotas[opt.pos] as number
+            : limitPerPos;
+        if (currentCount >= maxForThisPos) return; // 쿼터 설정된 포지션은 쿼터 상한 적용
+
         players[opt.pIdx].assignedPosition = opt.pos;
         playerAssigned.add(players[opt.pIdx].id);
         assignedCount[opt.pos] = currentCount + 1;
@@ -316,7 +371,7 @@ function optimizeTeams(
     });
 
     for (let k = 0; k < iterations; k++) {
-        if (noImprovementCount > 30) break; // 조기 종료
+        if (noImprovementCount > 60) break; // 조기 종료
 
         // 1. 임의의 두 팀 선택
         const t1Idx = Math.floor(Math.random() * currentTeams.length);
@@ -342,6 +397,9 @@ function optimizeTeams(
         const p2Group = matchMap.has(p2.id)
             ? currentTeams[t2Idx].players.filter(p => matchMap.get(p.id) === matchMap.get(p2.id))
             : [p2];
+
+        // 3-1b. 그룹 크기가 다르면 팀 크기가 변경되므로 무조건 거부
+        if (p1Group.length !== p2Group.length) continue;
 
         // 3-2. SPLIT 체크
         // t1에 p2Group이 왔을 때 SPLIT 위반? / t2에 p1Group이 갔을 때 SPLIT 위반?
@@ -369,35 +427,35 @@ function optimizeTeams(
         }
         if (conflict) continue;
 
-        // 4. 가상 교환 실행
-        const newTeams = cloneTeams(currentTeams);
+        // 4. 가상 교환 실행 (in-place swap on currentTeams, revert if rejected)
+        const p1Ids = new Set(p1Group.map(x => x.id));
+        const p2Ids = new Set(p2Group.map(x => x.id));
 
-        // Remove from source
-        newTeams[t1Idx].players = newTeams[t1Idx].players.filter(p => !p1Group.map(x => x.id).includes(p.id));
-        newTeams[t2Idx].players = newTeams[t2Idx].players.filter(p => !p2Group.map(x => x.id).includes(p.id));
+        // 교환 전 상태 보존 (영향받는 두 팀만)
+        const savedT1Players = currentTeams[t1Idx].players.map(p => ({ ...p }));
+        const savedT2Players = currentTeams[t2Idx].players.map(p => ({ ...p }));
+        const savedT1Skill = currentTeams[t1Idx].totalSkill;
+        const savedT2Skill = currentTeams[t2Idx].totalSkill;
 
-        // Add to target
-        newTeams[t1Idx].players.push(...p2Group);
-        newTeams[t2Idx].players.push(...p1Group);
+        // Remove from source, add to target
+        currentTeams[t1Idx].players = currentTeams[t1Idx].players.filter(p => !p1Ids.has(p.id));
+        currentTeams[t2Idx].players = currentTeams[t2Idx].players.filter(p => !p2Ids.has(p.id));
+        currentTeams[t1Idx].players.push(...p2Group.map(p => ({ ...p })));
+        currentTeams[t2Idx].players.push(...p1Group.map(p => ({ ...p })));
 
         // Update skill
-        newTeams[t1Idx].totalSkill = calculateTeamSkillReal(newTeams[t1Idx]);
-        newTeams[t2Idx].totalSkill = calculateTeamSkillReal(newTeams[t2Idx]);
+        currentTeams[t1Idx].totalSkill = calculateTeamSkillReal(currentTeams[t1Idx]);
+        currentTeams[t2Idx].totalSkill = calculateTeamSkillReal(currentTeams[t2Idx]);
 
         // 5. 포지션 재최적화 (이동했으니 포지션 다시 맞춰야 함)
-        optimizeTeamPositions(newTeams[t1Idx], allPositions, customQuotas);
-        optimizeTeamPositions(newTeams[t2Idx], allPositions, customQuotas);
+        optimizeTeamPositions(currentTeams[t1Idx], allPositions, customQuotas);
+        optimizeTeamPositions(currentTeams[t2Idx], allPositions, customQuotas);
 
         // 6. 평가 (Cost Function)
-        const newSD = calcSD(newTeams);
-        const newPosScore = calcPosScore(newTeams);
+        const newSD = calcSD(currentTeams);
+        const newPosScore = calcPosScore(currentTeams);
 
-        // 조건: 
-        // 1. SD가 0.1 이상 감소하면 무조건 수락 (밸런스 우선)
-        // 2. SD가 비슷하면(차이 0.1 미만), 포지션 점수가 오르면 수락
-        // 3. 포지션 점수가 '불가능(-9999)'이 포함되어 있으면 무조건 기각 (이전 상태가 정상이었다면)
-
-        const isPosValid = newPosScore > -5000; // 대략적인 체크
+        const isPosValid = newPosScore > -5000;
 
         let accept = false;
         if (isPosValid) {
@@ -408,13 +466,39 @@ function optimizeTeams(
             }
         }
 
+        // Swap 수락 시 쿼터 위반 검증: 위반이 증가하면 거부
+        if (accept && customQuotas) {
+            const countViolations = (teamPlayers: Player[]): number => {
+                let v = 0;
+                Object.entries(customQuotas).forEach(([pos, quota]) => {
+                    if (typeof quota === 'number') {
+                        const actual = teamPlayers.filter(p => p.assignedPosition === pos).length;
+                        if (actual !== quota) v++;
+                    }
+                });
+                return v;
+            };
+
+            const newViolations = countViolations(currentTeams[t1Idx].players) + countViolations(currentTeams[t2Idx].players);
+            if (newViolations > 0) {
+                const oldViolations = countViolations(savedT1Players) + countViolations(savedT2Players);
+                if (newViolations > oldViolations) {
+                    accept = false;
+                }
+            }
+        }
+
         if (accept) {
-            currentTeams = newTeams;
             minSD = newSD;
             maxPosScore = newPosScore;
-            bestTeams = cloneTeams(newTeams);
+            bestTeams = cloneTeams(currentTeams);
             noImprovementCount = 0;
         } else {
+            // 교환 기각 — 원래 상태로 복원
+            currentTeams[t1Idx].players = savedT1Players;
+            currentTeams[t2Idx].players = savedT2Players;
+            currentTeams[t1Idx].totalSkill = savedT1Skill;
+            currentTeams[t2Idx].totalSkill = savedT2Skill;
             noImprovementCount++;
         }
     }
@@ -445,50 +529,82 @@ export const generateBalancedTeams = (
                 sport === SportType.BASKETBALL ? ['PG', 'SG', 'SF', 'PF', 'C'] :
                     ['NONE'];
 
-    // 1 & 2. 초기 배정 (Greedy & Constraint)
-    const initialTeams = initialDistribute(activePlayers, teamCount, constraints);
+    // 중복 결과 방지를 위해 최대 MAX_RETRY_COUNT 회 재시도
+    const MAX_RETRY_COUNT = 5;
+    let bestResult: BalanceResult | null = null;
 
-    // 초기 스킬 계산
-    initialTeams.forEach(t => t.totalSkill = calculateTeamSkillReal(t));
+    for (let attempt = 0; attempt < MAX_RETRY_COUNT; attempt++) {
+        // 1 & 2. 초기 배정 (Greedy & Constraint)
+        const { teams: initialTeams, constraintViolated } = initialDistribute(activePlayers, teamCount, constraints);
 
-    // 3. 초기 포지션 최적화
-    initialTeams.forEach(t => optimizeTeamPositions(t, allPositions, customQuotas));
+        // 초기 스킬 계산
+        initialTeams.forEach(t => t.totalSkill = calculateTeamSkillReal(t));
 
-    // 4. Swap 최적화 (Gemini Core)
-    const optimizedTeams = optimizeTeams(initialTeams, constraints, allPositions, customQuotas);
+        // 3. 초기 포지션 최적화
+        initialTeams.forEach(t => optimizeTeamPositions(t, allPositions, customQuotas));
 
-    // 최종 결과 계산
-    const totalSkills = optimizedTeams.map(t => calculateTeamSkillReal(t));
-    const avgSkill = totalSkills.reduce((a, b) => a + b, 0) / teamCount;
-    const variance = totalSkills.reduce((sum, skill) => sum + Math.pow(skill - avgSkill, 2), 0) / teamCount;
-    const standardDeviation = Number(Math.sqrt(variance).toFixed(2));
-    const maxDiff = Number((Math.max(...totalSkills) - Math.min(...totalSkills)).toFixed(1));
+        // 4. Swap 최적화 (Gemini Core)
+        const optimizedTeams = optimizeTeams(initialTeams, constraints, allPositions, customQuotas);
 
-    // 최종 제약 위반 체크
-    // optimizeTeams 내부에서 철저히 지켰으므로 false가 정상. 
-    // 혹시 초기 배정에서 실패했을 경우를 대비해 다시 계산 안하고 false 처리하거나, 간단 체크 가능.
-    // 여기서는 항상 지켜졌다고 가정 (알고리즘 특성상)
+        // 해시 계산 및 중복 체크
+        const hash = computeTeamHash(optimizedTeams);
+        if (previousHashes.includes(hash) && attempt < MAX_RETRY_COUNT - 1) {
+            continue; // 이전과 동일한 결과 — 재시도
+        }
 
-    // 최종 쿼터 위반 체크
-    let isQuotaViolated = false;
-    if (customQuotas) {
-        Object.entries(customQuotas).forEach(([pos, quota]) => {
-            if (typeof quota === 'number') {
-                optimizedTeams.forEach(t => {
-                    const actual = t.players.filter(p => p.assignedPosition === pos).length;
-                    if (actual !== quota) isQuotaViolated = true;
-                });
-            }
-        });
+        // 최종 결과 계산
+        const totalSkills = optimizedTeams.map(t => calculateTeamSkillReal(t));
+        const avgSkill = totalSkills.reduce((a, b) => a + b, 0) / teamCount;
+        const variance = totalSkills.reduce((sum, skill) => sum + Math.pow(skill - avgSkill, 2), 0) / teamCount;
+        const standardDeviation = Number(Math.sqrt(variance).toFixed(2));
+        const maxDiff = Number((Math.max(...totalSkills) - Math.min(...totalSkills)).toFixed(1));
+
+        // 최종 쿼터 위반 체크
+        let isQuotaViolated = false;
+        if (customQuotas) {
+            Object.entries(customQuotas).forEach(([pos, quota]) => {
+                if (typeof quota === 'number') {
+                    optimizedTeams.forEach(t => {
+                        const actual = t.players.filter(p => p.assignedPosition === pos).length;
+                        if (actual !== quota) isQuotaViolated = true;
+                    });
+                }
+            });
+        }
+
+        bestResult = {
+            teams: optimizedTeams,
+            standardDeviation,
+            maxDiff,
+            hash,
+            imbalanceScore: standardDeviation,
+            isValid: !isQuotaViolated,
+            isConstraintViolated: constraintViolated,
+            isQuotaViolated
+        };
+        break;
     }
 
-    return {
-        teams: optimizedTeams,
-        standardDeviation,
-        maxDiff,
-        imbalanceScore: standardDeviation,
-        isValid: !isQuotaViolated,
-        isConstraintViolated: false,
-        isQuotaViolated
-    };
+    // MAX_RETRY_COUNT회 모두 중복이면 마지막 결과 반환 (bestResult가 null일 수 없지만 안전 처리)
+    if (!bestResult) {
+        const { teams: initialTeams, constraintViolated } = initialDistribute(activePlayers, teamCount, constraints);
+        initialTeams.forEach(t => t.totalSkill = calculateTeamSkillReal(t));
+        initialTeams.forEach(t => optimizeTeamPositions(t, allPositions, customQuotas));
+        const optimizedTeams = optimizeTeams(initialTeams, constraints, allPositions, customQuotas);
+        const totalSkills = optimizedTeams.map(t => calculateTeamSkillReal(t));
+        const avgSkill = totalSkills.reduce((a, b) => a + b, 0) / teamCount;
+        const variance = totalSkills.reduce((sum, skill) => sum + Math.pow(skill - avgSkill, 2), 0) / teamCount;
+        bestResult = {
+            teams: optimizedTeams,
+            standardDeviation: Number(Math.sqrt(variance).toFixed(2)),
+            maxDiff: Number((Math.max(...totalSkills) - Math.min(...totalSkills)).toFixed(1)),
+            hash: computeTeamHash(optimizedTeams),
+            imbalanceScore: Number(Math.sqrt(variance).toFixed(2)),
+            isValid: true,
+            isConstraintViolated: constraintViolated,
+            isQuotaViolated: false
+        };
+    }
+
+    return bestResult;
 };

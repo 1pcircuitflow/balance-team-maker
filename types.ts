@@ -58,9 +58,28 @@ export interface BalanceResult {
   teams: Team[];
   standardDeviation: number;
   imbalanceScore?: number;
+  positionSatisfaction?: number;
   hash?: string;
   maxDiff?: number;
   isValid?: boolean;
   isConstraintViolated?: boolean;
   isQuotaViolated?: boolean;
+}
+
+export enum BottomTabType {
+  HOME = 'HOME',
+  MEMBERS = 'MEMBERS',
+  SETTINGS = 'SETTINGS'
+}
+
+export enum AppPageType {
+  HOME = 'HOME',
+  DETAIL = 'DETAIL',
+  EDIT_ROOM = 'EDIT_ROOM',
+  BALANCE = 'BALANCE'
+}
+
+export enum DetailPageTab {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED'
 }
