@@ -581,11 +581,11 @@ const AppContent: React.FC = () => {
     return (
       <div className="space-y-8 pb-32">
         {activeTab !== SportType.ALL && (
-          <section className="bg-slate-50 dark:bg-slate-900 w-full rounded-2xl overflow-hidden">
+          <section className="bg-white dark:bg-slate-950 w-full rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between p-4 cursor-pointer select-none" onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}>
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
+                <h2 className="text-[14px] font-medium text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
                 <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                 </div>
@@ -595,13 +595,13 @@ const AppContent: React.FC = () => {
               <form onSubmit={addPlayer} className="px-5 pb-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="space-y-2">
                   <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
-                  <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-white dark:bg-slate-950 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                  <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('skillTier')}</label>
                   <div className="grid grid-cols-5 gap-2">
                     {(Object.entries(Tier).filter(([k]) => isNaN(Number(k))) as [string, Tier][]).map(([key, val]) => (
-                      <button key={key} type="button" onClick={e => { e.preventDefault(); setNewTier(val); }} className={`py-2 rounded-xl text-[11px] font-semibold transition-all ${newTier === val ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500'}`}>{key}</button>
+                      <button key={key} type="button" onClick={e => { e.preventDefault(); setNewTier(val); }} className={`py-2 rounded-xl text-[11px] font-semibold transition-all ${newTier === val ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>{key}</button>
                     ))}
                   </div>
                 </div>
@@ -628,7 +628,7 @@ const AppContent: React.FC = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 items-start">
-          <section className="bg-slate-50 dark:bg-slate-900 flex flex-col rounded-2xl overflow-hidden min-h-[100px]">
+          <section className="bg-white dark:bg-slate-950 flex flex-col rounded-2xl overflow-hidden min-h-[100px]">
             <div className="px-5 py-4 border-b border-transparent flex justify-between items-center bg-transparent">
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
@@ -671,15 +671,15 @@ const AppContent: React.FC = () => {
                       setSelectAllConfirm(false);
                     } else { setSelectAllConfirm(true); setTimeout(() => setSelectAllConfirm(false), 3000); }
                   }}
-                  className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-2 py-1 rounded-md text-[10px] font-semibold transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900' : ''}`}
+                  className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium border border-[#111111] transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
                 >
                   {selectAllConfirm ? <><CheckIcon /> {t('confirmRetry')}</> : t('selectAll')}
                 </button>
               </div>
             </div>
-            <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[100px]">
+            <div className="px-5 pb-4 space-y-1 min-h-[100px]">
               {memberPlayers.length === 0 ? (
-                <div className="col-span-full py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
+                <div className="py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
               ) : (
                 memberPlayers.map(p => (
                   <PlayerItem key={p.id} player={p} isEditing={editingPlayerId === p.id} lang={lang}
