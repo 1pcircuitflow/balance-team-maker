@@ -80,6 +80,7 @@ import { ApplyRoomModal } from './components/modals/ApplyRoomModal';
 
 // Pages
 import { HomePage } from './pages/HomePage';
+import { SettingsPage } from './components/SettingsPage';
 
 const App: React.FC = () => {
   return (
@@ -94,12 +95,12 @@ const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { lang, setLang, darkMode, setDarkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState } = useAppContext();
+  const { lang, setLang, darkMode, setDarkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showConfirm } = useAppContext();
   const { user, guestId, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, isProcessing, setIsProcessing, handleGoogleLogin, handleLogout, showLoginModal, setShowLoginModal, loginLater, setLoginLater } = useAuthContext();
   const { players, setPlayers, isDataLoaded, setIsDataLoaded } = usePlayerContext();
 
   const nav = useNavigation();
-  const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, detailTab, setDetailTab, touchStartX, setTouchStartX, isNavigatingFromDetail, setIsNavigatingFromDetail } = nav;
+  const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, detailTab, setDetailTab, touchStartX, setTouchStartX } = nav;
 
   const [activeTab, setActiveTab] = useState<SportType>(() => {
     const saved = localStorage.getItem('last_active_tab');
@@ -176,6 +177,7 @@ const AppContent: React.FC = () => {
   const [selectAllConfirm, setSelectAllConfirm] = useState(false);
   const [unselectAllConfirm, setUnselectAllConfirm] = useState(false);
   const [showRoomDetail, setShowRoomDetail] = useState(false);
+  const [showMemberPickerModal, setShowMemberPickerModal] = useState(false);
 
   // Section collapse states
   const [isPlayerRegistrationOpen, setIsPlayerRegistrationOpen] = useState(false);
@@ -219,14 +221,14 @@ const AppContent: React.FC = () => {
     alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal, showLoginRecommendModal,
     showUpgradeModal, showLimitModal, showReviewPrompt, showInfoModal, showApplyRoomModal,
     showHostRoomModal, showColorPicker, showQuotaSettings, selectionMode, currentPage,
-    isNavigatingFromDetail, currentBottomTab,
+    currentBottomTab, showMemberPickerModal,
   });
   useEffect(() => {
     modalStateRef.current = {
       alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal, showLoginRecommendModal,
       showUpgradeModal, showLimitModal, showReviewPrompt, showInfoModal, showApplyRoomModal,
       showHostRoomModal, showColorPicker, showQuotaSettings, selectionMode, currentPage,
-      isNavigatingFromDetail, currentBottomTab,
+      currentBottomTab, showMemberPickerModal,
     };
   });
 
@@ -246,12 +248,12 @@ const AppContent: React.FC = () => {
         if (s.showApplyRoomModal) { setShowApplyRoomModal(false); return; }
         if (s.showHostRoomModal) { setShowHostRoomModal(false); return; }
         if (s.showColorPicker) { setShowColorPicker(false); return; }
+        if (s.showMemberPickerModal) { setShowMemberPickerModal(false); return; }
         if (s.showQuotaSettings) { setShowQuotaSettings(false); return; }
         if (s.selectionMode !== null) { setSelectionMode(null); setSelectedPlayerIds([]); return; }
         if (s.currentPage === AppPageType.EDIT_ROOM) { setCurrentPage(AppPageType.DETAIL); return; }
-        if (s.currentPage === AppPageType.BALANCE) { setCurrentPage(AppPageType.DETAIL); return; }
-        if (s.currentPage === AppPageType.DETAIL) { setCurrentPage(AppPageType.HOME); setCurrentBottomTab(BottomTabType.HOME); setShowRoomDetail(false); setIsNavigatingFromDetail(false); return; }
-        if (s.isNavigatingFromDetail && s.currentBottomTab === BottomTabType.MEMBERS) { setCurrentPage(AppPageType.DETAIL); setIsNavigatingFromDetail(false); return; }
+        if (s.currentPage === AppPageType.BALANCE) { setCurrentPage(AppPageType.DETAIL); setResult(null); return; }
+        if (s.currentPage === AppPageType.DETAIL) { setCurrentPage(AppPageType.HOME); setCurrentBottomTab(BottomTabType.HOME); setShowRoomDetail(false); return; }
         CapApp.exitApp();
       });
     };
@@ -290,34 +292,16 @@ const AppContent: React.FC = () => {
     setLoginLater(true);
   };
 
-  const addPlayer = async (e: React.FormEvent) => {
+  const addPlayer = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    const shouldBeActive = isNavigatingFromDetail && !!currentActiveRoom;
     const player: Player = {
       id: crypto.randomUUID(), name: newName.trim(), tier: newTier,
-      isActive: shouldBeActive, sportType: activeTab,
+      isActive: false, sportType: activeTab,
       primaryPosition: newP1s[0] || 'NONE', secondaryPosition: newP2s[0] || 'NONE', tertiaryPosition: newP3s[0] || 'NONE',
       primaryPositions: newP1s, secondaryPositions: newP2s, tertiaryPositions: newP3s, forbiddenPositions: newForbidden,
     };
     setPlayers(prev => [player, ...prev]);
-
-    if (shouldBeActive && currentActiveRoom) {
-      try {
-        const roomRef = doc(db, 'rooms', currentActiveRoom.id);
-        const currentApps = [...(currentActiveRoom.applicants || [])];
-        const joinedPos = (player.primaryPositions && player.primaryPositions.length > 0) ? player.primaryPositions.join('/') : (player.primaryPosition || 'NONE');
-        currentApps.push({
-          id: 'app_' + Math.random().toString(36).substr(2, 9),
-          name: player.name, tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === player.tier) || 'B',
-          isApproved: true, position: joinedPos,
-          primaryPositions: player.primaryPositions || [], secondaryPositions: player.secondaryPositions || [],
-          tertiaryPositions: player.tertiaryPositions || [], forbiddenPositions: player.forbiddenPositions || [],
-          appliedAt: new Date().toISOString()
-        });
-        await updateDoc(roomRef, { applicants: currentApps });
-      } catch (e) { console.error("Add player sync error:", e); }
-    }
     setNewName(''); setNewP1s([]); setNewP2s([]); setNewP3s([]); setNewForbidden([]);
     setShowNewPlayerFormation(false);
     AnalyticsService.logEvent('add_player', { sport: activeTab, tier: newTier });
@@ -332,45 +316,12 @@ const AppContent: React.FC = () => {
     setPlayers(prev => prev.filter(p => p.id !== id));
   }, [setPlayers]);
 
-  const toggleParticipation = async (id: string) => {
+  const toggleParticipation = (id: string) => {
     if (editingPlayerId) return;
     const player = players.find(p => p.id === id);
     if (!player) return;
     const nextIsActive = !player.isActive;
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, isActive: nextIsActive } : p));
-
-    if (isNavigatingFromDetail && currentActiveRoom) {
-      try {
-        const roomRef = doc(db, 'rooms', currentActiveRoom.id);
-        const currentApps = [...(currentActiveRoom.applicants || [])];
-        const joinedPos = (player.primaryPositions && player.primaryPositions.length > 0) ? player.primaryPositions.join('/') : (player.primaryPosition || 'NONE');
-        if (nextIsActive) {
-          const exists = currentApps.find(a => a.name === player.name);
-          if (!exists) {
-            currentApps.push({
-              id: 'app_' + Math.random().toString(36).substr(2, 9), name: player.name,
-              tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === player.tier) || 'B',
-              isApproved: true, position: joinedPos,
-              primaryPositions: player.primaryPositions || [], secondaryPositions: player.secondaryPositions || [],
-              tertiaryPositions: player.tertiaryPositions || [], forbiddenPositions: player.forbiddenPositions || [],
-              appliedAt: new Date().toISOString()
-            });
-          } else {
-            const idx = currentApps.findIndex(a => a.name === player.name);
-            currentApps[idx].isApproved = true;
-            currentApps[idx].position = joinedPos;
-            currentApps[idx].primaryPositions = player.primaryPositions?.map(String) || [];
-            currentApps[idx].secondaryPositions = player.secondaryPositions?.map(String) || [];
-            currentApps[idx].tertiaryPositions = player.tertiaryPositions?.map(String) || [];
-            currentApps[idx].forbiddenPositions = player.forbiddenPositions?.map(String) || [];
-          }
-        } else {
-          const idx = currentApps.findIndex(a => a.name === player.name);
-          if (idx > -1) currentApps.splice(idx, 1);
-        }
-        await updateDoc(roomRef, { applicants: currentApps });
-      } catch (e) { console.error("Sync match player error:", e); }
-    }
   };
 
   const handleShare = async (elementId: string, fileName: string) => {
@@ -492,11 +443,14 @@ const AppContent: React.FC = () => {
             </button>
           </div>
 
-          {teamConstraints.length > 0 && (
+          {(() => {
+            const activePlayerIds = new Set(activePlayers.map(p => p.id));
+            const filtered = teamConstraints.filter(c => c.playerIds.every(id => activePlayerIds.has(id)));
+            return filtered.length > 0 && (
             <div className="px-5 py-2 space-y-2">
-              <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t('activeConstraints')}</h3>
+              <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t('activeConstraintsTitle')}</h3>
               <div className="flex flex-wrap gap-2">
-                {teamConstraints.map((c) => {
+                {filtered.map((c) => {
                   const playerNames = c.playerIds.map(id => players.find(p => p.id === id)?.name || id).join(', ');
                   return (
                     <div key={c.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-1.5 shadow-sm">
@@ -508,7 +462,7 @@ const AppContent: React.FC = () => {
                 })}
               </div>
             </div>
-          )}
+          );})()}
 
           <div className="px-5 pb-2 flex gap-1.5">
             <button onClick={() => setShowTier(!showTier)} className={`px-3 py-1.5 rounded-xl border transition-all flex items-center justify-center text-[11px] font-black ${showTier ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
@@ -579,10 +533,10 @@ const AppContent: React.FC = () => {
 
   const renderMembersTabContent = () => {
     return (
-      <div className="space-y-8 pb-32">
+      <div className={`space-y-2 ${selectionMode ? 'pb-60' : 'pb-32'}`}>
         {activeTab !== SportType.ALL && (
           <section className="bg-white dark:bg-slate-950 w-full rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 cursor-pointer select-none" onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}>
+            <div className="flex items-center justify-between px-5 py-4 cursor-pointer select-none" onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}>
               <div className="flex items-center gap-2">
                 <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
                 <h2 className="text-[14px] font-medium text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
@@ -627,70 +581,139 @@ const AppContent: React.FC = () => {
           </section>
         )}
 
-        <div className="grid grid-cols-1 gap-6 items-start">
-          <section className="bg-white dark:bg-slate-950 flex flex-col rounded-2xl overflow-hidden min-h-[100px]">
-            <div className="px-5 py-4 border-b border-transparent flex justify-between items-center bg-transparent">
-              <div className="flex items-center gap-2">
-                <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({memberPlayers.length})</span></h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={async () => {
-                    if (selectAllConfirm) {
-                      const updatedPlayers = players.map(p => (activeTab === SportType.ALL || p.sportType === activeTab) ? { ...p, isActive: true } : p);
-                      setPlayers(updatedPlayers);
-                      if (isNavigatingFromDetail && currentActiveRoom) {
-                        try {
-                          const roomRef = doc(db, 'rooms', currentActiveRoom.id);
-                          const currentApps = [...(currentActiveRoom.applicants || [])];
-                          const targetPlayers = updatedPlayers.filter(p => p.isActive && (activeTab === SportType.ALL || p.sportType === activeTab));
-                          targetPlayers.forEach(p => {
-                            const exists = currentApps.find(a => a.name === p.name);
-                            const joinedPos = (p.primaryPositions && p.primaryPositions.length > 0) ? p.primaryPositions.join('/') : (p.primaryPosition || 'NONE');
-                            if (!exists) {
-                              currentApps.push({ id: 'app_' + Math.random().toString(36).substr(2, 9), name: p.name,
-                                tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === p.tier) || 'B',
-                                isApproved: true, position: joinedPos,
-                                primaryPositions: p.primaryPositions || [], secondaryPositions: p.secondaryPositions || [],
-                                tertiaryPositions: p.tertiaryPositions || [], forbiddenPositions: p.forbiddenPositions || [],
-                                appliedAt: new Date().toISOString()
-                              });
-                            } else {
-                              const idx = currentApps.findIndex(a => a.name === p.name);
-                              currentApps[idx].isApproved = true; currentApps[idx].position = joinedPos;
-                              currentApps[idx].primaryPositions = p.primaryPositions?.map(String) || [];
-                              currentApps[idx].secondaryPositions = p.secondaryPositions?.map(String) || [];
-                              currentApps[idx].tertiaryPositions = p.tertiaryPositions?.map(String) || [];
-                              currentApps[idx].forbiddenPositions = p.forbiddenPositions?.map(String) || [];
-                            }
-                          });
-                          await updateDoc(roomRef, { applicants: currentApps });
-                        } catch (e) { console.error("Select All sync error:", e); }
+        <div>
+          <div className="px-2 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({memberPlayers.length})</span></h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (selectAllConfirm) {
+                    const updatedPlayers = players.map(p => (activeTab === SportType.ALL || p.sportType === activeTab) ? { ...p, isActive: true } : p);
+                    setPlayers(updatedPlayers);
+                    setSelectAllConfirm(false);
+                  } else { setSelectAllConfirm(true); setTimeout(() => setSelectAllConfirm(false), 3000); }
+                }}
+                className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium border border-slate-900 dark:border-slate-200 transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
+              >
+                {selectAllConfirm ? <><CheckIcon /> {t('confirmRetry')}</> : t('selectAll')}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1">
+            {memberPlayers.length === 0 ? (
+              <div className="py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
+            ) : (
+              memberPlayers.map(p => (
+                <PlayerItem key={p.id} player={p} isEditing={editingPlayerId === p.id} lang={lang}
+                  onToggle={toggleParticipation} onEditToggle={setEditingPlayerId} onUpdate={updatePlayer} onRemove={removePlayerFromSystem}
+                  isSelectionMode={!!selectionMode} isSelected={selectedPlayerIds.includes(p.id)}
+                  onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                  showTier={showTier} />
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const addPlayerToRoom = async (id: string) => {
+    const player = players.find(p => p.id === id);
+    if (!player || !currentActiveRoom) return;
+    try {
+      const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+      const currentApps = [...(currentActiveRoom.applicants || [])];
+      const exists = currentApps.find(a => a.name === player.name);
+      const joinedPos = (player.primaryPositions && player.primaryPositions.length > 0) ? player.primaryPositions.join('/') : (player.primaryPosition || 'NONE');
+      if (!exists) {
+        currentApps.push({
+          id: 'app_' + Math.random().toString(36).substr(2, 9), name: player.name,
+          tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === player.tier) || 'B',
+          isApproved: true, position: joinedPos,
+          primaryPositions: player.primaryPositions || [], secondaryPositions: player.secondaryPositions || [],
+          tertiaryPositions: player.tertiaryPositions || [], forbiddenPositions: player.forbiddenPositions || [],
+          appliedAt: new Date().toISOString()
+        });
+      } else {
+        const idx = currentApps.findIndex(a => a.name === player.name);
+        currentApps[idx].isApproved = true;
+        currentApps[idx].position = joinedPos;
+        currentApps[idx].primaryPositions = player.primaryPositions?.map(String) || [];
+        currentApps[idx].secondaryPositions = player.secondaryPositions?.map(String) || [];
+        currentApps[idx].tertiaryPositions = player.tertiaryPositions?.map(String) || [];
+        currentApps[idx].forbiddenPositions = player.forbiddenPositions?.map(String) || [];
+      }
+      await updateDoc(roomRef, { applicants: currentApps });
+    } catch (e) { console.error("Add player to room error:", e); }
+  };
+
+  const renderMemberPickerModal = () => {
+    if (!showMemberPickerModal) return null;
+    const [pickerSelectAllConfirm, setPickerSelectAllConfirm] = [selectAllConfirm, setSelectAllConfirm];
+    const approvedNames = new Set((currentActiveRoom?.applicants || []).filter(a => a.isApproved).map(a => a.name));
+    const pickablePlayers = memberPlayers.filter(p => !approvedNames.has(p.name));
+    return (
+      <div className="fixed inset-0 z-[2500] flex flex-col bg-white dark:bg-slate-950" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-900">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowMemberPickerModal(false)} className="p-2 -ml-2 text-slate-900 dark:text-white transition-all active:scale-90"><ArrowLeftIcon size={24} /></button>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('addParticipant')}</h2>
+            <span className="text-slate-400 dark:text-slate-500 text-sm font-normal">({pickablePlayers.length})</span>
+          </div>
+          <button
+            onClick={async () => {
+              if (pickerSelectAllConfirm) {
+                if (currentActiveRoom) {
+                  try {
+                    const roomRef = doc(db, 'rooms', currentActiveRoom.id);
+                    const currentApps = [...(currentActiveRoom.applicants || [])];
+                    pickablePlayers.forEach(p => {
+                      const exists = currentApps.find(a => a.name === p.name);
+                      const joinedPos = (p.primaryPositions && p.primaryPositions.length > 0) ? p.primaryPositions.join('/') : (p.primaryPosition || 'NONE');
+                      if (!exists) {
+                        currentApps.push({ id: 'app_' + Math.random().toString(36).substr(2, 9), name: p.name,
+                          tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === p.tier) || 'B',
+                          isApproved: true, position: joinedPos,
+                          primaryPositions: p.primaryPositions || [], secondaryPositions: p.secondaryPositions || [],
+                          tertiaryPositions: p.tertiaryPositions || [], forbiddenPositions: p.forbiddenPositions || [],
+                          appliedAt: new Date().toISOString()
+                        });
+                      } else {
+                        const idx = currentApps.findIndex(a => a.name === p.name);
+                        currentApps[idx].isApproved = true; currentApps[idx].position = joinedPos;
+                        currentApps[idx].primaryPositions = p.primaryPositions?.map(String) || [];
+                        currentApps[idx].secondaryPositions = p.secondaryPositions?.map(String) || [];
+                        currentApps[idx].tertiaryPositions = p.tertiaryPositions?.map(String) || [];
+                        currentApps[idx].forbiddenPositions = p.forbiddenPositions?.map(String) || [];
                       }
-                      setSelectAllConfirm(false);
-                    } else { setSelectAllConfirm(true); setTimeout(() => setSelectAllConfirm(false), 3000); }
-                  }}
-                  className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium border border-[#111111] transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
-                >
-                  {selectAllConfirm ? <><CheckIcon /> {t('confirmRetry')}</> : t('selectAll')}
-                </button>
-              </div>
-            </div>
-            <div className="px-5 pb-4 space-y-1 min-h-[100px]">
-              {memberPlayers.length === 0 ? (
-                <div className="py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
-              ) : (
-                memberPlayers.map(p => (
-                  <PlayerItem key={p.id} player={p} isEditing={editingPlayerId === p.id} lang={lang}
-                    onToggle={toggleParticipation} onEditToggle={setEditingPlayerId} onUpdate={updatePlayer} onRemove={removePlayerFromSystem}
-                    isSelectionMode={!!selectionMode} isSelected={selectedPlayerIds.includes(p.id)}
-                    onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                    showTier={showTier} />
-                ))
-              )}
-            </div>
-          </section>
+                    });
+                    await updateDoc(roomRef, { applicants: currentApps });
+                  } catch (e) { console.error("Select All sync error:", e); }
+                }
+                setPickerSelectAllConfirm(false);
+                setShowMemberPickerModal(false);
+              } else { setPickerSelectAllConfirm(true); setTimeout(() => setPickerSelectAllConfirm(false), 3000); }
+            }}
+            className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium border border-slate-900 dark:border-slate-200 transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${pickerSelectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
+          >
+            {pickerSelectAllConfirm ? <><CheckIcon /> {t('confirmRetry')}</> : t('selectAll')}
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
+          {pickablePlayers.length === 0 ? (
+            <div className="py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
+          ) : (
+            pickablePlayers.map(p => (
+              <PlayerItem key={p.id} player={p} isEditing={false} lang={lang}
+                onToggle={addPlayerToRoom} onEditToggle={() => {}} onUpdate={() => {}} onRemove={() => {}}
+                isSelectionMode={false} isSelected={false}
+                onSelect={() => {}}
+                showTier={showTier} readOnly={true} />
+            ))
+          )}
         </div>
       </div>
     );
@@ -708,13 +731,10 @@ const AppContent: React.FC = () => {
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
       {/* Header - Only on HOME page */}
-      {currentPage === AppPageType.HOME && (
+      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
         <header className="w-full flex flex-col items-center mb-0">
           <div className="w-full flex justify-between items-center bg-white dark:bg-slate-950 px-5 py-1.5 min-h-[56px]">
             <div className="flex gap-2">
-              {isNavigatingFromDetail && currentBottomTab === BottomTabType.MEMBERS && (
-                <button onClick={() => { setCurrentPage(AppPageType.DETAIL); setIsNavigatingFromDetail(false); }} className="p-2 -ml-2 text-slate-900 dark:text-white transition-all active:scale-90"><ArrowLeftIcon size={24} /></button>
-              )}
             </div>
             <div className="flex gap-1 items-center">
               <button onClick={() => setDarkMode(!darkMode)} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all" aria-label="Toggle dark mode">{darkMode ? <SunIcon /> : <MoonIcon />}</button>
@@ -726,9 +746,9 @@ const AppContent: React.FC = () => {
         </header>
       )}
 
-      {currentPage === AppPageType.HOME && (
+      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
         <nav className="flex gap-[10px] bg-white dark:bg-slate-950 px-5 pb-2 mb-3 w-full overflow-x-auto no-scrollbar whitespace-nowrap">
-          {(Object.entries(SportType) as [string, SportType][]).map(([key, value]) => (
+          {(Object.entries(SportType) as [string, SportType][]).filter(([, value]) => currentBottomTab !== BottomTabType.MEMBERS || value !== SportType.ALL).map(([key, value]) => (
             <button key={value} onClick={() => { setActiveTab(value); setResult(null); setEditingPlayerId(null); AnalyticsService.logEvent('tab_change', { sport: value }); }}
               className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border ${activeTab === value ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white' : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'}`}>
               {t(value.toLowerCase())}
@@ -1059,7 +1079,10 @@ const AppContent: React.FC = () => {
                       <div key={team.id} className="overflow-hidden">
                         <div className="flex items-center justify-between mb-4 px-1">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-[#111111] text-white flex items-center justify-center font-bold text-sm">
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
+                              style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: '#111111', color: 'white' }}
+                            >
                               {idx + 1}
                             </div>
                             <h4 className="text-[18px] font-bold text-[#111111] dark:text-white tracking-tight uppercase">
@@ -1069,7 +1092,7 @@ const AppContent: React.FC = () => {
                               onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
                               className="flex items-center gap-1.5 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
                             >
-                              <div className="w-4 h-4 rounded border border-slate-300 bg-white" style={team.color ? { backgroundColor: team.color } : {}} />
+                              <div className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" style={team.color ? { backgroundColor: team.color } : {}} />
                             </div>
                           </div>
                           <div className="text-right">
@@ -1095,7 +1118,7 @@ const AppContent: React.FC = () => {
                         <div className="space-y-1">
                           {getSortedTeamPlayers(team.players).map(p => (
                             <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm transition-all">
-                              <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] flex items-center justify-center text-[12px] font-medium text-[#777777] shrink-0">
+                              <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-[#777777] dark:text-slate-400 shrink-0">
                                 BELO
                               </div>
                               <div className="w-10 text-[14px] font-bold text-slate-400 shrink-0 text-center">
@@ -1148,7 +1171,7 @@ const AppContent: React.FC = () => {
 
                   <button
                     onClick={() => handleGenerate()}
-                    className="w-full bg-[#111111] text-white py-4 rounded-[24px] text-[18px] font-bold tracking-tight shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-10"
+                    className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 py-4 rounded-[24px] text-[18px] font-bold tracking-tight shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-10"
                     style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
                   >
                     {t('reshuffleTeams')}
@@ -1187,7 +1210,7 @@ const AppContent: React.FC = () => {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto px-5 pt-0 pb-4 space-y-6 pb-40">
+          <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-72' : 'pb-40'}`}>
             {(() => {
               const room = currentActiveRoom;
               const pendingApplicants = room.applicants.filter(a => !a.isApproved);
@@ -1339,7 +1362,7 @@ const AppContent: React.FC = () => {
                     <div className="flex justify-between items-center w-full">
                       <button
                         onClick={() => setShowTier(!showTier)}
-                        className={`px-[8px] h-[28px] flex items-center justify-center rounded-xl text-[12px] font-medium transition-all active:scale-95 border ${showTier ? 'bg-[#111111] text-[#FFFFFF] border-[#111111]' : 'bg-[#FFFFFF] dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                        className={`px-[8px] h-[28px] flex items-center justify-center rounded-xl text-[12px] font-medium transition-all active:scale-95 border ${showTier ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
                       >
                         {showTier ? t('hideTier') : t('showTier')}
                       </button>
@@ -1349,14 +1372,14 @@ const AppContent: React.FC = () => {
                           <>
                             <button
                               onClick={() => { setSelectionMode(prev => prev === 'MATCH' ? null : 'MATCH'); setSelectedPlayerIds([]); }}
-                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'MATCH' ? 'bg-[#111111] text-[#FFFFFF] border-[#111111]' : 'bg-[#FFFFFF] dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'MATCH' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
                             >
                               <div className="w-[16px] h-[16px] rounded bg-blue-500 text-white flex items-center justify-center text-[9px] font-black">M</div>
                               {t('matchTeams')}
                             </button>
                             <button
                               onClick={() => { setSelectionMode(prev => prev === 'SPLIT' ? null : 'SPLIT'); setSelectedPlayerIds([]); }}
-                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'SPLIT' ? 'bg-[#111111] text-[#FFFFFF] border-[#111111]' : 'bg-[#FFFFFF] dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'SPLIT' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
                             >
                               <div className="w-[16px] h-[16px] rounded bg-rose-500 text-white flex items-center justify-center text-[9px] font-black">S</div>
                               {t('splitTeams')}
@@ -1369,9 +1392,7 @@ const AppContent: React.FC = () => {
                         {detailTab === DetailPageTab.APPROVED && (
                           <button
                             onClick={() => {
-                              setCurrentPage(AppPageType.HOME);
-                              setCurrentBottomTab(BottomTabType.MEMBERS);
-                              setIsNavigatingFromDetail(true);
+                              setShowMemberPickerModal(true);
                             }}
                             className="bg-[#4685EB] text-white rounded-xl text-[12px] font-medium px-[8px] h-[28px] flex items-center justify-center transition-all active:scale-95 mr-2"
                           >
@@ -1390,11 +1411,17 @@ const AppContent: React.FC = () => {
                       </div>
                     </div>
 
-                    {teamConstraints.length > 0 && (
+                    {(() => {
+                      const approvedIds = new Set(room.applicants.filter(a => a.isApproved).map(a => {
+                        const member = players.find(p => p.name === a.name);
+                        return member ? member.id : a.id;
+                      }));
+                      const filtered = teamConstraints.filter(c => c.playerIds.every(id => approvedIds.has(id)));
+                      return detailTab === DetailPageTab.APPROVED && filtered.length > 0 && (
                       <div className="flex flex-col gap-2 mb-2 p-1">
-                        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t('activeConstraints')}</h3>
+                        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest px-1">{t('activeConstraintsTitle')}</h3>
                         <div className="flex flex-wrap gap-2">
-                          {teamConstraints.map((c) => {
+                          {filtered.map((c) => {
                             const playerNames = c.playerIds.map(id => {
                               const app = room.applicants.find(a => a.id === id);
                               return app ? app.name : (players.find(p => p.id === id)?.name || id);
@@ -1416,7 +1443,7 @@ const AppContent: React.FC = () => {
                           })}
                         </div>
                       </div>
-                    )}
+                    );})()}
 
                     <div className="space-y-1">
                       {(detailTab === DetailPageTab.PENDING ? pendingApplicants : room.applicants.filter(a => a.isApproved)).map((app) => {
@@ -1445,7 +1472,7 @@ const AppContent: React.FC = () => {
                                     {isSelected && <CheckIcon />}
                                   </div>
                                 )}
-                                <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] flex items-center justify-center text-[12px] font-medium text-[#777777] shrink-0">
+                                <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-[#777777] dark:text-slate-400 shrink-0">
                                   BELO
                                 </div>
                                 <div className="flex flex-col gap-0.5">
@@ -1490,7 +1517,7 @@ const AppContent: React.FC = () => {
                                           <span className="text-[12px] font-medium text-[#10B982] uppercase">{pos.trim()}</span>
                                         </div>
                                       )) : (
-                                        <span className="text-[10px] font-medium text-slate-300 italic">{t('notSet')}</span>
+                                        <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600 italic">{t('notSet')}</span>
                                       )
                                     )}
                                   </div>
@@ -1600,10 +1627,10 @@ const AppContent: React.FC = () => {
 
                       {(detailTab === DetailPageTab.PENDING ? pendingApplicants : room.applicants.filter(a => a.isApproved)).length === 0 && (
                         <div className="py-16 text-center space-y-4 animate-in fade-in zoom-in-95 duration-500">
-                          <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto">
-                            <Icons.UsersIcon size={24} className="text-slate-200 dark:text-slate-800" />
+                          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                            <Icons.UsersIcon size={24} className="text-slate-300 dark:text-slate-600" />
                           </div>
-                          <p className="text-[13px] font-medium text-slate-300 dark:text-slate-700 tracking-tight">{t('noPlayers')}</p>
+                          <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{t('noPlayers')}</p>
                         </div>
                       )}
                     </div>
@@ -1636,12 +1663,12 @@ const AppContent: React.FC = () => {
                           <div className="overflow-hidden">
                             <button
                               onClick={() => setIsQuotaSettingsExpanded(!isQuotaSettingsExpanded)}
-                              className="w-full py-3 relative flex items-center justify-center bg-[#eeeeee] rounded-[24px] text-[#111111] font-medium text-[16px] tracking-tight active:scale-[0.98] transition-all"
+                              className="w-full py-3 relative flex items-center justify-center bg-slate-200 dark:bg-slate-800 rounded-[24px] text-slate-900 dark:text-slate-100 font-medium text-[16px] tracking-tight active:scale-[0.98] transition-all"
                             >
                               <span style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>
                                 {t('positionSettings')}
                               </span>
-                              <div className={`absolute right-6 transition-transform duration-300 ${isQuotaSettingsExpanded ? 'rotate-180' : ''} text-[#111111]/50`}>
+                              <div className={`absolute right-6 transition-transform duration-300 ${isQuotaSettingsExpanded ? 'rotate-180' : ''} text-slate-900/50 dark:text-slate-100/50`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                               </div>
                             </button>
@@ -1661,24 +1688,24 @@ const AppContent: React.FC = () => {
                           </div>
 
                           <div className="space-y-3 mt-1">
-                            <div className="py-3 bg-white rounded-[24px] px-5 flex items-center">
+                            <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5 flex items-center">
                               <button
                                 onClick={() => setUseRandomMix(!useRandomMix)}
-                                className="w-full flex items-center justify-between transition-all text-[#111111]"
+                                className="w-full flex items-center justify-between transition-all text-slate-900 dark:text-slate-100"
                               >
                                 <span className="text-[16px] font-medium tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('randomMix')}</span>
-                                <div className={`w-[18px] h-[18px] rounded-sm flex items-center justify-center border-[1.5px] transition-all ${useRandomMix ? 'bg-[#777777] border-[#777777]' : 'border-[#777777]'}`}>
-                                  {useRandomMix && <Icons.CheckIcon size={12} className="text-white" />}
+                                <div className={`w-[18px] h-[18px] rounded-sm flex items-center justify-center border-[1.5px] transition-all ${useRandomMix ? 'bg-slate-500 dark:bg-slate-400 border-slate-500 dark:border-slate-400' : 'border-slate-400 dark:border-slate-500'}`}>
+                                  {useRandomMix && <Icons.CheckIcon size={12} className="text-white dark:text-slate-900" />}
                                 </div>
                               </button>
                             </div>
 
-                            <div className="py-3 bg-white rounded-[24px] px-5 flex items-center justify-between">
-                              <span className="text-[16px] font-medium text-[#111111] tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('teamCountLabel')}</span>
+                            <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5 flex items-center justify-between">
+                              <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('teamCountLabel')}</span>
                               <div className="flex items-center gap-4">
-                                <button onClick={() => setTeamCount(Math.max(2, teamCount - 1))} className="p-1 text-[#111111] hover:opacity-60 active:scale-90 transition-all"><Icons.MinusIcon size={16} /></button>
-                                <span className="text-[16px] font-medium text-[#111111] tracking-tight tabular-nums w-4 text-center" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{teamCount}</span>
-                                <button onClick={() => setTeamCount(Math.min(10, teamCount + 1))} className="p-1 text-[#111111] hover:opacity-60 active:scale-90 transition-all"><Icons.PlusIcon size={16} /></button>
+                                <button onClick={() => setTeamCount(Math.max(2, teamCount - 1))} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.MinusIcon size={16} /></button>
+                                <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight tabular-nums w-4 text-center" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{teamCount}</span>
+                                <button onClick={() => setTeamCount(Math.min(10, teamCount + 1))} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.PlusIcon size={16} /></button>
                               </div>
                             </div>
                           </div>
@@ -1700,8 +1727,9 @@ const AppContent: React.FC = () => {
 
                           const manualPlayers: Player[] = approvedApps.map(app => {
                             const tierVal = parseTier(app.tier);
+                            const member = players.find(p => p.name === app.name);
                             return {
-                              id: 'temp_' + app.name + '_' + Math.random().toString(36).substr(2, 5),
+                              id: member ? member.id : app.id,
                               name: app.name,
                               tier: tierVal,
                               isActive: true,
@@ -1775,6 +1803,8 @@ const AppContent: React.FC = () => {
           </div>
         </div>
       )}
+
+      {renderMemberPickerModal()}
 
       {/* Result Overlay (non-BALANCE page) */}
       {result && currentPage !== AppPageType.BALANCE && (
@@ -1884,18 +1914,33 @@ const AppContent: React.FC = () => {
 
       {currentBottomTab === BottomTabType.MEMBERS && (
         <div className="w-full px-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex justify-between items-center mb-4 px-1">
-            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('memberList')}</h3>
-          </div>
           {renderMembersTabContent()}
         </div>
       )}
 
       {currentBottomTab === BottomTabType.SETTINGS && (
-        <div className="w-full px-5 py-20 text-center animate-in fade-in duration-500">
-          <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-300"><SettingsIcon /></div>
-          <p className="text-sm font-bold text-slate-400">{t('comingSoon')}</p>
-        </div>
+        <SettingsPage
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          lang={lang}
+          setLang={handleManualLangChange}
+          user={user}
+          nickname={userNickname}
+          onUpdateNickname={(name) => { setUserNickname(name); localStorage.setItem('app_user_nickname', name); }}
+          onLogin={() => setShowLoginModal(true)}
+          onLogout={() => handleLogout(setPlayers, setIsDataLoaded)}
+          players={players}
+          setPlayers={setPlayers}
+          showTier={showTier}
+          setShowTier={setShowTier}
+          sortMode={sortMode}
+          setSortMode={setSortMode}
+          useTeamColors={useTeamColors}
+          setUseTeamColors={setUseTeamColors}
+          t={t}
+          showConfirm={showConfirm}
+          showAlert={showAlert}
+        />
       )}
 
       {/* Selection mode bottom bar */}
@@ -1992,7 +2037,7 @@ const AppContent: React.FC = () => {
               <div className={currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>{currentBottomTab === BottomTabType.HOME ? <HomeFilledIcon /> : <HomeIcon />}</div>
               <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>{t('homeTab')}</span>
             </button>
-            <button onClick={() => setCurrentBottomTab(BottomTabType.MEMBERS)} className="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
+            <button onClick={() => { setCurrentBottomTab(BottomTabType.MEMBERS); if (activeTab === SportType.ALL) setActiveTab(SportType.GENERAL); }} className="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
               <div className={currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>{currentBottomTab === BottomTabType.MEMBERS ? <UserPlusFilledIcon /> : <UserPlusIcon />}</div>
               <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>{t('membersTab')}</span>
             </button>

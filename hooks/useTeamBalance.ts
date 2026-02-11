@@ -23,13 +23,22 @@ export const useTeamBalance = (
   const [isGenerating, setIsGenerating] = useState(false);
   const [countdown, setCountdown] = useState(isAdFree ? 1 : 5);
   const [useRandomMix, setUseRandomMix] = useState(false);
-  const [useTeamColors, setUseTeamColors] = useState(false);
+  const [useTeamColors, setUseTeamColors] = useState(() => {
+    const saved = localStorage.getItem('app_default_team_colors');
+    return saved !== null ? saved === 'true' : false;
+  });
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedTeamColors, setSelectedTeamColors] = useState<string[]>(['#ef4444', '#3b82f6']);
   const [editingResultTeamIdx, setEditingResultTeamIdx] = useState<number | null>(null);
   const [lastGenContext, setLastGenContext] = useState<{ players: Player[]; sport?: SportType } | null>(null);
-  const [showTier, setShowTier] = useState(false);
-  const [sortMode, setSortMode] = useState<'name' | 'tier'>('name');
+  const [showTier, setShowTier] = useState(() => {
+    const saved = localStorage.getItem('app_default_show_tier');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [sortMode, setSortMode] = useState<'name' | 'tier'>(() => {
+    const saved = localStorage.getItem('app_default_sort_mode');
+    return (saved === 'name' || saved === 'tier') ? saved : 'name';
+  });
   const [selectionMode, setSelectionMode] = useState<'MATCH' | 'SPLIT' | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
   const [teamConstraints, setTeamConstraints] = useState<TeamConstraint[]>(() => {
@@ -65,6 +74,11 @@ export const useTeamBalance = (
       });
     }
   }, [players, activeTab, sortMode]);
+
+  // Defaults persistence
+  useEffect(() => { localStorage.setItem('app_default_show_tier', showTier.toString()); }, [showTier]);
+  useEffect(() => { localStorage.setItem('app_default_sort_mode', sortMode); }, [sortMode]);
+  useEffect(() => { localStorage.setItem('app_default_team_colors', useTeamColors.toString()); }, [useTeamColors]);
 
   // Constraints persistence
   useEffect(() => {
@@ -156,6 +170,11 @@ export const useTeamBalance = (
     nextTeams[idx] = { ...nextTeams[idx], color: colorValue, colorName: colorName };
     nextResult.teams = nextTeams;
     setResult(nextResult);
+    setSelectedTeamColors(prev => {
+      const next = [...prev];
+      next[idx] = colorValue;
+      return next;
+    });
     setEditingResultTeamIdx(null);
   };
 
@@ -239,16 +258,14 @@ export const useTeamBalance = (
       });
     }, 1000);
 
-    const activeConstraints = teamConstraints.filter(c => {
-      const p = players.find(p => c.playerIds.includes(p.id));
-      return p && (!targetSport || p.sportType === targetSport);
-    });
+    const participatingIds = new Set(participating.map(p => p.id));
+    const activeConstraints = teamConstraints
+      .map(c => ({ ...c, playerIds: c.playerIds.filter(id => participatingIds.has(id)) }))
+      .filter(c => c.playerIds.length >= 2);
 
     setTimeout(() => {
       try {
         const res = generateBalancedTeams(participating, teamCount, filteredQuotas, activeConstraints, useRandomMix, Array.from(pastResults), targetSport);
-
-        setResult(res);
 
         setPastResults(prev => {
           const next = new Set(prev);

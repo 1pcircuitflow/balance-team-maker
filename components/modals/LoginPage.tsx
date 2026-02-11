@@ -36,19 +36,8 @@ export const LoginPage: React.FC<{
         <div className="w-full flex flex-col items-center gap-4">
           <button
             onClick={onLogin}
-            className="w-full flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
-            style={{
-              maxWidth: '295px',
-              height: '56px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E5E5EC',
-              borderRadius: '12px',
-              boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)',
-              fontFamily: 'Pretendard Variable, Pretendard, sans-serif',
-              fontSize: '16px',
-              fontWeight: 600,
-              color: '#111111',
-            }}
+            className="w-full max-w-[295px] h-[56px] flex items-center justify-center gap-3 active:scale-[0.98] transition-transform bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-md text-[16px] font-semibold text-slate-900 dark:text-slate-100"
+            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
           >
             <svg className="w-5 h-5" viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -61,19 +50,8 @@ export const LoginPage: React.FC<{
 
           <button
             onClick={onLater}
-            className="w-full flex items-center justify-center active:scale-[0.98] transition-transform"
-            style={{
-              maxWidth: '295px',
-              height: '56px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E5E5EC',
-              borderRadius: '12px',
-              boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)',
-              fontFamily: 'Pretendard Variable, Pretendard, sans-serif',
-              fontSize: '16px',
-              fontWeight: 600,
-              color: '#777777',
-            }}
+            className="w-full max-w-[295px] h-[56px] flex items-center justify-center active:scale-[0.98] transition-transform bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-md text-[16px] font-semibold text-slate-500 dark:text-slate-400"
+            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
           >
             {t('loginLater')}
           </button>

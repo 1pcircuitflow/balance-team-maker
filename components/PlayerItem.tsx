@@ -6,7 +6,7 @@ import { TRANSLATIONS, Language } from '../translations';
 import * as Icons from '../Icons';
 import { FormationPicker } from './FormationPicker';
 
-const { PlusIcon, MinusIcon, TrashIcon, EditIcon, CheckIcon } = Icons;
+const { PlusIcon, MinusIcon, CheckIcon, MoreIcon, CloseIcon } = Icons;
 
 interface PlayerItemProps {
   player: Player;
@@ -18,11 +18,12 @@ interface PlayerItemProps {
   onRemove: (e: React.MouseEvent, id: string) => void;
   isSelectionMode?: boolean;
   showTier?: boolean; // 항목 2: 티어 숨기기
+  readOnly?: boolean; // 참가 토글만 허용 (수정/삭제 숨김)
 }
 
 
 export const PlayerItem = React.memo<any>(({
-  player, isEditing, lang, onToggle, onEditToggle, onUpdate, onRemove, isSelected, onSelect, isSelectionMode, showTier
+  player, isEditing, lang, onToggle, onEditToggle, onUpdate, onRemove, isSelected, onSelect, isSelectionMode, showTier, readOnly
 }: any) => {
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
@@ -31,8 +32,8 @@ export const PlayerItem = React.memo<any>(({
   };
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
 
-  // 리셋 확인 상태
   useEffect(() => {
     if (isEditing) {
       setIsConfirmingDelete(false);
@@ -43,6 +44,7 @@ export const PlayerItem = React.memo<any>(({
     <div
       onMouseLeave={() => {
         setIsConfirmingDelete(false);
+        setShowActionMenu(false);
       }}
       className={`flex ${isEditing ? 'flex-col' : 'items-center justify-between'} px-2 py-1 rounded-2xl transition-all duration-200 group ${player.isActive ? 'bg-slate-100/80 dark:bg-slate-900/40 opacity-80' : 'bg-white dark:bg-slate-950'} ${isSelectionMode && isSelected ? 'ring-2 ring-blue-500' : ''}`}
       onClick={() => isSelectionMode && onSelect && onSelect(player.id)}
@@ -56,19 +58,20 @@ export const PlayerItem = React.memo<any>(({
           )}
           {/* Avatar circle */}
           <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-[#777777] dark:text-slate-400 shrink-0">
-            {!isEditing && !isSelectionMode && showTier ? (
-              <span className={`px-1.5 py-0.5 rounded-md text-[12px] font-medium ${TIER_BADGE_COLORS[player.tier]}`}>
-                {Tier[player.tier]}
-              </span>
-            ) : (
-              <span>BELO</span>
-            )}
+            BELO
           </div>
           {/* Name + Position vertical stack */}
-          <div className="flex flex-col min-w-0">
-            <span className={`text-[16px] font-medium text-slate-900 dark:text-white truncate ${player.isActive ? 'text-slate-900 dark:text-white' : ''}`}>
-              {player.name}
-            </span>
+          <div className="flex flex-col min-w-0 gap-0.5">
+            <div className="flex items-center gap-2">
+              {!isEditing && !isSelectionMode && showTier && (
+                <span className={`px-1.5 py-0.5 rounded-md text-[12px] font-medium ${TIER_BADGE_COLORS[player.tier]}`}>
+                  {Tier[player.tier]}
+                </span>
+              )}
+              <span className={`text-[16px] font-medium text-slate-900 dark:text-white truncate`}>
+                {player.name}
+              </span>
+            </div>
             {!isEditing && player.sportType !== SportType.GENERAL && (
               <div className="flex items-center gap-1.5">
                 {(player.primaryPositions?.length || (player.primaryPosition !== 'NONE' ? 1 : 0)) > 0 &&
@@ -95,62 +98,91 @@ export const PlayerItem = React.memo<any>(({
                     </div>
                   ))
                 }
-                {player.forbiddenPositions && player.forbiddenPositions.length > 0 &&
-                  player.forbiddenPositions.map((pos: string, i: number) => (
-                    <div key={`f-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-rose-500 uppercase">
-                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                      <span>{pos}</span>
-                    </div>
-                  ))
-                }
               </div>
             )}
           </div>
         </div>
         {!isSelectionMode && (
-          <div className="flex items-center gap-0.5 shrink-0" data-capture-ignore="true">
-            <button
-              type="button"
-              title={player.isActive ? t('exclude') : t('addToList')}
-              className="p-1.5 rounded-lg transition-all active:scale-95 text-slate-400 dark:text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-950"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onToggle(player.id);
-              }}
-            >
-              {player.isActive ? <MinusIcon /> : <PlusIcon />}
-            </button>
-            <button
-              type="button"
-              className={`p-1.5 rounded-lg transition-colors ${isEditing ? 'text-slate-900 bg-slate-100 dark:text-slate-100 dark:bg-slate-950' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-950'}`}
-              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onEditToggle(isEditing ? null : player.id); }}
-            >
-              {isEditing ? <CheckIcon /> : <EditIcon />}
-            </button>
-            <button
-              type="button"
-              className={`p-1.5 rounded-lg transition-all duration-200 ${isConfirmingDelete
-                ? 'text-rose-600 bg-rose-100 dark:bg-rose-900/40 scale-110'
-                : 'text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20'}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                if (isConfirmingDelete) {
-                  onRemove(e, player.id);
-                  setIsConfirmingDelete(false);
-                } else {
-                  setIsConfirmingDelete(true);
-                }
-              }}
-            >
-              {isConfirmingDelete ? <CheckIcon /> : <TrashIcon />}
-            </button>
+          <div className="flex items-center gap-1.5 shrink-0 relative" data-capture-ignore="true">
+            {readOnly ? (
+              <button
+                type="button"
+                title={player.isActive ? t('exclude') : t('addToList')}
+                className="p-1.5 rounded-lg transition-all active:scale-95 text-slate-400 dark:text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-950"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onToggle(player.id);
+                }}
+              >
+                {player.isActive ? <MinusIcon /> : <PlusIcon />}
+              </button>
+            ) : showActionMenu ? (
+              <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const isCurrentlyEditing = isEditing;
+                    onEditToggle(isCurrentlyEditing ? null : player.id);
+                    if (isCurrentlyEditing) {
+                      setShowActionMenu(false);
+                    }
+                  }}
+                  className={`text-[14px] font-medium text-white px-2 py-0.5 rounded-md transition-all active:scale-95 ${isEditing ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-[#EDAE73]'}`}
+                >
+                  {isEditing ? t('confirm') : t('edit')}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (isConfirmingDelete) {
+                      onRemove(e, player.id);
+                      setIsConfirmingDelete(false);
+                      setShowActionMenu(false);
+                    } else {
+                      setIsConfirmingDelete(true);
+                    }
+                  }}
+                  className={`text-[14px] font-medium text-white px-2 py-0.5 rounded-md transition-all active:scale-95 ${isConfirmingDelete ? 'bg-rose-600 ring-2 ring-rose-400 ring-offset-1 dark:ring-offset-slate-950' : 'bg-rose-500'}`}
+                >
+                  {isConfirmingDelete ? t('confirm') : t('delete')}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShowActionMenu(false);
+                    setIsConfirmingDelete(false);
+                    if (isEditing) onEditToggle(null);
+                  }}
+                  className="p-1 text-slate-300 dark:text-slate-600"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowActionMenu(true);
+                }}
+                className="p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors"
+              >
+                <MoreIcon />
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {isEditing && (
+      {isEditing && !readOnly && (
         <div className="space-y-2.5 mt-1.5 pt-2" onClick={e => e.stopPropagation()} >
           <div className="grid grid-cols-5 gap-1">
             {(Object.entries(Tier).filter(([k]) => isNaN(Number(k))) as [string, Tier][]).map(([key, val]) => (
