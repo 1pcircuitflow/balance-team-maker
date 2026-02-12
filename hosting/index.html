@@ -1,157 +1,529 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#090909" media="(prefers-color-scheme: dark)">
-  <title>Balance Team Maker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            slate: {
-              50: '#F2F4F6',
-              100: '#FFFFFF',
-              200: '#E5E8EB',
-              300: '#D1D6DB',
-              400: '#7C8188',
-              500: '#8B95A1',
-              600: '#6B7684',
-              700: '#4E5968',
-              800: '#333D4B',
-              900: '#131313',
-              950: '#090909',
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTM Recruitment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        }
+                    }
+                }
             }
-          }
+        };
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
-      }
-    }
-  </script>
-  <link rel="stylesheet" as="style" crossorigin
-    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <link rel="stylesheet" as="style" crossorigin
-    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-jp.min.css" />
-  <style>
-    body {
-      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
-      background-color: #FFFFFF;
-      color: #202124;
-      -webkit-font-smoothing: antialiased;
-      padding-bottom: max(20px, env(safe-area-inset-bottom));
-      transition: background-color 0.3s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
 
-    input,
-    button,
-    select,
-    textarea {
-      outline: none !important;
-    }
+        .tier-btn.active-S {
+            background-color: #f3e8ff;
+            color: #7e22ce;
+            border-color: #e9d5ff;
+        }
 
-    * {
-      -webkit-tap-highlight-color: transparent;
-      line-height: 1.4;
-      letter-spacing: -0.025em;
-    }
+        .dark .tier-btn.active-S {
+            background-color: rgba(126, 34, 206, 0.3);
+            color: #d8b4fe;
+            border-color: #9333ea;
+        }
 
-    .dark body {
-      background-color: #090909;
-    }
+        .tier-btn.active-A {
+            background-color: #fff1f2;
+            color: #be123c;
+            border-color: #ffe4e6;
+        }
 
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 4px;
-    }
+        .dark .tier-btn.active-A {
+            background-color: rgba(190, 18, 60, 0.3);
+            color: #fda4af;
+            border-color: #e11d48;
+        }
 
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
+        .tier-btn.active-B {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-color: #dbeafe;
+        }
 
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 10px;
-    }
+        .dark .tier-btn.active-B {
+            background-color: rgba(29, 78, 216, 0.3);
+            color: #93c5fd;
+            border-color: #2563eb;
+        }
 
-    @keyframes slideInUp {
-      from {
-        transform: translateY(10px);
-        opacity: 0;
-      }
+        .tier-btn.active-C {
+            background-color: #ecfdf5;
+            color: #047857;
+            border-color: #d1fae5;
+        }
 
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
+        .dark .tier-btn.active-C {
+            background-color: rgba(4, 120, 87, 0.3);
+            color: #6ee7b7;
+            border-color: #059669;
+        }
 
-    @keyframes spin-slow {
-      from {
-        transform: rotate(0deg);
-      }
+        .tier-btn.active-D {
+            background-color: #f8fafc;
+            color: #64748b;
+            border-color: #f1f5f9;
+        }
 
-      to {
-        transform: rotate(360deg);
-      }
-    }
+        .dark .tier-btn.active-D {
+            background-color: rgba(30, 41, 59, 0.5);
+            color: #94a3b8;
+            border-color: #475569;
+        }
 
-    @keyframes progress-bar {
-      0% {
-        width: 0%;
-      }
+        .menu-popup {
+            z-index: 1000;
+        }
 
-      100% {
-        width: 100%;
-      }
-    }
-
-    .animate-in {
-      animation: slideInUp 0.4s ease-out forwards;
-    }
-
-    .animate-spin-slow {
-      animation: spin-slow 3s linear infinite;
-    }
-
-    .animate-progress {
-      animation: progress-bar 3s ease-in-out forwards;
-    }
-
-    select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.75rem center;
-      background-size: 1rem;
-    }
-
-    .dark select {
-      background-color: #1e293b;
-      color: #f1f5f9;
-    }
-  </style>
-
-  <link rel="stylesheet" href="/index.css">
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1"
-  }
-}
-</script>
-  <script type="module" crossorigin src="/assets/index-CjuI7uD9.js"></script>
+        .node {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
 </head>
 
-<body>
-  <div id="root"></div>
+<body
+    class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col items-center py-4 px-4 sm:px-6">
+    <button id="themeToggle"
+        class="fixed top-4 right-4 p-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm z-50 transition-all hover:scale-110 active:scale-95">
+        <span id="themeIcon" class="text-xl leading-none block">🌙</span>
+    </button>
+
+    <div class="max-w-md w-full space-y-3">
+        <header class="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-4 duration-700">
+            <img src="/assets/logo.png" alt="Belo Logo" class="w-16 h-16">
+            <h1 class="text-4xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">Belo</h1>
+        </header>
+
+        <div id="loading" class="flex flex-col items-center justify-center py-20 space-y-4">
+            <div class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p class="text-slate-400 dark:text-slate-500 font-bold text-[13px]">운동장을 준비하고 있습니다...</p>
+        </div>
+
+        <div id="roomInfo"
+            class="hidden p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 animate-in fade-in zoom-in-95 duration-500">
+            <div class="flex items-center justify-between">
+                <span id="roomSport"
+                    class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider">---</span>
+                <span id="roomDateTime" class="text-[11px] font-bold text-slate-400 dark:text-slate-500">---</span>
+            </div>
+        </div>
+
+        <div id="participantsInfo"
+            class="hidden p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 animate-in fade-in zoom-in-95 duration-500 delay-75">
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">인원 현황
+                </h3>
+                <span id="participantCount" class="text-xs font-black text-blue-600 dark:text-blue-400">0명</span>
+            </div>
+            <div id="participantList" class="flex flex-wrap gap-1.5"></div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <a href="https://play.google.com/store/apps/details?id=com.pcircuitflow.btm" target="_blank"
+                    class="group relative flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <div class="relative z-10 flex flex-col text-left">
+                        <span class="text-[10px] font-black text-blue-100/70 uppercase tracking-tight mb-0.5">오늘 경기도
+                            공정하게!</span>
+                        <span class="text-[12px] font-black text-white">Belo 앱으로 팀 나누기</span>
+                    </div>
+                    <div
+                        class="relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black group-hover:bg-white/30 transition-colors">
+                        앱 다운로드
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <form id="applyForm" class="hidden space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+            <div
+                class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div id="loginSection" class="hidden space-y-2">
+                    <button type="button" id="loginBtn"
+                        class="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span class="text-[13px] font-bold text-slate-600 dark:text-slate-400">Google 로그인으로 정보
+                            기억하기</span>
+                    </button>
+                    <div id="userInfo"
+                        class="hidden flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-3 text-left">
+                            <img id="userPhoto" src=""
+                                class="w-8 h-8 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                                alt="P">
+                            <div class="flex flex-col">
+                                <span id="userName"
+                                    class="text-xs font-black text-slate-800 dark:text-slate-100">User</span>
+                                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Auto
+                                    Sync Active</span>
+                            </div>
+                        </div>
+                        <button type="button" id="logoutBtn"
+                            class="text-[10px] font-black text-slate-400 hover:text-rose-500 transition-colors uppercase px-2">Logout</button>
+                    </div>
+                </div>
+
+                <div class="space-y-1 text-left">
+                    <label
+                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">이름</label>
+                    <input type="text" id="name" required maxlength="10" placeholder="본인의 이름을 입력하세요"
+                        class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-[13px]">
+                </div>
+
+                <div class="space-y-2 text-left">
+                    <label
+                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">실력
+                        티어</label>
+                    <div id="tierGroup" class="grid grid-cols-5 gap-2">
+                        <button type="button" data-tier="S"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">S</button>
+                        <button type="button" data-tier="A"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">A</button>
+                        <button type="button" data-tier="B"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">B</button>
+                        <button type="button" data-tier="C"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">C</button>
+                        <button type="button" data-tier="D"
+                            class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">D</button>
+                    </div>
+                </div>
+
+                <div id="posSection" class="space-y-2 text-left">
+                    <label
+                        class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">주
+                        포지션</label>
+                    <div class="relative aspect-[1.1/1] w-[85%] mx-auto bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900"
+                        id="pitch">
+                        <div id="pitchLines" class="absolute inset-0 opacity-10 pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full p-4 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-900/20 hover:bg-blue-500 hover:scale-[1.01] active:scale-[0.98] transition-all">
+                참가 신청하기
+            </button>
+        </form>
+
+        <div id="success"
+            class="hidden p-8 rounded-[40px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6 animate-in zoom-in-95 duration-500">
+            <div
+                class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white">신청 완료!</h3>
+                <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">팀 편성이 완료되면 알려드릴게요.<br>방장의 승인을
+                    기다려주세요.</p>
+            </div>
+            <div class="pt-4">
+                <a href="https://play.google.com/store/apps/details?id=com.pcircuitflow.btm" target="_blank"
+                    class="inline-block px-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 transition-all">
+                    Belo 앱 다운로드 하기
+                </a>
+            </div>
+        </div>
+
+        <footer class="text-center pt-8 pb-4">
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">Powered by
+                Belo System</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX43ePWFhdIbCUZUtoMePqMdTXiAowlx0",
+            authDomain: "balance-team-maker.firebaseapp.com",
+            projectId: "balance-team-maker",
+            storageBucket: "balance-team-maker.firebasestorage.app",
+            messagingSenderId: "834065889708",
+            appId: "1:834065889708:web:0fb72121f685619d406209"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const POS_CONFIG = {
+            'Soccer': [
+                { id: 'GK', x: 50, y: 85 }, { id: 'LB', x: 15, y: 65 }, { id: 'DF', x: 50, y: 65 }, { id: 'RB', x: 85, y: 65 },
+                { id: 'MF', x: 50, y: 42 }, { id: 'LW', x: 15, y: 25 }, { id: 'FW', x: 50, y: 18 }, { id: 'RW', x: 85, y: 25 }
+            ],
+            'Futsal': [
+                { id: 'GK', x: 50, y: 82 }, { id: 'FIX', x: 50, y: 62 }, { id: 'ALA', x: 50, y: 40 }, { id: 'PIV', x: 50, y: 18 }
+            ],
+            'Basketball': [
+                { id: 'PG', x: 35, y: 72 }, { id: 'SG', x: 65, y: 72 }, { id: 'SF', x: 25, y: 45 }, { id: 'PF', x: 75, y: 45 }, { id: 'C', x: 50, y: 28 }
+            ]
+        };
+        const KEY_NAME = 'btm_user_name';
+        const KEY_TIER = 'btm_user_tier';
+        let selections = {};
+        let selectedTier = 'B';
+        let currentRoomData = null;
+        let currentSport = 'Soccer';
+
+        const themeBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const loginSection = document.getElementById('loginSection');
+        const nameInput = document.getElementById('name');
+
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('btm_theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('btm_theme', 'light');
+            }
+            if (currentRoomData) renderPitch();
+        }
+
+        function selectTier(tier) {
+            selectedTier = tier;
+            document.querySelectorAll('.tier-btn').forEach(b => {
+                b.className = 'tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all';
+                if (b.dataset.tier === tier) b.classList.add('active-' + tier, 'shadow-lg', 'shadow-blue-500/10');
+            });
+        }
+
+        function renderParticipants(participants) {
+            const countEl = document.getElementById('participantCount');
+            const listEl = document.getElementById('participantList');
+            const approved = participants[0]?.isApproved !== undefined ? participants.filter(a => a.isApproved) : participants;
+            countEl.textContent = `${approved.length}명`;
+            if (approved.length === 0) {
+                listEl.innerHTML = '<p class="text-[10px] text-slate-400 font-bold ml-1">아직 참가자가 없습니다.</p>';
+            } else {
+                listEl.innerHTML = approved.map(a => `<span class="px-2 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[11px] font-black text-slate-600 dark:text-slate-300 animate-in fade-in zoom-in-50 duration-300">${a.name}</span>`).join('');
+            }
+        }
+
+        function renderPitch() {
+            const container = document.getElementById('pitch');
+            const lines = document.getElementById('pitchLines');
+            const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
+            const isDark = document.documentElement.classList.contains('dark');
+            const lineColor = isDark ? 'white' : 'slate-300';
+            container.querySelectorAll('.node').forEach(n => n.remove());
+            if (currentSport === 'Basketball') {
+                lines.innerHTML = `<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1/4 border-2 border-${lineColor} opacity-10 rounded-b-3xl"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-${lineColor} opacity-10 rounded-full"></div>`;
+            } else if (currentSport === 'Futsal') {
+                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-${lineColor} opacity-10"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-${lineColor} opacity-10 rounded-full"></div><div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-b border-${lineColor} opacity-10"></div><div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-1/5 border-x border-t border-${lineColor} opacity-10"></div>`;
+            } else {
+                lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-${lineColor} opacity-10"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border border-${lineColor} opacity-10 rounded-full"></div><div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-b border-${lineColor} opacity-10"></div><div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-t border-${lineColor} opacity-10"></div>`;
+            }
+            config.forEach(pos => {
+                const node = document.createElement('div');
+                node.className = 'node absolute -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:scale-110 active:scale-95 z-10';
+                node.style.left = pos.x + '%'; node.style.top = pos.y + '%';
+                node.id = 'node-' + pos.id;
+                node.innerHTML = `<span class="text-[12px] font-black text-slate-400 dark:text-slate-500 leading-none">${pos.id}</span><span class="text-[11px] font-black text-white leading-none mt-0.5" id="label-${pos.id}"></span>`;
+                node.onpointerdown = (e) => { e.preventDefault(); showMenu(pos.id, node); };
+                container.appendChild(node);
+            });
+        }
+
+        function showMenu(posId, anchor) {
+            document.querySelectorAll('.menu-popup').forEach(m => m.remove());
+            const menu = document.createElement('div');
+            // 노드 부모인 피치 컨테이너에 직접 추가하여 레이어 간섭 차단
+            const container = document.getElementById('pitch');
+            menu.className = 'menu-popup absolute p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-1.5 min-w-max animate-in zoom-in-50 fade-in duration-200 origin-bottom z-50';
+
+            // 클릭된 노드의 위치 정보를 가져와서 메뉴 위치 설정
+            menu.style.left = anchor.style.left;
+            menu.style.top = anchor.style.top;
+            menu.style.transform = 'translate(-50%, -100%) translateY(-24px)'; // 노드 위로 띄움
+
+            menu.onpointerdown = (e) => e.stopPropagation();
+            [{ l: 1, v: '100', c: 'bg-emerald-500' }, { l: 2, v: '75', c: 'bg-yellow-400' }, { l: 3, v: '50', c: 'bg-orange-400' }, { l: 'X', v: 'X', c: 'bg-rose-500' }].forEach(opt => {
+                const b = document.createElement('button'); b.type = 'button';
+                b.className = `w-10 h-10 rounded-full ${opt.c} text-white text-xs font-black transition-all active:scale-95`;
+                b.innerHTML = `<span>${opt.v}</span>`;
+                b.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); selectPos(posId, opt); menu.remove(); };
+                menu.appendChild(b);
+            });
+            container.appendChild(menu);
+        }
+
+        function selectPos(posId, opt) {
+            selections[posId] = opt.l;
+            if (opt.l === 1 || opt.l === 2 || opt.l === 3) {
+                const config = POS_CONFIG[currentSport] || POS_CONFIG['Soccer'];
+                config.forEach(pos => {
+                    if (pos.id !== posId && ![1, 2, 3].includes(selections[pos.id])) {
+                        selections[pos.id] = 'X'; updateNodeUI(pos.id, { l: 'X', v: 'X', c: 'bg-rose-500' });
+                    }
+                });
+            }
+            updateNodeUI(posId, opt);
+        }
+
+        function updateNodeUI(p, o) {
+            const n = document.getElementById('node-' + p);
+            const l = document.getElementById('label-' + p);
+            if (!n || !l) return;
+            n.className = `node absolute -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full ${o.c} flex flex-col items-center justify-center shadow-lg border-0 scale-110 z-10`;
+            n.querySelector('span').className = 'text-[12px] font-black text-white/80 leading-none';
+            l.className = 'text-[11px] font-black text-white leading-none mt-0.5';
+            l.textContent = o.v;
+        }
+
+        async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+
+            if (!roomId) {
+                document.getElementById('loading').innerHTML = `
+                    <div class="text-center p-8 space-y-4">
+                        <div class="text-4xl text-rose-500 font-black">!</div>
+                        <p class="text-slate-500 font-bold">방 정보를 불러올 수 없습니다.<br>올바른 신청 링크로 접속해주세요.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "rooms", roomId);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    console.error("Room missing:", roomId);
+                    return;
+                }
+
+                currentRoomData = docSnap.data();
+                const rawSport = currentRoomData.sport || 'Soccer';
+                currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
+                if (rawSport.toUpperCase() === 'SOCCER') currentSport = 'Soccer';
+                if (rawSport.toUpperCase() === 'FUTSAL') currentSport = 'Futsal';
+                if (rawSport.toUpperCase() === 'BASKETBALL') currentSport = 'Basketball';
+
+                document.getElementById('roomSport').textContent = currentSport;
+                document.getElementById('roomDateTime').textContent = `${currentRoomData.matchDate || ''} ${currentRoomData.matchTime || ''}`;
+
+                if (currentRoomData.sport?.toUpperCase() === 'GENERAL' || currentRoomData.sport?.toUpperCase() === '일반') {
+                    document.getElementById('posSection').classList.add('hidden');
+                } else {
+                    document.getElementById('posSection').classList.remove('hidden');
+                    renderPitch();
+                }
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('roomInfo').classList.remove('hidden');
+                document.getElementById('participantsInfo').classList.remove('hidden');
+                document.getElementById('applyForm').classList.remove('hidden');
+                renderParticipants(currentRoomData.activeParticipants || currentRoomData.applicants || []);
+            } catch (err) {
+                console.error("Init Error:", err);
+            }
+        }
+
+        themeBtn.onclick = () => setTheme(!document.documentElement.classList.contains('dark'));
+        const savedTheme = localStorage.getItem('btm_theme');
+        setTheme(savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+        const localName = localStorage.getItem(KEY_NAME);
+        const localTier = localStorage.getItem(KEY_TIER);
+        if (localName) nameInput.value = localName;
+        if (localTier) selectTier(localTier);
+
+        document.querySelectorAll('.tier-btn').forEach(btn => btn.onclick = () => selectTier(btn.dataset.tier));
+
+        loginBtn.onclick = async () => {
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { console.error("Login Error:", e); }
+        };
+        logoutBtn.onclick = () => signOut(auth);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (loginSection) loginSection.classList.remove('hidden');
+            if (user) {
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (userInfo) userInfo.classList.remove('hidden');
+                document.getElementById('userPhoto').src = user.photoURL || '';
+                document.getElementById('userName').textContent = user.displayName;
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const d = userDoc.data();
+                        if (d.nickname) nameInput.value = d.nickname;
+                        if (d.tier) selectTier(d.tier);
+                    } else if (!nameInput.value) {
+                        nameInput.value = user.displayName;
+                    }
+                } catch (e) { }
+            } else {
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (userInfo) userInfo.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('applyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const n = nameInput.value;
+            const urlParams = new URLSearchParams(window.location.search);
+            const rid = urlParams.get('room');
+            if (!rid) return;
+            localStorage.setItem(KEY_NAME, n);
+            localStorage.setItem(KEY_TIER, selectedTier);
+            if (auth.currentUser) {
+                try { await setDoc(doc(db, "users", auth.currentUser.uid), { nickname: n, tier: selectedTier }, { merge: true }); } catch (e) { }
+            }
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '신청 중...';
+            const p = [], s = [], t = [], f = [];
+            Object.entries(selections).forEach(([pos, level]) => {
+                if (level === 1) p.push(pos); else if (level === 2) s.push(pos); else if (level === 3) t.push(pos); else if (level === 'X') f.push(pos);
+            });
+            try {
+                await updateDoc(doc(db, "rooms", rid), {
+                    applicants: arrayUnion({ id: Math.random().toString(36).substr(2, 9), name: n, tier: selectedTier, position: p[0] || 'NONE', primaryPositions: p, secondaryPositions: s, tertiaryPositions: t, forbiddenPositions: f, timestamp: new Date().toISOString() })
+                });
+                document.getElementById('applyForm').classList.add('hidden');
+                document.getElementById('success').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) { alert('오류가 발생했습니다: ' + e.message); submitBtn.disabled = false; }
+        };
+
+        init();
+    </script>
 </body>
 
 </html>

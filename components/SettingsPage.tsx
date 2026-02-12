@@ -1,32 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { Player } from '../types';
 import { Language } from '../translations';
+import { useAppContext } from '../contexts/AppContext';
+import { useAuthContext } from '../contexts/AuthContext';
+import { usePlayerContext } from '../contexts/PlayerContext';
+import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
+import { AnalyticsService } from '../services/analyticsService';
 import * as Icons from '../Icons';
 
 const { EditIcon, CheckIcon, ExternalLinkIcon } = Icons;
-
-interface SettingsPageProps {
-  darkMode: boolean;
-  setDarkMode: (v: boolean) => void;
-  lang: Language;
-  setLang: (lang: Language) => void;
-  user: any;
-  nickname: string;
-  onUpdateNickname: (name: string) => void;
-  onLogin: () => void;
-  onLogout: () => void;
-  players: Player[];
-  setPlayers: (players: Player[]) => void;
-  showTier: boolean;
-  setShowTier: (v: boolean) => void;
-  sortMode: string;
-  setSortMode: (v: string) => void;
-  useTeamColors: boolean;
-  setUseTeamColors: (v: boolean) => void;
-  t: (key: string, ...args: any[]) => string;
-  showConfirm: (message: string, onConfirm: () => void, title?: string, confirmText?: string, cancelText?: string) => void;
-  showAlert: (message: string, title?: string) => void;
-}
 
 const ToggleSwitch: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({ value, onChange }) => (
   <button
@@ -76,12 +57,20 @@ const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
   </svg>
 );
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({
-  darkMode, setDarkMode, lang, setLang, user, nickname, onUpdateNickname,
-  onLogin, onLogout, players, setPlayers,
-  showTier, setShowTier, sortMode, setSortMode, useTeamColors, setUseTeamColors,
-  t, showConfirm, showAlert,
-}) => {
+export const SettingsPage: React.FC = () => {
+  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert } = useAppContext();
+  const { user, userNickname: nickname, setUserNickname, handleLogout, setShowLoginModal, isAdFree, setIsAdFree } = useAuthContext();
+  const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
+  const { showTier, setShowTier, sortMode, setSortMode, useTeamColors, setUseTeamColors } = useTeamBalanceContext();
+
+  const setLang = (newLang: Language) => {
+    setLangRaw(newLang);
+    localStorage.setItem('app_lang_manual', newLang);
+    AnalyticsService.logEvent('change_language', { language: newLang });
+  };
+  const onUpdateNickname = (name: string) => { setUserNickname(name); localStorage.setItem('app_user_nickname', name); };
+  const onLogin = () => setShowLoginModal(true);
+  const onLogout = () => handleLogout(setPlayers, setIsDataLoaded);
   const [langOpen, setLangOpen] = useState(false);
   const [editingNickname, setEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);

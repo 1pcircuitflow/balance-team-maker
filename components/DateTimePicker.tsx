@@ -81,7 +81,11 @@ const WheelPicker: React.FC<{
 };
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange, lang, onViewModeChange }) => {
-    const t = (key: any): any => (TRANSLATIONS[lang] as any)[key] || key;
+    const t = (key: any, ...args: any[]): any => {
+        const translation = (TRANSLATIONS[lang] as any)[key];
+        if (typeof translation === 'function') return translation(...args);
+        return translation || key;
+    };
 
     // Parse input props
     const [yStr, mStr, dStr] = date.split('-');
@@ -192,7 +196,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                         ${viewMode === 'YEAR_MONTH_SELECT' ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 >
                     <span className="text-sm font-black text-slate-900 dark:text-white">
-                        {currentYear}{lang === 'ko' ? '년' : '.'} {String(currentMonth).padStart(2, '0')}{lang === 'ko' ? '월' : ''}
+                        {t('dateYearMonth', currentYear, String(currentMonth).padStart(2, '0'))}
                     </span>
                     <div className={`transition-transform duration-300 ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`}>
                         <Icons.ChevronDownIcon />

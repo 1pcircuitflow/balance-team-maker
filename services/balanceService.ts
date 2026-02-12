@@ -1,4 +1,5 @@
 import { Player, Team, BalanceResult, SportType, Position, Tier, TeamConstraint } from '../types';
+import { POSITIONS_BY_SPORT } from '../constants';
 
 /**
  * Gemini 팀 밸런싱 알고리즘 (Enhanced)
@@ -523,11 +524,7 @@ export const generateBalancedTeams = (
 
     // sportType 매개변수가 있으면 그것을 우선 사용, 없으면 첫 번째 플레이어 데이터에서 유추
     const sport = sportType || (activePlayers.length > 0 ? activePlayers[0].sportType : SportType.GENERAL);
-    const allPositions: Position[] =
-        sport === SportType.SOCCER ? ['ST', 'LW', 'RW', 'MF', 'DF', 'LB', 'RB', 'GK'] :
-            sport === SportType.FUTSAL ? ['PIV', 'ALA', 'FIX', 'GK'] :
-                sport === SportType.BASKETBALL ? ['PG', 'SG', 'SF', 'PF', 'C'] :
-                    ['NONE'];
+    const allPositions: Position[] = POSITIONS_BY_SPORT[sport] || ['NONE'];
 
     // 중복 결과 방지를 위해 최대 MAX_RETRY_COUNT 회 재시도
     const MAX_RETRY_COUNT = 5;

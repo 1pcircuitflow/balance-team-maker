@@ -221,7 +221,7 @@ export const HostRoomModal: React.FC<{
         try {
           await Share.share({
             title: t('shareRecruitLink'),
-            text: `[${activeRoom.title}] ${activeRoom.matchDate} ${activeRoom.matchTime} ${t(activeRoom.sport.toLowerCase())} 참여자를 모집합니다!\n\n👇 참가하기 👇\n${webUrl}`,
+            text: t('shareRecruitMessage', activeRoom.title, activeRoom.matchDate, activeRoom.matchTime, t(activeRoom.sport.toLowerCase()), webUrl),
             dialogTitle: t('shareRecruitLink'),
           });
         } catch (shareError) {

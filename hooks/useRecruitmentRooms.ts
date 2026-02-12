@@ -8,6 +8,7 @@ import {
   Applicant,
   db,
 } from '../services/firebaseService';
+import { upsertPlayerFromApplicant } from '../utils/helpers';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
@@ -78,25 +79,29 @@ export const useRecruitmentRooms = (
 
     const unsubscribe = subscribeToUserRooms(currentUserId, (rooms) => {
       rooms.forEach(room => {
-        const prevCount = prevApplicantsCount.current[room.id];
-        if (prevCount !== undefined && room.applicants.length > prevCount) {
-          const newPlayer = room.applicants[room.applicants.length - 1];
-          const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
-          if (Capacitor.isNativePlatform()) {
-            LocalNotifications.schedule({
-              notifications: [{
-                title: `[${room.title}] ${t('recruitParticipants')}`,
-                body: msg,
-                id: Math.floor(Math.random() * 1000000),
-                smallIcon: 'ic_stat_icon_config_sample',
-                sound: 'default',
-              }]
-            }).catch(e => console.error('Local Notification failed', e));
-          } else {
-            showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+        const pendingCount = room.applicants.filter(a => !a.isApproved).length;
+        const prevPending = prevApplicantsCount.current[room.id];
+        if (prevPending !== undefined && pendingCount > prevPending) {
+          const newPlayer = room.applicants.filter(a => !a.isApproved).slice(-1)[0];
+          if (newPlayer) {
+            const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
+            if (Capacitor.isNativePlatform()) {
+              LocalNotifications.schedule({
+                notifications: [{
+                  title: `[${room.title}] ${t('recruitParticipants')}`,
+                  body: msg,
+                  id: Math.floor(Math.random() * 1000000),
+                  channelId: 'recruit_channel',
+                  smallIcon: 'ic_stat_icon_config_sample',
+                  sound: 'default',
+                }]
+              }).catch(e => console.error('Local Notification failed', e));
+            } else {
+              showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+            }
           }
         }
-        prevApplicantsCount.current[room.id] = room.applicants.length;
+        prevApplicantsCount.current[room.id] = pendingCount;
       });
 
       setActiveRooms(rooms);
@@ -160,47 +165,7 @@ export const useRecruitmentRooms = (
         a.id === applicant.id ? { ...a, isApproved: true } : a
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
-
-      const p1 = (applicant as any).primaryPositions || [applicant.position || 'NONE'];
-      const s1 = (applicant as any).secondaryPositions || [];
-      const t1 = (applicant as any).tertiaryPositions || [];
-      const f1 = (applicant as any).forbiddenPositions || [];
-
-      setPlayers(prev => {
-        const existingIdx = prev.findIndex(p => p.name === applicant.name);
-        if (existingIdx > -1) {
-          const newList = [...prev];
-          newList[existingIdx] = {
-            ...newList[existingIdx],
-            tier: (Tier as any)[applicant.tier] || Tier.B,
-            isActive: true,
-            sportType: room.sport as SportType,
-            primaryPosition: p1[0] || 'NONE',
-            primaryPositions: p1,
-            secondaryPosition: s1[0] || 'NONE',
-            secondaryPositions: s1,
-            tertiaryPosition: t1[0] || 'NONE',
-            tertiaryPositions: t1,
-            forbiddenPositions: f1
-          };
-          return newList;
-        }
-        const newPlayer: Player = {
-          id: 'p_' + Math.random().toString(36).substr(2, 9),
-          name: applicant.name,
-          tier: (Tier as any)[applicant.tier] || Tier.B,
-          isActive: true,
-          sportType: room.sport as SportType,
-          primaryPosition: p1[0] || 'NONE',
-          primaryPositions: p1,
-          secondaryPosition: s1[0] || 'NONE',
-          secondaryPositions: s1,
-          tertiaryPosition: t1[0] || 'NONE',
-          tertiaryPositions: t1,
-          forbiddenPositions: f1
-        };
-        return [...prev, newPlayer];
-      });
+      setPlayers(prev => upsertPlayerFromApplicant(prev, applicant, room.sport as SportType));
     } catch (e) {
       console.error("Approval Error:", e);
     }
@@ -257,46 +222,11 @@ export const useRecruitmentRooms = (
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
 
       setPlayers(prev => {
-        const newList = [...prev];
+        let result = prev;
         room.applicants.filter(a => !a.isApproved).forEach(a => {
-          const existingIdx = newList.findIndex(p => p.name === a.name);
-          const p1 = (a as any).primaryPositions || [a.position || 'NONE'];
-          const s1 = (a as any).secondaryPositions || [];
-          const t1 = (a as any).tertiaryPositions || [];
-          const f1 = (a as any).forbiddenPositions || [];
-
-          if (existingIdx > -1) {
-            newList[existingIdx] = {
-              ...newList[existingIdx],
-              tier: (Tier as any)[a.tier] || Tier.B,
-              isActive: true,
-              sportType: room.sport as SportType,
-              primaryPosition: p1[0] || 'NONE',
-              primaryPositions: p1,
-              secondaryPosition: s1[0] || 'NONE',
-              secondaryPositions: s1,
-              tertiaryPosition: t1[0] || 'NONE',
-              tertiaryPositions: t1,
-              forbiddenPositions: f1
-            };
-          } else {
-            newList.push({
-              id: 'p_' + Math.random().toString(36).substr(2, 9),
-              name: a.name,
-              tier: (Tier as any)[a.tier] || Tier.B,
-              isActive: true,
-              sportType: room.sport as SportType,
-              primaryPosition: p1[0] || 'NONE',
-              primaryPositions: p1,
-              secondaryPosition: s1[0] || 'NONE',
-              secondaryPositions: s1,
-              tertiaryPosition: t1[0] || 'NONE',
-              tertiaryPositions: t1,
-              forbiddenPositions: f1
-            });
-          }
+          result = upsertPlayerFromApplicant(result, a, room.sport as SportType);
         });
-        return newList;
+        return result;
       });
     } catch (e) {
       console.error("Approve All Error:", e);
@@ -312,7 +242,7 @@ export const useRecruitmentRooms = (
         try {
           await Share.share({
             title: t('shareRecruitLink'),
-            text: `[${room.title}] ${room.matchDate} ${room.matchTime} ${t(room.sport.toLowerCase())} 참여자를 모집합니다!\n\n👇 참가하기 👇\n${webUrl}`,
+            text: t('shareRecruitMessage', room.title, room.matchDate, room.matchTime, t(room.sport.toLowerCase()), webUrl),
             dialogTitle: t('shareRecruitLink'),
           });
         } catch (shareError) {

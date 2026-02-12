@@ -122,8 +122,15 @@ export const useInitialization = (
       if (Capacitor.isNativePlatform()) {
         try {
           await LocalNotifications.requestPermissions();
+          await LocalNotifications.createChannel({
+            id: 'recruit_channel',
+            name: 'Recruitment Notifications',
+            importance: 5,
+            sound: 'default',
+            vibration: true,
+          });
         } catch (e) {
-          console.error('LocalNotifications permissions failed', e);
+          console.error('LocalNotifications init failed', e);
         }
       }
     };

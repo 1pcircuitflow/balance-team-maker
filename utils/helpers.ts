@@ -1,5 +1,6 @@
 
-import { Position, Tier } from '../types';
+import { Player, Position, SportType, Tier } from '../types';
+import { Applicant } from '../services/firebaseService';
 import { TRANSLATIONS, Language } from '../translations';
 
 export const compareVersions = (v1: string, v2: string) => {
@@ -39,4 +40,50 @@ export const parseTier = (tierStr: string): Tier => {
 export const tierToLabel = (tierStr: string): string => {
   if (!isNaN(Number(tierStr))) return TIER_VALUE_TO_NAME[Number(tierStr)] || 'B';
   return tierStr;
+};
+
+export const applicantToPlayer = (
+  applicant: Applicant,
+  sportType: SportType,
+  options?: { isActive?: boolean; existingId?: string }
+): Player => {
+  const p1 = (applicant.primaryPositions as Position[]) || (applicant.position ? [applicant.position as Position] : ['NONE' as Position]);
+  const s1 = (applicant.secondaryPositions as Position[]) || [];
+  const t1 = (applicant.tertiaryPositions as Position[]) || [];
+  const f1 = (applicant.forbiddenPositions as Position[]) || [];
+
+  return {
+    id: options?.existingId || 'p_' + Math.random().toString(36).substr(2, 9),
+    name: applicant.name,
+    tier: parseTier(applicant.tier),
+    isActive: options?.isActive ?? true,
+    sportType,
+    primaryPosition: (p1[0] || 'NONE') as Position,
+    primaryPositions: p1,
+    secondaryPosition: (s1[0] || 'NONE') as Position,
+    secondaryPositions: s1,
+    tertiaryPosition: (t1[0] || 'NONE') as Position,
+    tertiaryPositions: t1,
+    forbiddenPositions: f1,
+  };
+};
+
+export const upsertPlayerFromApplicant = (
+  players: Player[],
+  applicant: Applicant,
+  sportType: SportType,
+  isActive?: boolean
+): Player[] => {
+  const existingIdx = players.findIndex(p => p.name === applicant.name);
+  const newPlayer = applicantToPlayer(applicant, sportType, {
+    isActive: isActive ?? true,
+    existingId: existingIdx > -1 ? players[existingIdx].id : undefined,
+  });
+
+  if (existingIdx > -1) {
+    const newList = [...players];
+    newList[existingIdx] = { ...newList[existingIdx], ...newPlayer };
+    return newList;
+  }
+  return [...players, newPlayer];
 };

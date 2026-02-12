@@ -1,26 +1,34 @@
 import React from 'react';
-import { SportType } from '../types';
+import { AppPageType } from '../types';
 import { SPORT_IMAGES } from '../constants';
+import { useAppContext } from '../contexts/AppContext';
+import { useNavigationContext } from '../contexts/NavigationContext';
+import { useRecruitmentContext } from '../contexts/RecruitmentContext';
 import * as Icons from '../Icons';
-import { RecruitmentRoom } from '../services/firebaseService';
 
 const { PlusIcon } = Icons;
 
-interface HomePageProps {
-  filteredRooms: RecruitmentRoom[];
-  players: any[];
-  activeTab: SportType;
-  t: (key: string, ...args: any[]) => string;
-  onRoomClick: (room: RecruitmentRoom) => void;
-  onCreateRoom: () => void;
-  onShareLink: (room: RecruitmentRoom) => void;
-  onDeleteRoom: (room: RecruitmentRoom) => void;
-}
+export const HomePage: React.FC = () => {
+  const { t, showConfirm, setConfirmState } = useAppContext();
+  const { setCurrentPage } = useNavigationContext();
+  const {
+    filteredRooms, setCurrentActiveRoom, setShowHostRoomModal,
+    handleShareRecruitLink, handleCloseRecruitRoom,
+  } = useRecruitmentContext();
 
-export const HomePage: React.FC<HomePageProps> = ({
-  filteredRooms, players, activeTab, t,
-  onRoomClick, onCreateRoom, onShareLink, onDeleteRoom,
-}) => {
+  const onRoomClick = (room: any) => {
+    setCurrentActiveRoom(room);
+    setCurrentPage(AppPageType.DETAIL);
+  };
+  const onCreateRoom = () => {
+    setCurrentActiveRoom(null);
+    setShowHostRoomModal(true);
+  };
+  const onShareLink = (room: any) => handleShareRecruitLink(room);
+  const onDeleteRoom = (room: any) => {
+    const confirmData = handleCloseRecruitRoom(room);
+    setConfirmState({ isOpen: true, title: confirmData.title, message: confirmData.message, confirmText: confirmData.confirmText, onConfirm: async () => { await confirmData.onConfirm(); setConfirmState((prev: any) => ({ ...prev, isOpen: false })); } });
+  };
   return (
     <section className="w-full px-5 mb-5" data-capture-ignore="true">
       <div className="space-y-4">
@@ -56,7 +64,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
 
-                  <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+                  <div className="absolute inset-0 p-3 flex flex-col justify-between text-white">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="bg-white/95 px-3 py-0 rounded-xl shrink-0">
@@ -93,7 +101,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between my-auto">
                       <div className="flex-1 min-w-0">
                         {room.venue && (
                           <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venue}</p>
@@ -103,8 +111,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                         const approvedCount = room.applicants.filter(a => a.isApproved).length;
                         const isFull = room.maxApplicants > 0 && approvedCount >= room.maxApplicants;
                         return (
-                          <div className={`text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl tracking-[-0.025em] shrink-0 ${isFull ? 'bg-[#F43F5E]' : 'bg-[#53B175]'}`}>
-                            {isFull ? '\uBAA8\uC9D1\uB9C8\uAC10' : '\uBAA8\uC9D1\uC911'}
+                          <div className={`text-[12px] font-medium text-[#FFFFFF] px-2 py-0.5 rounded-xl tracking-[-0.025em] shrink-0 ${isFull ? 'bg-[#F43F5E]' : 'bg-[#53B175]'}`}>
+                            {isFull ? t('recruitFull') : t('recruiting')}
                           </div>
                         );
                       })()}
@@ -112,7 +120,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
                     <div className="flex justify-between items-end gap-2">
                       <div className="space-y-0.5">
-                        <p className="text-[12px] font-medium uppercase tracking-[-0.025em]" style={{ color: '#FFFFFF' }}>{'\uACBD\uAE30 \uB0A0\uC9DC & \uC2DC\uAC04'}</p>
+                        <p className="text-[12px] font-medium uppercase tracking-[-0.025em]" style={{ color: '#FFFFFF' }}>{t('matchDateTimeLabel')}</p>
                         <p className="text-[16px] font-medium tracking-[-0.025em] leading-none">{room.matchDate} {room.matchTime}</p>
                       </div>
 
@@ -120,7 +128,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                         <span className="text-[20px] font-black tracking-[-0.025em] tabular-nums leading-none">
                           {room.applicants.filter(a => a.isApproved).length}
                           <span className="text-white mx-1">/</span>
-                          <span className="text-[12px]">{room.maxApplicants > 0 ? room.maxApplicants : '\uBB34\uC81C\uD55C'}</span>
+                          <span className="text-[12px]">{room.maxApplicants > 0 ? room.maxApplicants : t('unlimited')}</span>
                         </span>
                       </div>
                     </div>
