@@ -339,7 +339,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             {isSelected && <CheckIcon />}
                           </div>
                         )}
-                        <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-[#777777] dark:text-slate-400 shrink-0">
+                        <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
                           BELO
                         </div>
                         <div className="flex flex-col gap-0.5">
@@ -497,7 +497,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
                     <Icons.UsersIcon size={24} className="text-slate-300 dark:text-slate-600" />
                   </div>
-                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{t('noPlayers')}</p>
+                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : t('noPlayers')}</p>
                 </div>
               )}
             </div>
