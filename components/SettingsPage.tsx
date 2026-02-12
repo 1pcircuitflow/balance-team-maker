@@ -32,9 +32,9 @@ const ToggleSwitch: React.FC<{ value: boolean; onChange: (v: boolean) => void }>
   <button
     type="button"
     onClick={() => onChange(!value)}
-    className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 flex-shrink-0 ${value ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+    className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${value ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
   >
-    <div className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${value ? 'translate-x-[22px]' : 'translate-x-[2px]'}`} />
+    <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${value ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
   </button>
 );
 
@@ -153,12 +153,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Section 1: Appearance */}
       <div className="mb-6">
         <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-400 uppercase tracking-wider">{t('settingsAppearance')}</span>
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAppearance')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Dark Mode */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('darkMode')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('darkMode')}</span>
             <ToggleSwitch value={darkMode} onChange={setDarkMode} />
           </div>
           {/* Language */}
@@ -167,9 +167,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               className="px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
               onClick={() => setLangOpen(!langOpen)}
             >
-              <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('language')}</span>
+              <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('language')}</span>
               <div className="flex items-center gap-2">
-                <span className="text-[15px] text-slate-400">{currentLang?.flag} {currentLang?.name}</span>
+                <span className="text-[12px] text-slate-400">{currentLang?.flag} {currentLang?.name}</span>
                 <ChevronIcon open={langOpen} />
               </div>
             </div>
@@ -200,27 +200,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Section 2: Defaults */}
       <div className="mb-6">
         <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-400 uppercase tracking-wider">{t('settingsDefaults')}</span>
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsDefaults')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Show Tier */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('defaultShowTier')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultShowTier')}</span>
             <ToggleSwitch value={showTier} onChange={setShowTier} />
           </div>
           {/* Sort Mode */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('defaultSortMode')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultSortMode')}</span>
             <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
               <button
                 onClick={() => setSortMode('name')}
-                className={`px-3 py-1.5 text-[13px] font-medium transition-all ${sortMode === 'name' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 text-[12px] font-medium transition-all ${sortMode === 'name' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
               >
                 {t('sortByName')}
               </button>
               <button
                 onClick={() => setSortMode('tier')}
-                className={`px-3 py-1.5 text-[13px] font-medium transition-all ${sortMode === 'tier' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 text-[12px] font-medium transition-all ${sortMode === 'tier' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
               >
                 {t('sortByTier')}
               </button>
@@ -228,7 +228,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
           {/* Team Colors */}
           <div className="px-5 py-3.5 flex items-center justify-between">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('defaultTeamColors')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultTeamColors')}</span>
             <ToggleSwitch value={useTeamColors} onChange={setUseTeamColors} />
           </div>
         </div>
@@ -237,17 +237,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Section 3: Account */}
       <div className="mb-6">
         <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-400 uppercase tracking-wider">{t('settingsAccount')}</span>
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAccount')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Account Type */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('accountType')}</span>
-            <span className="text-[15px] text-slate-400">{user ? t('googleAccount') : t('guestMode')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('accountType')}</span>
+            <span className="text-[12px] text-slate-400">{user ? t('googleAccount') : t('guestMode')}</span>
           </div>
           {/* Nickname */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('nickname')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('nickname')}</span>
             {editingNickname ? (
               <div className="flex items-center gap-2">
                 <input
@@ -264,7 +264,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setNicknameInput(nickname); setEditingNickname(true); }}>
-                <span className="text-[15px] text-slate-400">{nickname}</span>
+                <span className="text-[12px] text-slate-400">{nickname}</span>
                 <span className="text-slate-300 dark:text-slate-600"><EditIcon /></span>
               </div>
             )}
@@ -274,14 +274,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             {user ? (
               <button
                 onClick={onLogout}
-                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[15px] font-medium text-red-500 transition-all active:scale-[0.98]"
+                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[12px] font-medium text-red-500 transition-all active:scale-[0.98]"
               >
                 {t('logout')}
               </button>
             ) : (
               <button
                 onClick={onLogin}
-                className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-white text-[15px] font-medium text-white dark:text-slate-900 transition-all active:scale-[0.98]"
+                className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-white text-[12px] font-medium text-white dark:text-slate-900 transition-all active:scale-[0.98]"
               >
                 {t('googleLogin')}
               </button>
@@ -293,7 +293,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Section 4: Data Management */}
       <div className="mb-6">
         <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-400 uppercase tracking-wider">{t('settingsDataManagement')}</span>
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsDataManagement')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Export */}
@@ -301,7 +301,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
             onClick={handleExport}
           >
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('exportData')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('exportData')}</span>
             <span className="text-slate-400"><DownloadIcon /></span>
           </div>
           {/* Import */}
@@ -309,7 +309,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
             onClick={() => fileInputRef.current?.click()}
           >
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('importData')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('importData')}</span>
             <span className="text-slate-400"><UploadIcon /></span>
           </div>
           <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
@@ -318,7 +318,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             className="px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-red-50 dark:active:bg-red-950/20"
             onClick={handleReset}
           >
-            <span className="text-[15px] font-normal text-red-500">{t('resetAllData')}</span>
+            <span className="text-[12px] font-normal text-red-500">{t('resetAllData')}</span>
             <span className="text-red-400"><TrashIcon /></span>
           </div>
         </div>
@@ -327,7 +327,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Section 5: About */}
       <div className="mb-6">
         <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-400 uppercase tracking-wider">{t('settingsAbout')}</span>
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAbout')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Rate App */}
@@ -335,13 +335,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
             onClick={handleRateApp}
           >
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('rateApp')}</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('rateApp')}</span>
             <span className="text-slate-400"><ExternalLinkIcon /></span>
           </div>
           {/* Version */}
           <div className="px-5 py-3.5 flex items-center justify-between">
-            <span className="text-[15px] font-normal text-slate-900 dark:text-white">{t('version')}</span>
-            <span className="text-[15px] text-slate-400">2.1.26</span>
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('version')}</span>
+            <span className="text-[12px] text-slate-400">2.1.26</span>
           </div>
         </div>
       </div>

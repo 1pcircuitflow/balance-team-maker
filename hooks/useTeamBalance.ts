@@ -55,6 +55,14 @@ export const useTeamBalance = (
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showRewardAd, setShowRewardAd] = useState(false);
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [resultHistory, setResultHistory] = useState<BalanceResult[]>(() => {
+    try {
+      const saved = localStorage.getItem('app_result_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [showHistory, setShowHistory] = useState(false);
 
   const activePlayers = useMemo(() =>
     players.filter(p => p.isActive && (activeTab === SportType.ALL || p.sportType === activeTab)),
@@ -62,7 +70,11 @@ export const useTeamBalance = (
   );
 
   const memberPlayers = useMemo(() => {
-    const currentPlayers = players.filter(p => activeTab === SportType.ALL || p.sportType === activeTab);
+    let currentPlayers = players.filter(p => activeTab === SportType.ALL || p.sportType === activeTab);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      currentPlayers = currentPlayers.filter(p => p.name.toLowerCase().includes(q));
+    }
     if (sortMode === 'name') {
       return [...currentPlayers].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     } else {
@@ -73,7 +85,7 @@ export const useTeamBalance = (
         return a.name.localeCompare(b.name, 'ko');
       });
     }
-  }, [players, activeTab, sortMode]);
+  }, [players, activeTab, sortMode, searchQuery]);
 
   // Defaults persistence
   useEffect(() => { localStorage.setItem('app_default_show_tier', showTier.toString()); }, [showTier]);
@@ -286,6 +298,11 @@ export const useTeamBalance = (
         }
 
         setResult(res);
+        setResultHistory(prev => {
+          const next = [res, ...prev].slice(0, 5);
+          localStorage.setItem('app_result_history', JSON.stringify(next));
+          return next;
+        });
         setShowQuotaSettings(false);
         setCurrentPage(AppPageType.BALANCE);
 
@@ -375,6 +392,9 @@ export const useTeamBalance = (
     showRewardAd, setShowRewardAd,
     showReviewPrompt, setShowReviewPrompt,
     activePlayers, memberPlayers,
+    searchQuery, setSearchQuery,
+    resultHistory, setResultHistory,
+    showHistory, setShowHistory,
     updateQuota, toggleQuotaMode,
     currentQuotaTotal,
     handleUpdateResultTeamColor,

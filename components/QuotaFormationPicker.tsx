@@ -27,7 +27,7 @@ export const QuotaFormationPicker: React.FC<{
   };
 
   return (
-    <div className="relative aspect-[3/4] w-full max-w-[340px] mx-auto mt-4 px-2">
+    <div className="relative aspect-[3/4] w-full mx-auto mt-4">
       <div className="absolute inset-0 rounded-3xl overflow-hidden">
         {/* Stadium Backgrounds */}
         {sport === SportType.BASKETBALL ? (
@@ -114,7 +114,7 @@ export const QuotaFormationPicker: React.FC<{
                   <MinusIcon size={8} />
                 </button>
 
-                <span className={`text-[12px] font-medium min-w-[20px] text-center leading-none tracking-tight transition-colors ${isAuto ? 'text-emerald-600 dark:text-emerald-400' : 'text-black dark:text-white'
+                <span className={`text-[12px] font-medium min-w-[28px] text-center leading-none tracking-tight whitespace-nowrap transition-colors ${isAuto ? 'text-emerald-600 dark:text-emerald-400' : 'text-black dark:text-white'
                   }`}>
                   {isAuto ? t('autoQuota') : val}
                 </span>

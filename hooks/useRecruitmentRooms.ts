@@ -42,6 +42,7 @@ export const useRecruitmentRooms = (
   const [hostRoomEndTime, setHostRoomEndTime] = useState('');
   const [hostRoomUseLimit, setHostRoomUseLimit] = useState(false);
   const [hostRoomMaxApplicants, setHostRoomMaxApplicants] = useState(0);
+  const [hostRoomVenue, setHostRoomVenue] = useState('');
   const [hostRoomTierMode, setHostRoomTierMode] = useState<'5TIER' | '3TIER'>('5TIER');
   const [hostRoomActivePicker, setHostRoomActivePicker] = useState<'START' | 'END'>('START');
   const [hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode] = useState(false);
@@ -362,7 +363,8 @@ export const useRecruitmentRooms = (
         matchEndDate: hostRoomEndDate,
         matchEndTime: hostRoomEndTime,
         maxApplicants: hostRoomUseLimit ? hostRoomMaxApplicants : 0,
-        tierMode: hostRoomTierMode
+        tierMode: hostRoomTierMode,
+        venue: hostRoomVenue.trim() || undefined,
       };
       await updateDoc(roomRef, updateData);
       setCurrentActiveRoom(prev => prev ? { ...prev, ...updateData } : null);
@@ -394,6 +396,7 @@ export const useRecruitmentRooms = (
     hostRoomEndTime, setHostRoomEndTime,
     hostRoomUseLimit, setHostRoomUseLimit,
     hostRoomMaxApplicants, setHostRoomMaxApplicants,
+    hostRoomVenue, setHostRoomVenue,
     hostRoomTierMode, setHostRoomTierMode,
     hostRoomActivePicker, setHostRoomActivePicker,
     hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode,

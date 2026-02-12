@@ -34,6 +34,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
+export interface Announcement {
+    id: string;
+    message: string;
+    messages?: { ko?: string; en?: string; ja?: string; es?: string; pt?: string };
+    isActive: boolean;
+    createdAt: string;
+    link?: string;
+    type?: 'info' | 'event' | 'update';
+}
+
 export interface Applicant {
     id: string;
     name: string;
@@ -66,6 +76,7 @@ export interface RecruitmentRoom {
     createdAt: string;
     tierMode?: '5TIER' | '3TIER'; // 티어 체계 (5단계 또는 3단계)
     fcmToken?: string; // 방장의 FCM 토큰
+    venue?: string; // 장소
 }
 
 export const translations = {
@@ -258,4 +269,20 @@ export const checkAppVersion = async () => {
         console.error("Remote Config Error:", error);
         return null;
     }
+};
+
+/**
+ * 11. 공지사항 실시간 구독
+ */
+export const subscribeToAnnouncements = (callback: (announcements: Announcement[]) => void) => {
+    const q = query(
+        collection(db, "announcements"),
+        where("isActive", "==", true)
+    );
+
+    return onSnapshot(q, (snap) => {
+        const announcements = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+        announcements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        callback(announcements);
+    });
 };

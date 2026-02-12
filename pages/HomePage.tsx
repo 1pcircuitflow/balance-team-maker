@@ -93,12 +93,17 @@ export const HomePage: React.FC<HomePageProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col justify-center items-end">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        {room.venue && (
+                          <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venue}</p>
+                        )}
+                      </div>
                       {(() => {
                         const approvedCount = room.applicants.filter(a => a.isApproved).length;
                         const isFull = room.maxApplicants > 0 && approvedCount >= room.maxApplicants;
                         return (
-                          <div className={`text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl tracking-[-0.025em] ${isFull ? 'bg-[#F43F5E]' : 'bg-[#53B175]'}`}>
+                          <div className={`text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl tracking-[-0.025em] shrink-0 ${isFull ? 'bg-[#F43F5E]' : 'bg-[#53B175]'}`}>
                             {isFull ? '\uBAA8\uC9D1\uB9C8\uAC10' : '\uBAA8\uC9D1\uC911'}
                           </div>
                         );
@@ -114,8 +119,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                       <div className="text-right leading-none flex flex-col items-end">
                         <span className="text-[20px] font-black tracking-[-0.025em] tabular-nums leading-none">
                           {room.applicants.filter(a => a.isApproved).length}
-                          <span className="text-white/40 mx-1 text-[16px]">/</span>
-                          {room.maxApplicants > 0 ? room.maxApplicants : '\uBB34\uC81C\uD55C'}
+                          <span className="text-white mx-1">/</span>
+                          <span className="text-[12px]">{room.maxApplicants > 0 ? room.maxApplicants : '\uBB34\uC81C\uD55C'}</span>
                         </span>
                       </div>
                     </div>

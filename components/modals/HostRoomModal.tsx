@@ -69,6 +69,7 @@ export const HostRoomModal: React.FC<{
 
   const [selectedSport, setSelectedSport] = useState<SportType>(activeTab === SportType.ALL ? SportType.GENERAL : activeTab);
   const [title, setTitle] = useState("");
+  const [venue, setVenue] = useState("");
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
@@ -173,7 +174,8 @@ export const HostRoomModal: React.FC<{
         matchEndTime: endTime,
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
         tierMode: tierMode,
-        fcmToken: localStorage.getItem('fcm_token') || undefined
+        fcmToken: localStorage.getItem('fcm_token') || undefined,
+        venue: venue.trim() || undefined,
       });
 
       // 링크생성 및 자동 복사
@@ -284,6 +286,18 @@ export const HostRoomModal: React.FC<{
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder={t('inputRoomTitle')}
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                />
+              </div>
+
+              {/* 장소 입력 */}
+              <div className="flex items-center gap-4">
+                <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('venue' as any)}</label>
+                <input
+                  type="text"
+                  value={venue}
+                  onChange={e => setVenue(e.target.value)}
+                  placeholder={t('venuePlaceholder' as any)}
                   className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
                 />
               </div>

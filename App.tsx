@@ -27,10 +27,12 @@ import {
   updateRoomFcmToken,
   RecruitmentRoom,
   Applicant,
+  Announcement,
   db,
   savePlayersToCloud,
   loadPlayersFromCloud,
-  checkAppVersion
+  checkAppVersion,
+  subscribeToAnnouncements
 } from './services/firebaseService';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -64,6 +66,7 @@ import { PlayerItem } from './components/PlayerItem';
 import { LanguageMenu } from './components/LanguageMenu';
 import { FormationPicker } from './components/FormationPicker';
 import { QuotaFormationPicker } from './components/QuotaFormationPicker';
+import { Toast } from './components/Toast';
 // Modals
 import { AlertModal } from './components/modals/AlertModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
@@ -114,7 +117,7 @@ const AppContent: React.FC = () => {
   const balance = useTeamBalance(players, activeTab, showAlert, t, isAdFree, setCurrentPage, AppPageType);
   const {
     teamCount, setTeamCount, result, setResult, isSharing, setIsSharing,
-    quotas, showQuotaSettings, setShowQuotaSettings, isQuotaSettingsExpanded, setIsQuotaSettingsExpanded,
+    quotas, setQuotas, showQuotaSettings, setShowQuotaSettings, isQuotaSettingsExpanded, setIsQuotaSettingsExpanded,
     isGenerating, countdown, useRandomMix, setUseRandomMix,
     useTeamColors, setUseTeamColors, showColorPicker, setShowColorPicker,
     selectedTeamColors, setSelectedTeamColors, editingResultTeamIdx, setEditingResultTeamIdx,
@@ -125,6 +128,9 @@ const AppContent: React.FC = () => {
     showLimitModal, setShowLimitModal, showRewardAd, setShowRewardAd,
     showReviewPrompt, setShowReviewPrompt,
     activePlayers, memberPlayers,
+    searchQuery, setSearchQuery,
+    resultHistory, setResultHistory,
+    showHistory, setShowHistory,
     updateQuota, toggleQuotaMode, currentQuotaTotal,
     handleUpdateResultTeamColor, getSortedTeamPlayers, handleGenerate,
     handleReviewLater, handleRateApp, expectedPerTeam,
@@ -149,6 +155,7 @@ const AppContent: React.FC = () => {
     hostRoomEndTime, setHostRoomEndTime,
     hostRoomUseLimit, setHostRoomUseLimit,
     hostRoomMaxApplicants, setHostRoomMaxApplicants,
+    hostRoomVenue, setHostRoomVenue,
     hostRoomTierMode, setHostRoomTierMode,
     hostRoomActivePicker, setHostRoomActivePicker,
     hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode,
@@ -164,6 +171,61 @@ const AppContent: React.FC = () => {
   const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'FULL' | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<{ message: string; forceUpdate: boolean; storeUrl: string; } | null>(null);
+
+  // Announcement state
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('dismissed_announcements') || '[]'); } catch { return []; }
+  });
+
+  useEffect(() => {
+    const unsub = subscribeToAnnouncements(setAnnouncements);
+    return () => unsub();
+  }, []);
+
+  const visibleAnnouncement = useMemo(() => {
+    return announcements.find(a => !dismissedAnnouncements.includes(a.id)) || null;
+  }, [announcements, dismissedAnnouncements]);
+
+  const getAnnouncementText = useCallback((a: Announcement) => {
+    if (a.messages && a.messages[lang]) return a.messages[lang]!;
+    return a.message;
+  }, [lang]);
+
+  const dismissAnnouncement = useCallback((id: string) => {
+    setDismissedAnnouncements(prev => {
+      const next = [...prev, id];
+      localStorage.setItem('dismissed_announcements', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const announcementTextRef = useRef<HTMLSpanElement>(null);
+  const announcementWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let anim: Animation | null = null;
+    const timer = setTimeout(() => {
+      const textEl = announcementTextRef.current;
+      const wrapEl = announcementWrapRef.current;
+      if (textEl && wrapEl && textEl.scrollWidth > wrapEl.clientWidth) {
+        const distance = textEl.scrollWidth - wrapEl.clientWidth + 40;
+        const slideDuration = distance * 50;
+        const pause = 1500;
+        const totalDuration = slideDuration + pause * 2;
+        const pauseRatio = pause / totalDuration;
+        anim = textEl.animate(
+          [
+            { transform: 'translateX(0)' },
+            { transform: 'translateX(0)', offset: pauseRatio },
+            { transform: `translateX(-${distance}px)`, offset: 1 - pauseRatio },
+            { transform: `translateX(-${distance}px)` },
+          ],
+          { duration: totalDuration, iterations: Infinity }
+        );
+      }
+    }, 300);
+    return () => { clearTimeout(timer); anim?.cancel(); };
+  }, [visibleAnnouncement, lang]);
 
   // Player form state
   const [newName, setNewName] = useState('');
@@ -311,10 +373,17 @@ const AppContent: React.FC = () => {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   }, [setPlayers]);
 
+  // Toast + Undo Delete
+  const [toastState, setToastState] = useState<{ isVisible: boolean; player: Player | null }>({ isVisible: false, player: null });
+
   const removePlayerFromSystem = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    const deletedPlayer = players.find(p => p.id === id);
     setPlayers(prev => prev.filter(p => p.id !== id));
-  }, [setPlayers]);
+    if (deletedPlayer) {
+      setToastState({ isVisible: true, player: deletedPlayer });
+    }
+  }, [setPlayers, players]);
 
   const toggleParticipation = (id: string) => {
     if (editingPlayerId) return;
@@ -420,133 +489,20 @@ const AppContent: React.FC = () => {
   // The JSX is kept as-is from the original App.tsx, just referencing the hooks/context values
   // This file is imported from the original monolith - identical output guaranteed
 
-  const renderTeamGenerationSection = () => {
-    if (activeTab === SportType.ALL) return null;
-    return (
-      <div className="space-y-6">
-        <section id="participation-capture-section" className="bg-slate-50 dark:bg-slate-900 flex flex-col rounded-2xl overflow-hidden min-h-[100px]">
-          <div className="px-5 py-4 border-b border-transparent flex justify-between items-center bg-transparent">
-            <div className="flex items-center gap-2">
-              <div className="text-emerald-500"><UserCheckIcon /></div>
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('participantList')} <span className="text-slate-900 dark:text-slate-100 font-normal ml-1">({activePlayers.length})</span></h2>
-            </div>
-            <button
-              onClick={() => {
-                if (unselectAllConfirm) {
-                  setPlayers(prev => prev.map(p => (activeTab === SportType.ALL || p.sportType === activeTab) ? { ...p, isActive: false } : p));
-                  setUnselectAllConfirm(false);
-                } else { setUnselectAllConfirm(true); setTimeout(() => setUnselectAllConfirm(false), 3000); }
-              }}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${unselectAllConfirm ? 'bg-rose-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}
-            >
-              {unselectAllConfirm ? t('confirmRetry') : t('unselectAll')}
-            </button>
-          </div>
-
-          {(() => {
-            const activePlayerIds = new Set(activePlayers.map(p => p.id));
-            const filtered = teamConstraints.filter(c => c.playerIds.every(id => activePlayerIds.has(id)));
-            return filtered.length > 0 && (
-            <div className="px-5 py-2 space-y-2">
-              <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t('activeConstraintsTitle')}</h3>
-              <div className="flex flex-wrap gap-2">
-                {filtered.map((c) => {
-                  const playerNames = c.playerIds.map(id => players.find(p => p.id === id)?.name || id).join(', ');
-                  return (
-                    <div key={c.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-1.5 shadow-sm">
-                      <div className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-black text-white ${c.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`}>{c.type === 'MATCH' ? 'M' : 'S'}</div>
-                      <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 max-w-[150px] truncate">{playerNames}</span>
-                      <button onClick={() => setTeamConstraints(prev => prev.filter(x => x.id !== c.id))} className="p-1 text-slate-300 hover:text-rose-500 transition-colors"><CloseIcon /></button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );})()}
-
-          <div className="px-5 pb-2 flex gap-1.5">
-            <button onClick={() => setShowTier(!showTier)} className={`px-3 py-1.5 rounded-xl border transition-all flex items-center justify-center text-[11px] font-black ${showTier ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
-              {showTier ? t('hideTier') : t('showTier')}
-            </button>
-            <button onClick={() => { setSelectionMode('MATCH'); setSelectedPlayerIds([]); }} className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-1.5 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-blue-500 text-white flex items-center justify-center text-[8px] font-black">M</div>{t('matchTeams')}
-            </button>
-            <button onClick={() => { setSelectionMode('SPLIT'); setSelectedPlayerIds([]); }} className="flex-1 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 py-1.5 rounded-xl text-[10px] font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-rose-500 text-white flex items-center justify-center text-[8px] font-black">S</div>{t('splitTeams')}
-            </button>
-          </div>
-          <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[100px]">
-            {activePlayers.length === 0 ? (<div className="col-span-full py-10 opacity-40 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t('selectParticipating')}</div>) :
-              activePlayers.map(p => (
-                <PlayerItem key={p.id} player={p} isEditing={editingPlayerId === p.id} lang={lang}
-                  onToggle={toggleParticipation} onEditToggle={setEditingPlayerId} onUpdate={updatePlayer} onRemove={removePlayerFromSystem}
-                  isSelectionMode={!!selectionMode} isSelected={selectedPlayerIds.includes(p.id)}
-                  onSelect={(id) => setSelectedPlayerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                  showTier={showTier} />
-              ))
-            }
-          </div>
-        </section>
-
-        <section className="bg-slate-950 dark:bg-white rounded-[2rem] p-8 flex flex-col items-center w-full gap-6 shadow-2xl">
-          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4 text-white dark:text-slate-900">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900"><ShuffleIcon /></div>
-              <div>
-                <p className="text-[10px] text-white/40 dark:text-slate-400 font-black uppercase tracking-[0.2em] mb-1">{t('teamGenerator')}</p>
-                <p className="text-lg font-black">{t(activeTab.toLowerCase())} • {t('playersParticipating', activePlayers.length)}</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4 w-full md:w-auto">
-              <div className="flex items-center gap-3 w-full">
-                <div className="flex items-center gap-3 bg-white/5 dark:bg-slate-50 h-14 px-5 rounded-2xl border border-white/10 dark:border-slate-200 flex-1 group">
-                  <span className="text-[11px] font-black text-white/40 dark:text-slate-400 uppercase tracking-widest">{t('teamCountLabel')}</span>
-                  <select value={teamCount} onChange={e => setTeamCount(Number(e.target.value))} className="bg-transparent text-white dark:text-slate-900 font-black text-sm focus:outline-none flex-1 appearance-none text-right outline-none">
-                    {[2, 3, 4, 5, 6].map(num => (<option key={num} value={num} className="bg-slate-900 dark:bg-white">{num}</option>))}
-                  </select>
-                </div>
-                <button onClick={handleGenerate} disabled={activePlayers.length < teamCount || isGenerating}
-                  className="px-10 h-14 bg-white dark:bg-slate-900 text-slate-950 dark:text-white font-black rounded-2xl transition-all active:scale-95 text-sm tracking-tight shadow-xl shadow-white/5 disabled:opacity-30 disabled:pointer-events-none">
-                  {t('generateTeams')}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="w-full border-t border-white/5 dark:border-slate-100 pt-6">
-            <div className="flex items-center gap-6">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${useTeamColors ? 'bg-white border-white dark:bg-slate-900 dark:border-slate-900 text-slate-950 dark:text-white' : 'border-white/10 dark:border-slate-200'}`}>{useTeamColors && <CheckIcon />}</div>
-                <input type="checkbox" className="hidden" checked={useTeamColors} onChange={e => { setUseTeamColors(e.target.checked); if (e.target.checked) setShowColorPicker(true); }} />
-                <span className="text-[11px] font-black text-white/40 dark:text-slate-400 group-hover:text-white dark:group-hover:text-slate-900 tracking-widest uppercase">{t('useTeamColorsLabel')}</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${useRandomMix ? 'bg-rose-500 border-rose-500 text-white' : 'border-white/10 dark:border-slate-200'}`}>{useRandomMix && <CheckIcon />}</div>
-                <input type="checkbox" className="hidden" checked={useRandomMix} onChange={e => setUseRandomMix(e.target.checked)} />
-                <span className="text-[11px] font-black text-white/40 dark:text-slate-400 group-hover:text-rose-500 tracking-widest uppercase">{t('randomMix')}</span>
-              </label>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-  };
-
   const renderMembersTabContent = () => {
     return (
-      <div className={`space-y-2 ${selectionMode ? 'pb-60' : 'pb-32'}`}>
+      <div className={`space-y-2 ${selectionMode ? 'pb-80' : 'pb-44'}`}>
         {activeTab !== SportType.ALL && (
-          <section className="bg-white dark:bg-slate-950 w-full rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 cursor-pointer select-none" onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}>
-              <div className="flex items-center gap-2">
+          <section className="w-full">
+            <div className="flex items-center px-2 py-3 cursor-pointer select-none gap-2" onClick={() => setIsPlayerRegistrationOpen(!isPlayerRegistrationOpen)}>
                 <div className="text-slate-400 dark:text-slate-500"><PlusIcon /></div>
-                <h2 className="text-[14px] font-medium text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
                 <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                 </div>
-              </div>
             </div>
             {isPlayerRegistrationOpen && (
-              <form onSubmit={addPlayer} className="px-5 pb-6 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              <form onSubmit={addPlayer} className="px-2 pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="space-y-2">
                   <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
                   <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
@@ -582,29 +538,51 @@ const AppContent: React.FC = () => {
         )}
 
         <div>
-          <div className="px-2 py-3 flex justify-between items-center">
-            <div className="flex items-center gap-2">
+          <div className="px-2 py-3 flex items-center gap-2">
               <div className="text-slate-400 dark:text-slate-500"><UserPlusIcon /></div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({memberPlayers.length})</span></h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (selectAllConfirm) {
-                    const updatedPlayers = players.map(p => (activeTab === SportType.ALL || p.sportType === activeTab) ? { ...p, isActive: true } : p);
-                    setPlayers(updatedPlayers);
-                    setSelectAllConfirm(false);
-                  } else { setSelectAllConfirm(true); setTimeout(() => setSelectAllConfirm(false), 3000); }
-                }}
-                className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium border border-slate-900 dark:border-slate-200 transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
-              >
-                {selectAllConfirm ? <><CheckIcon /> {t('confirmRetry')}</> : t('selectAll')}
-              </button>
-            </div>
           </div>
+
+          {/* Search input */}
+          <div className="relative mb-2">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={t('searchPlaceholder')}
+              className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl pl-9 pr-9 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none transition-all"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors">
+                <CloseIcon size={16} />
+              </button>
+            )}
+          </div>
+
           <div className="space-y-1">
             {memberPlayers.length === 0 ? (
-              <div className="py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
+              searchQuery.trim() ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3">
+                  <div className="text-slate-300 dark:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">{t('noSearchResults')}</p>
+                  <button onClick={() => setSearchQuery('')} className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors">{t('cancel')}</button>
+                </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center gap-3">
+                  <div className="text-slate-300 dark:text-slate-600">
+                    <UserPlusIcon size={40} />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">{t('noPlayersHint')}</p>
+                  <button onClick={() => setIsPlayerRegistrationOpen(true)} className="bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95">
+                    {t('playerRegistration')}
+                  </button>
+                </div>
+              )
             ) : (
               memberPlayers.map(p => (
                 <PlayerItem key={p.id} player={p} isEditing={editingPlayerId === p.id} lang={lang}
@@ -730,20 +708,28 @@ const AppContent: React.FC = () => {
 
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
-      {/* Header - Only on HOME page */}
-      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
-        <header className="w-full flex flex-col items-center mb-0">
-          <div className="w-full flex justify-between items-center bg-white dark:bg-slate-950 px-5 py-1.5 min-h-[56px]">
-            <div className="flex gap-2">
-            </div>
-            <div className="flex gap-1 items-center">
-              <button onClick={() => setDarkMode(!darkMode)} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all" aria-label="Toggle dark mode">{darkMode ? <SunIcon /> : <MoonIcon />}</button>
-              <LanguageMenu lang={lang} onLangChange={handleManualLangChange} t={t} />
-              <button onClick={() => setShowGuideModal(true)} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all" aria-label="Show app Help"><HelpCircleIcon /></button>
-              <button onClick={() => setShowInfoModal(true)} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all" aria-label="Show app Info"><InfoIcon /></button>
+      {/* Announcement Banner - Only on HOME page */}
+      {currentPage === AppPageType.HOME && visibleAnnouncement && (
+        <div
+          className="w-full px-5 py-2.5 flex items-center gap-2 cursor-pointer"
+          onClick={() => { if (visibleAnnouncement.link) window.open(visibleAnnouncement.link, '_blank'); }}
+        >
+          <span className="text-blue-600 dark:text-blue-400 shrink-0 text-[14px]">📢</span>
+          <div className="flex-1 overflow-hidden">
+            <div ref={announcementWrapRef} className="overflow-hidden">
+              <span ref={announcementTextRef} className="text-[12px] font-medium text-blue-800 dark:text-blue-200 whitespace-nowrap inline-block">
+                {getAnnouncementText(visibleAnnouncement)}
+              </span>
             </div>
           </div>
-        </header>
+          <button
+            onClick={(e) => { e.stopPropagation(); dismissAnnouncement(visibleAnnouncement.id); }}
+            className="shrink-0 p-1 text-blue-400 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            aria-label="Dismiss announcement"
+          >
+            <CloseIcon />
+          </button>
+        </div>
       )}
 
       {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
@@ -815,6 +801,17 @@ const AppContent: React.FC = () => {
                     value={hostRoomTitle}
                     onChange={(e) => setHostRoomTitle(e.target.value)}
                     placeholder={t('inputRoomTitle')}
+                    className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('venue')}</label>
+                  <input
+                    type="text"
+                    value={hostRoomVenue}
+                    onChange={(e) => setHostRoomVenue(e.target.value)}
+                    placeholder={t('venuePlaceholder')}
                     className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
                   />
                 </div>
@@ -953,7 +950,7 @@ const AppContent: React.FC = () => {
 
       {/* BALANCE Page */}
       {currentPage === AppPageType.BALANCE && currentActiveRoom && (
-        <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-y-auto">
+        <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300">
           <header className="sticky top-0 z-50 bg-white dark:bg-slate-950 px-4 pt-[40px] pb-[8px] border-b border-slate-100 dark:border-slate-800">
             <div className="flex justify-between items-center w-full">
               <button
@@ -971,8 +968,9 @@ const AppContent: React.FC = () => {
               <div className="w-8" />
             </div>
           </header>
+          <div className="flex-1 overflow-y-auto" ref={(el) => { if (el && result) el.scrollTop = 0; }}>
 
-          <div className="flex-1 px-6 py-6 max-w-lg mx-auto w-full">
+          <div className={`flex-1 max-w-lg mx-auto w-full ${result ? 'px-5 pt-0' : 'px-6 py-6'}`}>
             <div className="space-y-6">
               {!result && (
                 <>
@@ -986,7 +984,7 @@ const AppContent: React.FC = () => {
                     </button>
 
                     {isQuotaSettingsExpanded && (
-                      <div className="mt-4 p-4 rounded-[24px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="mt-4 px-5 py-4 rounded-[24px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300 overflow-y-auto max-h-[60vh]">
                         <QuotaFormationPicker
                           sport={currentActiveRoom.sport as SportType}
                           quotas={quotas}
@@ -996,9 +994,33 @@ const AppContent: React.FC = () => {
                           darkMode={darkMode}
                         />
                         {currentActiveRoom.sport !== SportType.GENERAL && (
-                          <p className="mt-4 text-[11px] text-slate-400 leading-relaxed italic px-2">
-                            {t('quotaInfoMsg')}
-                          </p>
+                          <>
+                            {/* Recommended preset button */}
+                            <div className="mt-3 flex items-center gap-2 px-2">
+                              <button
+                                onClick={() => {
+                                  const sport = currentActiveRoom.sport as SportType;
+                                  if (sport === SportType.SOCCER) {
+                                    const perTeam = expectedPerTeam || 5;
+                                    setQuotas({ GK: 1, LB: null, DF: Math.max(1, Math.round((perTeam - 1) * 0.4)), RB: null, MF: null, LW: null, ST: null, RW: null });
+                                  } else if (sport === SportType.FUTSAL) {
+                                    setQuotas({ GK: 1, FIX: 1, ALA: null, PIV: null });
+                                  } else if (sport === SportType.BASKETBALL) {
+                                    setQuotas({ C: 1, PG: 1, SG: null, SF: null, PF: null });
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl text-[11px] font-bold border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-950/50"
+                              >
+                                ⚡ {t('recommendedPreset')}
+                              </button>
+                            </div>
+                            {/* Help box */}
+                            <div className="mt-3 mx-2 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
+                                💡 {t('quotaHelpText')}
+                              </p>
+                            </div>
+                          </>
                         )}
                       </div>
                     )}
@@ -1043,35 +1065,112 @@ const AppContent: React.FC = () => {
                   >
                     {t('generateTeams')}
                   </button>
+                  <div className="h-32" />
                 </>
               )}
 
               {result && (
-                <div id="results-capture-section" className="mt-8 pb-32 animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
-                    <div data-capture-ignore="true" className="flex gap-2">
+                <div id="results-capture-section" className="pb-48 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div data-capture-ignore="true" className="flex gap-2 py-3">
+                    {resultHistory.length > 0 && (
                       <button
-                        onClick={() => handleShare('results-capture-section', 'team-balance-result')}
-                        disabled={!!isSharing}
-                        className="bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2"
+                        onClick={() => setShowHistory(!showHistory)}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 border flex items-center justify-center gap-1.5 ${showHistory ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'}`}
                       >
-                        {isSharing ? t('generatingImage') : <><ShareIcon /> {t('shareResult')}</>}
+                        <RotateCcwIcon size={14} />{t('history')} ({resultHistory.length})
                       </button>
+                    )}
+                    <button
+                      onClick={() => handleShare('results-capture-section', 'team-balance-result')}
+                      disabled={!!isSharing}
+                      className="flex-1 bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"
+                    >
+                      {isSharing ? t('generatingImage') : <><ShareIcon /> {t('shareResult')}</>}
+                    </button>
+                  </div>
+
+                  {/* History panel */}
+                  {showHistory && (
+                    <div data-capture-ignore="true" className="mb-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest mb-3 uppercase">{t('resultHistory')}</h3>
+                      <div className="space-y-2">
+                        {resultHistory.map((hist, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setResult(hist); setShowHistory(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all active:scale-[0.98] ${result === hist ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">#{i + 1}</span>
+                              <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+                                {t('historyItem', hist.standardDeviation.toFixed(2), hist.teams.length)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {hist.teams.map((team, ti) => (
+                                <span key={ti} className="text-[10px] font-mono font-bold text-slate-500">{team.totalSkill}</span>
+                              ))}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-[12px] font-bold uppercase text-slate-900 dark:text-slate-100 mb-1">{t('standardDeviation')}</span>
+                      <span className="text-3xl font-black font-mono leading-none">{result.standardDeviation.toFixed(2)}</span>
+                      <span className="text-[10px] text-slate-900 dark:text-slate-100 mt-1">({t('lowerFairer')})</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-[12px] font-bold uppercase text-slate-900 dark:text-slate-100 mb-1">{t('penaltyScore')}</span>
+                      <span className="text-3xl font-black font-mono leading-none text-blue-500">{result.positionSatisfaction?.toFixed(1) || '0.0'}</span>
+                      <span className="text-[10px] text-slate-900 dark:text-slate-100 mt-1">({t('penaltyScoreDesc')})</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className={`${darkMode ? 'bg-slate-800' : 'bg-slate-50'} rounded-[24px] p-4 flex flex-col items-center text-center shadow-sm`}>
-                      <span className={`text-[10px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('standardDeviation')}</span>
-                      <span className="text-3xl font-black font-mono leading-none">{result.standardDeviation.toFixed(2)}</span>
-                      <span className={`text-[9px] ${darkMode ? 'text-slate-500' : 'text-slate-400'} mt-1`}>({t('lowerFairer')})</span>
-                    </div>
-                    <div className={`${darkMode ? 'bg-slate-800' : 'bg-slate-50'} rounded-[24px] p-4 flex flex-col items-center text-center shadow-sm`}>
-                      <span className={`text-[10px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('penaltyScore')}</span>
-                      <span className="text-3xl font-black font-mono leading-none text-blue-500">{result.positionSatisfaction?.toFixed(1) || '0.0'}</span>
-                      <span className={`text-[9px] ${darkMode ? 'text-slate-500' : 'text-slate-400'} mt-1`}>({t('penaltyScoreDesc')})</span>
-                    </div>
+                  <div data-capture-ignore="true" className="mb-4">
+                    <label className="flex items-center gap-2.5 cursor-pointer px-1 py-2" onClick={() => {
+                      if (!useTeamColors) {
+                        setResult(prev => {
+                          if (!prev) return prev;
+                          return { ...prev, teams: prev.teams.map((team, idx) => ({ ...team, color: TEAM_COLORS[idx % TEAM_COLORS.length].value, colorName: TEAM_COLORS[idx % TEAM_COLORS.length].name })) };
+                        });
+                      } else {
+                        setResult(prev => {
+                          if (!prev) return prev;
+                          return { ...prev, teams: prev.teams.map(team => ({ ...team, color: undefined, colorName: undefined })) };
+                        });
+                      }
+                      setUseTeamColors(!useTeamColors);
+                    }}>
+                      <div className={`w-[18px] h-[18px] rounded-md border-[1.5px] flex items-center justify-center transition-all ${useTeamColors ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                        {useTeamColors && <CheckIcon size={12} className="text-white dark:text-slate-900" />}
+                      </div>
+                      <span className="text-[13px] font-medium text-slate-900 dark:text-slate-100">{t('useTeamColorsLabel')}</span>
+                    </label>
+                    {useTeamColors && result && (
+                      <div className="flex flex-wrap gap-3 px-1 mt-1">
+                        {result.teams.map((team, idx) => (
+                          <div key={team.id} className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                              {team.colorName ? t('teamNameWithColor', t(team.colorName || '')) : `TEAM ${String.fromCharCode(65 + idx)}`}
+                            </span>
+                            <div className="flex gap-1">
+                              {TEAM_COLORS.map(color => (
+                                <button
+                                  key={color.value}
+                                  onClick={() => handleUpdateResultTeamColor(idx, color.value, color.name)}
+                                  className={`w-5 h-5 rounded-full transition-all ${team.color === color.value ? 'ring-2 ring-offset-1 ring-slate-900 dark:ring-white dark:ring-offset-slate-950 scale-110' : 'opacity-40 hover:opacity-100'}`}
+                                  style={{ backgroundColor: color.value, border: color.value === '#ffffff' ? '1px solid #e2e8f0' : 'none' }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 gap-6">
@@ -1180,6 +1279,7 @@ const AppContent: React.FC = () => {
               )}
             </div>
           </div>
+          </div>
 
           <div className="sticky bottom-0 bg-white dark:bg-slate-950 p-2 border-t border-slate-100 dark:border-slate-800" data-capture-ignore="true">
             <div className="w-full h-[50px] bg-slate-50 dark:bg-slate-900/50 rounded-xl flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800">
@@ -1210,7 +1310,7 @@ const AppContent: React.FC = () => {
             </div>
           </header>
 
-          <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-72' : 'pb-40'}`}>
+          <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-80' : 'pb-48'}`}>
             {(() => {
               const room = currentActiveRoom;
               const pendingApplicants = room.applicants.filter(a => !a.isApproved);
@@ -1249,6 +1349,7 @@ const AppContent: React.FC = () => {
                               e.stopPropagation();
                               setHostRoomSelectedSport(room.sport as SportType);
                               setHostRoomTitle(room.title);
+                              setHostRoomVenue(room.venue || '');
                               setHostRoomDate(room.matchDate);
                               setHostRoomTime(room.matchTime);
                               setHostRoomEndDate(room.matchEndDate || room.matchDate);
@@ -1287,12 +1388,17 @@ const AppContent: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex-1 flex flex-col justify-center items-end">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          {room.venue && (
+                            <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venue}</p>
+                          )}
+                        </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleShareRecruitLink(room); }}
-                          className="text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl bg-[#53B175] tracking-[-0.025em] active:scale-95 transition-transform"
+                          className="text-[12px] font-medium text-[#FFFFFF] px-3 py-1 rounded-xl bg-[#F43F5E] tracking-[-0.025em] active:scale-95 transition-transform shrink-0 flex items-center gap-1"
                         >
-                          {t('participationLink')}
+                          <Icons.ShareIcon size={12} />{t('participationLink')}
                         </button>
                       </div>
 
@@ -1304,8 +1410,8 @@ const AppContent: React.FC = () => {
                         <div className="text-right leading-none">
                           <span className="text-[20px] font-medium tracking-tighter tabular-nums leading-none">
                             {room.applicants.filter(a => a.isApproved).length}
-                            <span className="text-white/40 mx-1 text-[16px]">/</span>
-                            {room.maxApplicants > 0 ? room.maxApplicants : '\u221E'}
+                            <span className="text-white mx-1">/</span>
+                            <span className="text-[12px]">{room.maxApplicants > 0 ? room.maxApplicants : '\u221E'}</span>
                           </span>
                         </div>
                       </div>
@@ -1372,14 +1478,14 @@ const AppContent: React.FC = () => {
                           <>
                             <button
                               onClick={() => { setSelectionMode(prev => prev === 'MATCH' ? null : 'MATCH'); setSelectedPlayerIds([]); }}
-                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'MATCH' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium transition-all flex items-center justify-center gap-1.5 ${selectionMode === 'MATCH' ? 'bg-blue-500 text-white border border-blue-500 shadow-lg shadow-blue-500/30' : 'border-2 border-blue-200 dark:border-blue-800 text-blue-500 dark:text-blue-400 bg-transparent'}`}
                             >
                               <div className="w-[16px] h-[16px] rounded bg-blue-500 text-white flex items-center justify-center text-[9px] font-black">M</div>
                               {t('matchTeams')}
                             </button>
                             <button
                               onClick={() => { setSelectionMode(prev => prev === 'SPLIT' ? null : 'SPLIT'); setSelectedPlayerIds([]); }}
-                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium hover:brightness-95 transition-all flex items-center justify-center gap-1.5 border ${selectionMode === 'SPLIT' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-100 dark:border-slate-800'}`}
+                              className={`px-[8px] h-[28px] rounded-xl text-[12px] font-medium transition-all flex items-center justify-center gap-1.5 ${selectionMode === 'SPLIT' ? 'bg-rose-500 text-white border border-rose-500 shadow-lg shadow-rose-500/30' : 'border-2 border-rose-200 dark:border-rose-800 text-rose-500 dark:text-rose-400 bg-transparent'}`}
                             >
                               <div className="w-[16px] h-[16px] rounded bg-rose-500 text-white flex items-center justify-center text-[9px] font-black">S</div>
                               {t('splitTeams')}
@@ -1418,8 +1524,8 @@ const AppContent: React.FC = () => {
                       }));
                       const filtered = teamConstraints.filter(c => c.playerIds.every(id => approvedIds.has(id)));
                       return detailTab === DetailPageTab.APPROVED && filtered.length > 0 && (
-                      <div className="flex flex-col gap-2 mb-2 p-1">
-                        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest px-1">{t('activeConstraintsTitle')}</h3>
+                      <div className="flex flex-col gap-2 -mt-4 -mb-4 px-1">
+                        <h3 className="text-[12px] font-medium text-slate-900 dark:text-slate-100 tracking-widest px-1">{t('activeConstraintsTitle')}</h3>
                         <div className="flex flex-wrap gap-2">
                           {filtered.map((c) => {
                             const playerNames = c.playerIds.map(id => {
@@ -1654,10 +1760,11 @@ const AppContent: React.FC = () => {
                         : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))'),
                       paddingBottom: isBalanceSettingsOpen
                         ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))')
-                        : 0
+                        : 0,
+                      maxHeight: isBalanceSettingsOpen ? '85vh' : 'auto',
                     }}
                   >
-                    <div className={`w-full max-w-lg px-5 ${isBalanceSettingsOpen ? 'pt-5' : ''}`}>
+                    <div className={`w-full max-w-lg px-5 ${isBalanceSettingsOpen ? 'pt-5 overflow-y-auto' : ''}`} style={isBalanceSettingsOpen ? { maxHeight: 'calc(85vh - 80px)' } : undefined}>
                       {isBalanceSettingsOpen && (
                         <div className="w-full mb-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
                           <div className="overflow-hidden">
@@ -1674,7 +1781,7 @@ const AppContent: React.FC = () => {
                             </button>
 
                             {isQuotaSettingsExpanded && (
-                              <div className="pt-4 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="pt-4 pb-2 px-5 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <QuotaFormationPicker
                                   sport={room.sport as SportType}
                                   quotas={quotas}
@@ -1683,6 +1790,33 @@ const AppContent: React.FC = () => {
                                   onToggleMode={toggleQuotaMode}
                                   darkMode={darkMode}
                                 />
+                                {room.sport !== SportType.GENERAL && (
+                                  <>
+                                    <div className="mt-3 flex items-center gap-2 px-2">
+                                      <button
+                                        onClick={() => {
+                                          const sport = room.sport as SportType;
+                                          if (sport === SportType.SOCCER) {
+                                            const perTeam = expectedPerTeam || 5;
+                                            setQuotas({ GK: 1, LB: null, DF: Math.max(1, Math.round((perTeam - 1) * 0.4)), RB: null, MF: null, LW: null, ST: null, RW: null });
+                                          } else if (sport === SportType.FUTSAL) {
+                                            setQuotas({ GK: 1, FIX: 1, ALA: null, PIV: null });
+                                          } else if (sport === SportType.BASKETBALL) {
+                                            setQuotas({ C: 1, PG: 1, SG: null, SF: null, PF: null });
+                                          }
+                                        }}
+                                        className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl text-[11px] font-bold border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-950/50"
+                                      >
+                                        ⚡ {t('recommendedPreset')}
+                                      </button>
+                                    </div>
+                                    <div className="mt-3 mx-2 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                                      <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
+                                        💡 {t('quotaHelpText')}
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1945,22 +2079,28 @@ const AppContent: React.FC = () => {
 
       {/* Selection mode bottom bar */}
       {selectionMode && (
-        <div className="fixed left-0 right-0 z-[2100] bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 animate-in slide-in-from-bottom duration-300"
-          style={{ bottom: currentPage === AppPageType.DETAIL ? (isAdFree ? 'env(safe-area-inset-bottom, 0px)' : 'calc(90px + env(safe-area-inset-bottom, 0px))') : 'calc(60px + env(safe-area-inset-bottom, 0px))', paddingBottom: currentPage === AppPageType.DETAIL ? (isAdFree ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : '1rem') : '1rem' }}>
-          <div className="max-w-4xl mx-auto flex flex-col gap-3">
+        <div className="fixed left-0 right-0 z-[2100] bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom duration-300 overflow-hidden"
+          style={{ bottom: currentPage === AppPageType.DETAIL ? (isAdFree ? 'env(safe-area-inset-bottom, 0px)' : 'calc(56px + env(safe-area-inset-bottom, 0px))') : 'calc(60px + env(safe-area-inset-bottom, 0px))', paddingBottom: currentPage === AppPageType.DETAIL ? (isAdFree ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : '1rem') : '1rem' }}>
+          {/* Top color bar */}
+          <div className={`h-1 w-full ${selectionMode === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
+          <div className="max-w-4xl mx-auto flex flex-col gap-3 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full animate-pulse ${selectionMode === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{t('selectionModeActive')}</span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">({selectedPlayerIds.length})</span>
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${selectionMode === 'MATCH' ? 'bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400' : 'bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400'}`}>
+                  {t('selectedCount', selectedPlayerIds.length)}
+                </span>
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{t('constraintDescription')}</p>
             </div>
+            <p className={`text-[11px] font-medium ${selectionMode === 'MATCH' ? 'text-blue-500 dark:text-blue-400' : 'text-rose-500 dark:text-rose-400'}`}>
+              {selectionMode === 'MATCH' ? t('matchDescription') : t('splitDescription')}
+            </p>
             <div className="flex gap-2">
               <button disabled={selectedPlayerIds.length < 2} onClick={() => {
                 const newConstraint: TeamConstraint = { id: Math.random().toString(36).substr(2, 9), playerIds: selectedPlayerIds, type: selectionMode };
                 setTeamConstraints(prev => [...prev, newConstraint]); setSelectionMode(null);
-              }} className={`flex-1 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all ${selectedPlayerIds.length >= 2 ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600'}`}>{t('apply')}</button>
+              }} className={`flex-1 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all ${selectedPlayerIds.length >= 2 ? (selectionMode === 'MATCH' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/20') : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600'}`}>{t('apply')}</button>
               <button onClick={() => setSelectionMode(null)} className="flex-1 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all">{t('cancel')}</button>
             </div>
           </div>
@@ -2050,6 +2190,20 @@ const AppContent: React.FC = () => {
       )}
 
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} bottomOffset="0px" />
+
+      {/* Toast for undo delete */}
+      <Toast
+        isVisible={toastState.isVisible}
+        message={t('playerDeleted')}
+        actionLabel={t('undo')}
+        onAction={() => {
+          if (toastState.player) {
+            setPlayers(prev => [toastState.player!, ...prev]);
+          }
+          setToastState({ isVisible: false, player: null });
+        }}
+        onDismiss={() => setToastState({ isVisible: false, player: null })}
+      />
     </div>
   );
 };
