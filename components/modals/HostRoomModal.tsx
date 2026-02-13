@@ -73,7 +73,6 @@ export const HostRoomModal: React.FC<{
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
-  const [tierMode, setTierMode] = useState<'5TIER' | '3TIER'>('5TIER');
   const [isPickerSelectionMode, setIsPickerSelectionMode] = useState(false);
 
   useEffect(() => {
@@ -166,16 +165,16 @@ export const HostRoomModal: React.FC<{
       const roomId = await createRecruitmentRoom({
         hostId: currentUserId,
         hostName: userNickname,
-        title: title,
+        title: title.trim() || `${userNickname}${t('matchOf')}`,
         sport: selectedSport,
         matchDate: startDate,
         matchTime: startTime,
         matchEndDate: endDate,
         matchEndTime: endTime,
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
-        tierMode: tierMode,
-        fcmToken: localStorage.getItem('fcm_token') || undefined,
-        venue: venue.trim() || undefined,
+        tierMode: '5TIER',
+        ...(localStorage.getItem('fcm_token') ? { fcmToken: localStorage.getItem('fcm_token')! } : {}),
+        ...(venue.trim() ? { venue: venue.trim() } : {}),
       });
 
       // 링크생성 및 자동 복사
@@ -184,7 +183,7 @@ export const HostRoomModal: React.FC<{
 
       try {
         await Clipboard.write({ string: webUrl });
-        showAlert(t('linkCopied' as any), t('shareRecruitLink'));
+        showAlert(t('linkCopiedMsg'), t('linkCopiedTitle'));
       } catch (err) {
         console.error('Clipboard copy failed', err);
       }
@@ -286,7 +285,7 @@ export const HostRoomModal: React.FC<{
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder={t('inputRoomTitle')}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
                 />
               </div>
 
@@ -298,7 +297,7 @@ export const HostRoomModal: React.FC<{
                   value={venue}
                   onChange={e => setVenue(e.target.value)}
                   placeholder={t('venuePlaceholder' as any)}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
                 />
               </div>
             </div>
@@ -382,33 +381,7 @@ export const HostRoomModal: React.FC<{
               </div>
             </div>
 
-            <div className="h-px bg-slate-100 dark:bg-slate-800" />
-
             <div className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('tierMode')}</label>
-                <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <button
-                    onClick={() => setTierMode('5TIER')}
-                    className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${tierMode === '5TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
-                  >
-                    {t('tierMode5')}
-                  </button>
-                  <button
-                    onClick={() => setTierMode('3TIER')}
-                    className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${tierMode === '3TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
-                  >
-                    {t('tierMode3')}
-                  </button>
-                </div>
-              </div>
-              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                <p className="text-[11px] text-blue-600 dark:text-blue-400 font-bold leading-relaxed">
-                  💡 {tierMode === '3TIER' ? t('tierModeDesc') : t('tierMode5Desc' as any)}
-                </p>
-              </div>
-
-              {/* 추가된 즉시 생성 버튼: 오른쪽 하단 정렬, 소형화 */}
               <div className="flex justify-end pt-2">
                 <button
                   onClick={handleCreate}
@@ -419,18 +392,6 @@ export const HostRoomModal: React.FC<{
                 </button>
               </div>
             </div>
-
-            {!isPickerSelectionMode && (
-              <div className="fixed bottom-0 left-0 right-0 p-5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800">
-                <button
-                  onClick={handleCreate}
-                  disabled={loading}
-                  className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-black text-base rounded-3xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] flex items-center justify-center"
-                >
-                  {loading ? '...' : t('completeRegistration' as any)}
-                </button>
-              </div>
-            )}
           </div>
         ) : null}
       </div>

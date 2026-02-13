@@ -44,7 +44,6 @@ export const useRecruitmentRooms = (
   const [hostRoomUseLimit, setHostRoomUseLimit] = useState(false);
   const [hostRoomMaxApplicants, setHostRoomMaxApplicants] = useState(0);
   const [hostRoomVenue, setHostRoomVenue] = useState('');
-  const [hostRoomTierMode, setHostRoomTierMode] = useState<'5TIER' | '3TIER'>('5TIER');
   const [hostRoomActivePicker, setHostRoomActivePicker] = useState<'START' | 'END'>('START');
   const [hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode] = useState(false);
 
@@ -82,22 +81,25 @@ export const useRecruitmentRooms = (
         const pendingCount = room.applicants.filter(a => !a.isApproved).length;
         const prevPending = prevApplicantsCount.current[room.id];
         if (prevPending !== undefined && pendingCount > prevPending) {
-          const newPlayer = room.applicants.filter(a => !a.isApproved).slice(-1)[0];
-          if (newPlayer) {
-            const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
-            if (Capacitor.isNativePlatform()) {
-              LocalNotifications.schedule({
-                notifications: [{
-                  title: `[${room.title}] ${t('recruitParticipants')}`,
-                  body: msg,
-                  id: Math.floor(Math.random() * 1000000),
-                  channelId: 'recruit_channel',
-                  smallIcon: 'ic_stat_icon_config_sample',
-                  sound: 'default',
-                }]
-              }).catch(e => console.error('Local Notification failed', e));
-            } else {
-              showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+          const recruitEnabled = localStorage.getItem('app_recruit_notif_enabled') !== 'false';
+          if (recruitEnabled) {
+            const newPlayer = room.applicants.filter(a => !a.isApproved).slice(-1)[0];
+            if (newPlayer) {
+              const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
+              if (Capacitor.isNativePlatform()) {
+                LocalNotifications.schedule({
+                  notifications: [{
+                    title: `[${room.title}] ${t('recruitParticipants')}`,
+                    body: msg,
+                    id: Math.floor(Math.random() * 1000000),
+                    channelId: 'recruit_channel',
+                    smallIcon: 'ic_stat_icon_config_sample',
+                    sound: 'default',
+                  }]
+                }).catch(e => console.error('Local Notification failed', e));
+              } else {
+                showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
+              }
             }
           }
         }
@@ -293,7 +295,7 @@ export const useRecruitmentRooms = (
         matchEndDate: hostRoomEndDate,
         matchEndTime: hostRoomEndTime,
         maxApplicants: hostRoomUseLimit ? hostRoomMaxApplicants : 0,
-        tierMode: hostRoomTierMode,
+        tierMode: '5TIER',
         venue: hostRoomVenue.trim() || undefined,
       };
       await updateDoc(roomRef, updateData);
@@ -327,7 +329,6 @@ export const useRecruitmentRooms = (
     hostRoomUseLimit, setHostRoomUseLimit,
     hostRoomMaxApplicants, setHostRoomMaxApplicants,
     hostRoomVenue, setHostRoomVenue,
-    hostRoomTierMode, setHostRoomTierMode,
     hostRoomActivePicker, setHostRoomActivePicker,
     hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode,
     handleApproveApplicant,

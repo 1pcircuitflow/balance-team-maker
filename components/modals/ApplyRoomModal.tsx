@@ -41,7 +41,7 @@ export const ApplyRoomModal: React.FC<{
         <form onSubmit={handleSubmit} className="space-y-4">
           <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder={t('inputNamePlaceholder')} className="w-full bg-slate-50 dark:bg-slate-950 rounded-2xl px-5 py-4 dark:text-white font-bold" />
           <div className="grid grid-cols-5 gap-1.5">
-            {(room.tierMode === '3TIER' ? ['S', 'A', 'B'] : ['S', 'A', 'B', 'C', 'D']).map(v => (
+            {['S', 'A', 'B', 'C', 'D'].map(v => (
               <button
                 key={v}
                 type="button"

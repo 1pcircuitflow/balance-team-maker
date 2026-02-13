@@ -4,7 +4,7 @@ import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT } from '../constant
 import { cancelApplication } from '../services/firebaseService';
 import { FormationPicker } from '../components/FormationPicker';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
-import { parseTier, tierToLabel, applicantToPlayer } from '../utils/helpers';
+import { parseTier, tierToLabel, applicantToPlayer, upsertPlayerFromApplicant } from '../utils/helpers';
 import { useAppContext } from '../contexts/AppContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlayerContext } from '../contexts/PlayerContext';
@@ -39,7 +39,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
     currentActiveRoom: room,
     setHostRoomSelectedSport, setHostRoomTitle, setHostRoomVenue,
     setHostRoomDate, setHostRoomTime, setHostRoomEndDate, setHostRoomEndTime,
-    setHostRoomUseLimit, setHostRoomMaxApplicants, setHostRoomTierMode,
+    setHostRoomUseLimit, setHostRoomMaxApplicants,
     setHostRoomActivePicker, setHostRoomIsPickerSelectionMode,
     handleShareRecruitLink, handleCloseRecruitRoom,
     handleApproveApplicant, handleApproveAllApplicants, handleUpdateApplicant,
@@ -114,7 +114,6 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       setHostRoomEndTime(room.matchEndTime || room.matchTime);
                       setHostRoomUseLimit(room.maxApplicants > 0);
                       setHostRoomMaxApplicants(room.maxApplicants || 12);
-                      setHostRoomTierMode(room.tierMode || '5TIER');
                       setHostRoomActivePicker('START');
                       setHostRoomIsPickerSelectionMode(false);
                       setCurrentPage(AppPageType.EDIT_ROOM);
@@ -459,7 +458,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                     {editingApplicantId === app.id && detailTab === DetailPageTab.APPROVED && (
                       <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[24px] p-4 mt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="grid grid-cols-5 gap-1.5">
-                          {(room.tierMode === '3TIER' ? ['S', 'A', 'B'] : ['S', 'A', 'B', 'C', 'D']).map(v => (
+                          {['S', 'A', 'B', 'C', 'D'].map(v => (
                             <button
                               key={v}
                               onClick={() => handleUpdateApplicant(room, app.id, { tier: v })}
@@ -644,25 +643,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   }
 
                   setPlayers(prev => {
-                    const newList = [...prev];
+                    let newList = [...prev];
                     approvedApps.forEach(app => {
-                      const existing = newList.find(p => p.name === app.name);
-                      if (existing) {
-                        existing.isActive = true;
-                      } else {
-                        const tierVal = parseTier(app.tier);
-                        newList.push({
-                          id: 'p_' + Math.random().toString(36).substr(2, 9),
-                          name: app.name,
-                          tier: tierVal,
-                          isActive: true,
-                          sportType: room.sport as SportType,
-                          primaryPosition: (app.position as Position) || 'NONE',
-                          primaryPositions: (app.primaryPositions as Position[]) || [],
-                          secondaryPositions: (app.secondaryPositions as Position[]) || [],
-                          tertiaryPositions: (app.tertiaryPositions as Position[]) || []
-                        });
-                      }
+                      newList = upsertPlayerFromApplicant(newList, app, room.sport as SportType, true);
                     });
                     return newList;
                   });

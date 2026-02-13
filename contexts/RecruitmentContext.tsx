@@ -44,8 +44,6 @@ interface RecruitmentContextValue {
   setHostRoomMaxApplicants: (v: number) => void;
   hostRoomVenue: string;
   setHostRoomVenue: (v: string) => void;
-  hostRoomTierMode: '5TIER' | '3TIER';
-  setHostRoomTierMode: (v: '5TIER' | '3TIER') => void;
   hostRoomActivePicker: 'START' | 'END';
   setHostRoomActivePicker: (v: 'START' | 'END') => void;
   hostRoomIsPickerSelectionMode: boolean;

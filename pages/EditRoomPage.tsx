@@ -22,7 +22,6 @@ export const EditRoomPage: React.FC = React.memo(() => {
     hostRoomEndDate, setHostRoomEndDate, hostRoomEndTime, setHostRoomEndTime,
     hostRoomUseLimit, setHostRoomUseLimit,
     hostRoomMaxApplicants, setHostRoomMaxApplicants,
-    hostRoomTierMode, setHostRoomTierMode,
     hostRoomActivePicker, setHostRoomActivePicker,
     setHostRoomIsPickerSelectionMode,
     handleUpdateRoom,
@@ -68,7 +67,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
                 value={hostRoomTitle}
                 onChange={(e) => setHostRoomTitle(e.target.value)}
                 placeholder={t('inputRoomTitle')}
-                className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
               />
             </div>
 
@@ -79,7 +78,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
                 value={hostRoomVenue}
                 onChange={(e) => setHostRoomVenue(e.target.value)}
                 placeholder={t('venuePlaceholder')}
-                className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-[#777777] placeholder:font-semibold placeholder:text-[13px]"
+                className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
               />
             </div>
           </div>
@@ -165,33 +164,6 @@ export const EditRoomPage: React.FC = React.memo(() => {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('tierMode')}</label>
-              <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <button
-                  onClick={() => setHostRoomTierMode('5TIER')}
-                  className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${hostRoomTierMode === '5TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
-                >
-                  {t('tierMode5')}
-                </button>
-                <button
-                  onClick={() => setHostRoomTierMode('3TIER')}
-                  className={`px-3 py-1.5 rounded-xl text-[12px] font-black transition-all ${hostRoomTierMode === '3TIER' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-400'}`}
-                >
-                  {t('tierMode3')}
-                </button>
-              </div>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-bold leading-relaxed">
-                {hostRoomTierMode === '3TIER' ? t('tierModeDesc') : t('tierMode5Desc')}
-              </p>
             </div>
           </div>
 
