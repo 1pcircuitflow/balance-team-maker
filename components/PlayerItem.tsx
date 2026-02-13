@@ -42,12 +42,21 @@ export const PlayerItem = React.memo<any>(({
 
   return (
     <div
+      role={isSelectionMode ? 'button' : undefined}
+      tabIndex={isSelectionMode ? 0 : undefined}
+      aria-pressed={isSelectionMode ? isSelected : undefined}
       onMouseLeave={() => {
         setIsConfirmingDelete(false);
         setShowActionMenu(false);
       }}
       className={`flex ${isEditing ? 'flex-col' : 'items-center justify-between'} px-2 py-1 rounded-2xl transition-all duration-200 group ${player.isActive ? 'bg-slate-100/80 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950'} ${isSelectionMode && isSelected ? 'ring-2 ring-blue-500' : ''}`}
       onClick={() => isSelectionMode && onSelect && onSelect(player.id)}
+      onKeyDown={(e) => {
+        if (isSelectionMode && onSelect && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onSelect(player.id);
+        }
+      }}
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2.5 flex-1 overflow-hidden">

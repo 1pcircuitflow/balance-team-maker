@@ -588,6 +588,29 @@ export function optimizeTeams(
             }
         }
 
+        // Swap 수락 전 MATCH 제약 재검증
+        if (accept) {
+            let matchViolated = false;
+            for (const [pid, gid] of matchMap.entries()) {
+                // 같은 그룹의 모든 선수가 같은 팀에 있는지 확인
+                const groupMembers: number[] = [];
+                currentTeams.forEach((t, tIdx) => {
+                    t.players.forEach(p => {
+                        if (matchMap.get(p.id) === gid) {
+                            groupMembers.push(tIdx);
+                        }
+                    });
+                });
+                if (groupMembers.length > 1 && new Set(groupMembers).size > 1) {
+                    matchViolated = true;
+                    break;
+                }
+            }
+            if (matchViolated) {
+                accept = false;
+            }
+        }
+
         if (accept) {
             minSD = newSD;
             maxPosScore = newPosScore;
@@ -1904,6 +1927,10 @@ export const generateBalancedTeams = (
             });
         }
 
+        // NONE 배정 선수 수 계산 (포지션이 있는 종목에서만)
+        const noneAssignedCount = allPositions.includes('NONE' as Position) ? 0 :
+            optimizedTeams.reduce((sum, t) => sum + t.players.filter(p => p.assignedPosition === 'NONE').length, 0);
+
         bestResult = {
             teams: optimizedTeams,
             standardDeviation,
@@ -1912,7 +1939,9 @@ export const generateBalancedTeams = (
             imbalanceScore: standardDeviation,
             isValid: !isQuotaViolated,
             isConstraintViolated: constraintViolated,
-            isQuotaViolated
+            isQuotaViolated,
+            positionWarning: noneAssignedCount > 0,
+            noneAssignedCount,
         };
         break;
     }

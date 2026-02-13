@@ -41,7 +41,7 @@ export const InfoModal: React.FC<{
             <div className="flex items-center justify-between mb-4">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                  {user ? 'Google Account' : 'Guest Mode'}
+                  {user?.provider === 'kakao' ? 'Kakao Account' : 'Google Account'}
                 </span>
                 {isEditingName ? (
                   <div className="flex items-center gap-2">
@@ -62,15 +62,9 @@ export const InfoModal: React.FC<{
                   </div>
                 )}
               </div>
-              {user ? (
-                <button onClick={onLogout} className="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
-                  {t('logout')}
-                </button>
-              ) : (
-                <button onClick={onLogin} className="px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
-                  {t('googleLogin')}
-                </button>
-              )}
+              <button onClick={onLogout} className="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
+                {t('logout')}
+              </button>
             </div>
           </div>
 

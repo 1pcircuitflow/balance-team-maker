@@ -11,6 +11,9 @@ interface RecruitmentContextValue {
   activeRooms: RecruitmentRoom[];
   setActiveRooms: React.Dispatch<React.SetStateAction<RecruitmentRoom[]>>;
   filteredRooms: RecruitmentRoom[];
+  publicRooms: RecruitmentRoom[];
+  homeTab: 'MY' | 'PUBLIC';
+  setHomeTab: (v: 'MY' | 'PUBLIC') => void;
   currentActiveRoom: RecruitmentRoom | null;
   setCurrentActiveRoom: React.Dispatch<React.SetStateAction<RecruitmentRoom | null>>;
   showHostRoomModal: boolean;

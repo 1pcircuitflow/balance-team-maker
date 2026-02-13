@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "balance-team-maker"
+  },
   "targets": {
     "balance-team-maker": {
       "hosting": {

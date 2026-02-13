@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { TRANSLATIONS, Language } from '../translations';
+import { TRANSLATIONS, Language, TranslationKey } from '../translations';
 import { getInitialLang } from '../utils/helpers';
 
 interface AlertState {
@@ -66,7 +66,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     onConfirm: () => {},
   });
 
-  const t = useCallback((key: string, ...args: any[]): string => {
+  const t = useCallback((key: TranslationKey | string, ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
     if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
     return String(translation || key);

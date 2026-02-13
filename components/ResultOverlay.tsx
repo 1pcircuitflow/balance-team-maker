@@ -21,7 +21,7 @@ export const ResultOverlay: React.FC = React.memo(() => {
 
   return (
     <div id="results-capture-section" className="fixed inset-0 z-[3000] bg-white dark:bg-slate-950 flex flex-col px-5 py-4 animate-in fade-in duration-300 overflow-y-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 bg-white dark:bg-slate-950">
         <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
         <div data-capture-ignore="true" className="flex gap-2">
           <button
@@ -69,19 +69,29 @@ export const ResultOverlay: React.FC = React.memo(() => {
         )}
       </div>
 
+      {result.positionWarning && result.noneAssignedCount && result.noneAssignedCount > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-3 mb-4 flex items-center gap-2">
+          <span className="text-amber-500 text-sm">⚠</span>
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+            {t('positionAssignmentWarning', result.noneAssignedCount)}
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
         {result.teams.map((team, idx) => (
           <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800">
             <div className="bg-white dark:bg-slate-950 p-5 flex items-center justify-between" style={{ borderTop: team.color ? `6px solid ${team.color}` : 'none' }}>
               <div className="flex items-center gap-3">
-                <div
+                <button
                   className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg bg-slate-100 dark:bg-slate-800"
                   style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: darkMode ? '#e2e8f0' : '#0f172a', color: darkMode ? '#0f172a' : 'white' }}
                   onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
+                  aria-label={t('teamColorSelect')}
                   data-capture-ignore="true"
                 >
                   {idx + 1}
-                </div>
+                </button>
                 <h4 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase">{team.colorName ? t('teamNameWithColor', t(team.colorName || '')) : `TEAM ${idx + 1}`}</h4>
               </div>
               <div className="text-right">

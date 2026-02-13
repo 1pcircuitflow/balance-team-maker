@@ -21,16 +21,37 @@ export const ApplyRoomModal: React.FC<{
   const [pos, setPos] = useState<string>('MF');
   const [room, setRoom] = useState<RecruitmentRoom | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
     if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
     return String(translation || key);
   };
-  useEffect(() => { if (roomId && isOpen) getRoomInfo(roomId).then(setRoom); }, [roomId, isOpen]);
+  useEffect(() => {
+    if (roomId && isOpen) {
+      getRoomInfo(roomId).then(setRoom);
+      setErrorMsg(null);
+    }
+  }, [roomId, isOpen]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!roomId || !name) return;
     setLoading(true);
-    try { await applyForParticipation(roomId, { name, tier, position: pos }); onSuccess(); } catch (e) { console.error(e); } finally { setLoading(false); }
+    setErrorMsg(null);
+    try {
+      const fcmToken = localStorage.getItem('fcm_token') || undefined;
+      await applyForParticipation(roomId, { name, tier, position: pos, ...(fcmToken ? { fcmToken } : {}) });
+      onSuccess();
+    } catch (err: any) {
+      if (err?.message === 'DUPLICATE_APPLICATION') {
+        setErrorMsg(t('duplicateApplicationMsg' as any));
+      } else if (err?.message === 'ROOM_FULL') {
+        setErrorMsg(t('roomFullMsg' as any));
+      } else if (err?.message === 'ROOM_NOT_FOUND') {
+        setErrorMsg(t('roomNotFoundMsg' as any));
+      } else {
+        setErrorMsg(t('networkErrorMsg'));
+      }
+    } finally { setLoading(false); }
   };
   if (!isOpen || !room) return null;
   return (
@@ -52,6 +73,9 @@ export const ApplyRoomModal: React.FC<{
               </button>
             ))}
           </div>
+          {errorMsg && (
+            <p className="text-rose-500 text-sm font-bold text-center">{errorMsg}</p>
+          )}
           <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 text-white font-black rounded-3xl mt-4 shadow-xl shadow-blue-500/20">{loading ? '...' : t('completeApplication')}</button>
           <button type="button" onClick={onClose} className="w-full py-3 text-slate-400 font-bold text-sm">{t('cancel')}</button>
         </form>

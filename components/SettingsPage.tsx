@@ -148,7 +148,7 @@ export const SettingsPage: React.FC = () => {
           {/* Account Type */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
             <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('accountType')}</span>
-            <span className="text-[12px] text-slate-400">{user ? t('googleAccount') : t('guestMode')}</span>
+            <span className="text-[12px] text-slate-400">{user ? (user.provider === 'kakao' ? t('kakaoAccount') : t('googleAccount')) : t('guestMode')}</span>
           </div>
           {/* Nickname */}
           <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
@@ -168,10 +168,10 @@ export const SettingsPage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setNicknameInput(nickname); setEditingNickname(true); }}>
+              <button type="button" className="flex items-center gap-2 cursor-pointer" onClick={() => { setNicknameInput(nickname); setEditingNickname(true); }} aria-label={t('nickname')}>
                 <span className="text-[12px] text-slate-400">{nickname}</span>
                 <span className="text-slate-300 dark:text-slate-600"><EditIcon /></span>
-              </div>
+              </button>
             )}
           </div>
           {/* Login / Logout */}
@@ -208,16 +208,18 @@ export const SettingsPage: React.FC = () => {
           </div>
           {/* Language */}
           <div>
-            <div
-              className="px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
+            <button
+              type="button"
+              className="w-full px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
               onClick={() => setLangOpen(!langOpen)}
+              aria-expanded={langOpen}
             >
               <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('language')}</span>
               <div className="flex items-center gap-2">
                 <span className="text-[12px] text-slate-400">{currentLang?.flag} {currentLang?.name}</span>
                 <ChevronIcon open={langOpen} />
               </div>
-            </div>
+            </button>
             {langOpen && (
               <div className="border-t border-slate-100 dark:border-slate-800">
                 {LANGUAGES.map(l => (
@@ -303,30 +305,33 @@ export const SettingsPage: React.FC = () => {
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Export */}
-          <div
-            className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
+          <button
+            type="button"
+            className="w-full px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
             onClick={handleExport}
           >
             <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('exportData')}</span>
             <span className="text-slate-400"><DownloadIcon /></span>
-          </div>
+          </button>
           {/* Import */}
-          <div
-            className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
+          <button
+            type="button"
+            className="w-full px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
             onClick={() => fileInputRef.current?.click()}
           >
             <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('importData')}</span>
             <span className="text-slate-400"><UploadIcon /></span>
-          </div>
+          </button>
           <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
           {/* Reset */}
-          <div
-            className="px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-red-50 dark:active:bg-red-950/20"
+          <button
+            type="button"
+            className="w-full px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-red-50 dark:active:bg-red-950/20 text-left"
             onClick={handleReset}
           >
             <span className="text-[12px] font-normal text-red-500">{t('resetAllData')}</span>
             <span className="text-red-400"><TrashIcon /></span>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -337,13 +342,14 @@ export const SettingsPage: React.FC = () => {
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
           {/* Rate App */}
-          <div
-            className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
+          <button
+            type="button"
+            className="w-full px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
             onClick={handleRateApp}
           >
             <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('rateApp')}</span>
             <span className="text-slate-400"><ExternalLinkIcon /></span>
-          </div>
+          </button>
           {/* Version */}
           <div className="px-5 py-3.5 flex items-center justify-between">
             <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('version')}</span>

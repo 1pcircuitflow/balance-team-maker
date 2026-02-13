@@ -28,6 +28,7 @@ import { BottomTabBar } from './components/BottomTabBar';
 import { SelectionModeBar } from './components/SelectionModeBar';
 import { MembersTabContent } from './components/MembersTabContent';
 import { ResultOverlay } from './components/ResultOverlay';
+import { OfflineBanner } from './components/OfflineBanner';
 
 // Modals
 import { AlertModal } from './components/modals/AlertModal';
@@ -39,7 +40,6 @@ import { ReviewPrompt } from './components/modals/ReviewPrompt';
 import { LoginPage } from './components/modals/LoginPage';
 import { PositionLimitModal } from './components/modals/PositionLimitModal';
 import { RewardAdModal } from './components/modals/RewardAdModal';
-import { LoginRecommendModal } from './components/modals/LoginRecommendModal';
 import { HostRoomModal } from './components/modals/HostRoomModal';
 import { ApplyRoomModal } from './components/modals/ApplyRoomModal';
 import { MemberPickerModal } from './components/modals/MemberPickerModal';
@@ -73,7 +73,7 @@ const App: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState } = useAppContext();
-  const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleLogout, showLoginModal, setShowLoginModal, loginLater, setLoginLater } = useAuthContext();
+  const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
   const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab } = useNavigationContext();
   const {
@@ -97,8 +97,6 @@ const AppContent: React.FC = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showLoginRecommendModal, setShowLoginRecommendModal] = useState(false);
-  const [pendingUpgradeType, setPendingUpgradeType] = useState<'AD_FREE' | 'FULL' | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<{ message: string; forceUpdate: boolean; storeUrl: string; } | null>(null);
   const [showMemberPickerModal, setShowMemberPickerModal] = useState(false);
@@ -113,12 +111,31 @@ const AppContent: React.FC = () => {
     showAlert(t('bonusUnlockedMsg'), t('bonusUnlockedTitle'));
   };
 
+  // Kakao login callback handler (중복 호출 방지)
+  const processedKakaoCodeRef = useRef<string | null>(null);
+  const handleKakaoCode = useCallback((code: string) => {
+    if (processedKakaoCodeRef.current === code) return;
+    processedKakaoCodeRef.current = code;
+    completeKakaoLogin(code, setPlayers, setIsDataLoaded);
+  }, [completeKakaoLogin, setPlayers, setIsDataLoaded]);
+
   // Initialization hook
   useInitialization(
-    lang, setLang, user, loginLater, setShowLoginModal, setIsAdFree,
+    lang, setLang, user, currentUserId, setShowLoginModal, setIsAdFree,
     currentActiveRoom?.id, setAlertState, setPendingJoinRoomId,
     setShowUpdateModal, setUpdateInfo, handleRewardAdComplete, t,
+    handleKakaoCode,
   );
+
+  // Web: 카카오 로그인 콜백 (URL 파라미터 감지)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const kakaoCode = params.get('kakao_code');
+    if (kakaoCode) {
+      window.history.replaceState({}, '', window.location.pathname);
+      handleKakaoCode(kakaoCode);
+    }
+  }, []);
 
   // Reset result when activeTab changes
   useEffect(() => {
@@ -133,14 +150,14 @@ const AppContent: React.FC = () => {
 
   // Back button handler
   const modalStateRef = useRef({
-    alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal, showLoginRecommendModal,
+    alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal,
     showUpgradeModal, showLimitModal, showReviewPrompt, showInfoModal, showApplyRoomModal,
     showHostRoomModal, showColorPicker, showQuotaSettings, selectionMode, currentPage,
     currentBottomTab, showMemberPickerModal,
   });
   useEffect(() => {
     modalStateRef.current = {
-      alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal, showLoginRecommendModal,
+      alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal,
       showUpgradeModal, showLimitModal, showReviewPrompt, showInfoModal, showApplyRoomModal,
       showHostRoomModal, showColorPicker, showQuotaSettings, selectionMode, currentPage,
       currentBottomTab, showMemberPickerModal,
@@ -154,8 +171,7 @@ const AppContent: React.FC = () => {
         const s = modalStateRef.current;
         if (s.alertIsOpen) { setAlertState(prev => ({ ...prev, isOpen: false })); return; }
         if (s.showRewardAd) { setShowRewardAd(false); return; }
-        if (s.showLoginModal) { setShowLoginModal(false); return; }
-        if (s.showLoginRecommendModal) { setShowLoginRecommendModal(false); return; }
+        if (s.showLoginModal) { CapApp.exitApp(); return; }
         if (s.showUpgradeModal) { setShowUpgradeModal(false); return; }
         if (s.showLimitModal) { setShowLimitModal(false); return; }
         if (s.showReviewPrompt) { setShowReviewPrompt(false); return; }
@@ -190,11 +206,6 @@ const AppContent: React.FC = () => {
 
   const executePurchase = async (type: 'AD_FREE' | 'UNLIMITED_POS' | 'FULL') => {};
   const handleRestorePurchases = async () => {};
-
-  const handleLoginLater = () => {
-    setShowLoginModal(false);
-    setLoginLater(true);
-  };
 
   // ========= SWIPE TAB NAVIGATION =========
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -235,6 +246,8 @@ const AppContent: React.FC = () => {
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'} font-sans p-0 flex flex-col items-center`}
       style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
       onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
+
+      <OfflineBanner />
 
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
@@ -317,11 +330,9 @@ const AppContent: React.FC = () => {
         onCancel={() => setMemberSuggestion({ isOpen: false, applicant: null })} />
       <ConfirmModal isOpen={confirmState.isOpen} title={confirmState.title} message={confirmState.message} onConfirm={confirmState.onConfirm}
         onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))} confirmText={confirmState.confirmText} cancelText={confirmState.cancelText} />
-      <LoginPage isOpen={showLoginModal} onLater={handleLoginLater} onLogin={() => handleGoogleLogin(setPlayers, setIsDataLoaded)} />
+      <LoginPage isOpen={showLoginModal} onLogin={() => handleGoogleLogin(setPlayers, setIsDataLoaded)} onKakaoLogin={() => handleKakaoLogin(setPlayers, setIsDataLoaded)} />
       <PositionLimitModal isOpen={showLimitModal} onWatchAd={handleWatchRewardAd} onUpgrade={() => { setShowLimitModal(false); setShowUpgradeModal(true); }} onClose={() => setShowLimitModal(false)} />
       <RewardAdModal isOpen={showRewardAd} onComplete={handleRewardAdComplete} onClose={() => setShowRewardAd(false)} />
-      <LoginRecommendModal isOpen={showLoginRecommendModal} onLogin={() => { setShowLoginRecommendModal(false); handleGoogleLogin(setPlayers, setIsDataLoaded); }}
-        onLater={() => { setShowLoginRecommendModal(false); if (pendingUpgradeType) executePurchase(pendingUpgradeType); }} />
       <HostRoomModal isOpen={showHostRoomModal} onClose={() => setShowHostRoomModal(false)}
         onRoomCreated={(room) => { setCurrentActiveRoom(room); setActiveRooms(prev => { const exists = prev.find(r => r.id === room.id); if (exists) return prev.map(r => r.id === room.id ? room : r); return [...prev, room]; }); setShowHostRoomModal(false); AnalyticsService.logEvent('recruit_room_created', { sport: room.sport }); }}
         activeRoom={currentActiveRoom} activeRooms={activeRooms}

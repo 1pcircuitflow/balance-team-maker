@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { TRANSLATIONS } from '../translations';
 import { useAppContext } from './AppContext';
-import { loadPlayersFromCloud } from '../services/firebaseService';
+import { loadPlayersFromCloud, removeUserFcmToken } from '../services/firebaseService';
 import { SAMPLE_PLAYERS_BY_LANG } from '../sampleData';
 import { Player } from '../types';
+import { openKakaoAuth, exchangeKakaoCode } from '../services/kakaoAuthService';
 
 interface AuthContextValue {
   user: any;
@@ -18,11 +19,11 @@ interface AuthContextValue {
   isProcessing: boolean;
   setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>;
   handleGoogleLogin: (setPlayers: React.Dispatch<React.SetStateAction<Player[]>>, setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>) => Promise<void>;
+  handleKakaoLogin: (setPlayers: React.Dispatch<React.SetStateAction<Player[]>>, setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>) => Promise<void>;
+  completeKakaoLogin: (code: string, setPlayers: React.Dispatch<React.SetStateAction<Player[]>>, setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>) => Promise<void>;
   handleLogout: (setPlayers: React.Dispatch<React.SetStateAction<Player[]>>, setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>) => void;
   showLoginModal: boolean;
   setShowLoginModal: React.Dispatch<React.SetStateAction<boolean>>;
-  loginLater: boolean;
-  setLoginLater: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextValue>(null!);
@@ -59,7 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginLater, setLoginLater] = useState(false);
 
   const handleGoogleLogin = useCallback(async (
     setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
@@ -112,13 +112,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isProcessing, userNickname, lang, showAlert, t]);
 
+  const handleKakaoLogin = useCallback(async (
+    setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
+    setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      await openKakaoAuth();
+      // 네이티브에서는 딥링크 콜백으로, 웹에서는 리다이렉트로 코드 수신
+      // 실제 코드 교환은 App.tsx의 딥링크/URL 핸들러에서 처리
+    } catch (e: any) {
+      console.error('Kakao login failed', e);
+      showAlert(`Login failed: ${e.message || 'Unknown error'}`, 'Error');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [isProcessing, showAlert]);
+
+  const completeKakaoLogin = useCallback(async (
+    code: string,
+    setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
+    setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    setIsProcessing(true);
+    try {
+      const kakaoUser = await exchangeKakaoCode(code);
+      const userObj = { id: kakaoUser.id, givenName: kakaoUser.givenName, imageUrl: kakaoUser.imageUrl, email: kakaoUser.email, provider: 'kakao' };
+      setUser(userObj);
+      localStorage.setItem('app_user', JSON.stringify(userObj));
+
+      if (userNickname.startsWith(TRANSLATIONS[lang].guest)) {
+        setUserNickname(kakaoUser.givenName);
+        localStorage.setItem('app_user_nickname', kakaoUser.givenName);
+      }
+
+      setShowLoginModal(false);
+      showAlert(t('welcomeMsg', kakaoUser.givenName), t('loginSuccessMsg'));
+
+      setIsDataLoaded(false);
+      const cloudPlayers = await loadPlayersFromCloud(kakaoUser.id);
+
+      setPlayers(prev => {
+        const sampleIdPattern = /^(ko|en|pt|es|ja)_/;
+        const actualLocalPlayers = prev.filter(p => !sampleIdPattern.test(p.id));
+
+        if (!cloudPlayers || cloudPlayers.length === 0) {
+          return actualLocalPlayers.length > 0 ? actualLocalPlayers : prev;
+        }
+
+        const merged = [...cloudPlayers];
+        actualLocalPlayers.forEach(lp => {
+          const isDuplicate = merged.some(cp => cp.name === lp.name);
+          if (!isDuplicate) {
+            merged.push(lp);
+          }
+        });
+
+        return merged;
+      });
+      setIsDataLoaded(true);
+    } catch (e: any) {
+      console.error('Kakao code exchange failed', e);
+      showAlert(`Login failed: ${e.message || 'Unknown error'}`, 'Error');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [userNickname, lang, showAlert, t]);
+
   const handleLogout = useCallback((
     setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
     setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>
   ) => {
     (async () => {
       try {
-        await GoogleAuth.signOut();
+        const fcmToken = localStorage.getItem('fcm_token');
+        if (fcmToken && currentUserId) {
+          await removeUserFcmToken(currentUserId, fcmToken);
+        }
+        // provider에 따라 분기 (카카오는 별도 signOut 불필요)
+        if (!user?.provider || user.provider !== 'kakao') {
+          await GoogleAuth.signOut();
+        }
       } catch (e) {
         console.error('Sign out error', e);
       }
@@ -138,14 +213,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsDataLoaded(true);
 
     showAlert(t('logoutMsg'), t('logoutTitle'));
-  }, [lang, showAlert, t]);
+    setShowLoginModal(true);
+  }, [lang, showAlert, t, user, currentUserId]);
 
   return (
     <AuthContext.Provider value={{
       user, setUser, guestId, currentUserId, userNickname, setUserNickname,
       isAdFree, setIsAdFree, isProcessing, setIsProcessing,
-      handleGoogleLogin, handleLogout,
-      showLoginModal, setShowLoginModal, loginLater, setLoginLater
+      handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout,
+      showLoginModal, setShowLoginModal
     }}>
       {children}
     </AuthContext.Provider>

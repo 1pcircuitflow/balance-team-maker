@@ -64,6 +64,8 @@ export interface BalanceResult {
   isValid?: boolean;
   isConstraintViolated?: boolean;
   isQuotaViolated?: boolean;
+  positionWarning?: boolean;
+  noneAssignedCount?: number;
 }
 
 export enum BottomTabType {

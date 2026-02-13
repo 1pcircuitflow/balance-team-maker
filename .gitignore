@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+functions/lib
 dist-ssr
 *.local
 
@@ -19,6 +20,8 @@ dist-ssr
 /android/app/build
 /android/app/src/main/assets/public
 /android/app/src/main/assets/capacitor.config.json
+
+nul
 
 # Editor directories and files
 .vscode/*

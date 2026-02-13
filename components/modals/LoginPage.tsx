@@ -3,8 +3,8 @@ import React from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 
 export const LoginPage: React.FC<{
-  isOpen: boolean; onLater: () => void; onLogin: () => void;
-}> = ({ isOpen, onLater, onLogin }) => {
+  isOpen: boolean; onLogin: () => void; onKakaoLogin: () => void;
+}> = ({ isOpen, onLogin, onKakaoLogin }) => {
   const { t } = useAppContext();
   if (!isOpen) return null;
 
@@ -49,11 +49,14 @@ export const LoginPage: React.FC<{
           </button>
 
           <button
-            onClick={onLater}
-            className="w-full max-w-[295px] h-[56px] flex items-center justify-center active:scale-[0.98] transition-transform bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-md text-[16px] font-semibold text-slate-500 dark:text-slate-400"
-            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
+            onClick={onKakaoLogin}
+            className="w-full max-w-[295px] h-[56px] flex items-center justify-center gap-3 active:scale-[0.98] transition-transform rounded-xl shadow-md text-[16px] font-semibold"
+            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif', backgroundColor: '#FEE500', color: '#000000' }}
           >
-            {t('loginLater')}
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#000000" d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.8 5.108 4.513 6.467-.197.736-.714 2.666-.818 3.079-.128.506.186.499.39.363.16-.107 2.554-1.736 3.588-2.442.742.104 1.507.16 2.327.16 5.523 0 10-3.463 10-7.627S17.523 3 12 3" />
+            </svg>
+            {t('kakaoLogin')}
           </button>
         </div>
       </div>

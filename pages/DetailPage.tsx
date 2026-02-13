@@ -22,6 +22,7 @@ interface DetailPageProps {
 export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   setShowMemberPickerModal,
 }) => {
+  const [processingApplicantId, setProcessingApplicantId] = React.useState<string | null>(null);
   const { t, lang, darkMode, showAlert, setConfirmState } = useAppContext();
   const { isAdFree } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
@@ -56,7 +57,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 
   return (
     <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
-      <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 shrink-0">
+      <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
             onClick={() => {
@@ -323,8 +324,19 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 return (
                   <React.Fragment key={app.id}>
                     <div
+                      role={selectionMode && detailTab === DetailPageTab.APPROVED ? 'button' : undefined}
+                      tabIndex={selectionMode && detailTab === DetailPageTab.APPROVED ? 0 : undefined}
+                      aria-pressed={selectionMode && detailTab === DetailPageTab.APPROVED ? isSelected : undefined}
                       onClick={() => {
                         if (selectionMode && detailTab === DetailPageTab.APPROVED) {
+                          setSelectedPlayerIds(prev =>
+                            prev.includes(effectiveId) ? prev.filter(x => x !== effectiveId) : [...prev, effectiveId]
+                          );
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (selectionMode && detailTab === DetailPageTab.APPROVED && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault();
                           setSelectedPlayerIds(prev =>
                             prev.includes(effectiveId) ? prev.filter(x => x !== effectiveId) : [...prev, effectiveId]
                           );
@@ -394,16 +406,28 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         {detailTab === DetailPageTab.PENDING ? (
                           <>
                             <button
-                              onClick={() => cancelApplication(room.id, app)}
-                              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-[12px] font-medium transition-all active:scale-95"
+                              onClick={async () => {
+                                setProcessingApplicantId(app.id);
+                                try { await cancelApplication(room.id, app); } finally { setProcessingApplicantId(null); }
+                              }}
+                              disabled={processingApplicantId === app.id}
+                              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-[12px] font-medium transition-all active:scale-95 disabled:opacity-50"
                             >
-                              {t('reject')}
+                              {processingApplicantId === app.id ? (
+                                <span className="inline-block w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                              ) : t('reject')}
                             </button>
                             <button
-                              onClick={() => handleApproveApplicant(room, app)}
-                              className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-[12px] font-medium transition-all active:scale-95"
+                              onClick={async () => {
+                                setProcessingApplicantId(app.id);
+                                try { await handleApproveApplicant(room, app); } finally { setProcessingApplicantId(null); }
+                              }}
+                              disabled={processingApplicantId === app.id}
+                              className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-[12px] font-medium transition-all active:scale-95 disabled:opacity-50"
                             >
-                              {t('approve')}
+                              {processingApplicantId === app.id ? (
+                                <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                              ) : t('approve')}
                             </button>
                           </>
                         ) : (
@@ -599,9 +623,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                     <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5 flex items-center justify-between">
                       <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('teamCountLabel')}</span>
                       <div className="flex items-center gap-4">
-                        <button onClick={() => setTeamCount(Math.max(2, teamCount - 1))} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.MinusIcon size={16} /></button>
+                        <button onClick={() => setTeamCount(Math.max(2, teamCount - 1))} aria-label={t('decreaseTeamCount')} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.MinusIcon size={16} /></button>
                         <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight tabular-nums w-4 text-center" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{teamCount}</span>
-                        <button onClick={() => setTeamCount(Math.min(10, teamCount + 1))} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.PlusIcon size={16} /></button>
+                        <button onClick={() => setTeamCount(Math.min(10, teamCount + 1))} aria-label={t('increaseTeamCount')} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.PlusIcon size={16} /></button>
                       </div>
                     </div>
                   </div>

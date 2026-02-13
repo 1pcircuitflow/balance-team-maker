@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카카오 로그인 처리 중...</title>
+    <style>
+        body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #FEE500; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { text-align: center; padding: 2rem; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1); border-top-color: #3C1E1E; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        p { color: #3C1E1E; font-weight: 600; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <p>로그인 처리 중...</p>
+    </div>
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const error = params.get('error');
+
+            if (error || !code) {
+                document.querySelector('p').textContent = '로그인에 실패했습니다. 앱으로 돌아가주세요.';
+                return;
+            }
+
+            // 네이티브 앱에서 열렸는지 판별 (User-Agent 또는 referrer 기반)
+            const isNative = /capacitor|android|iphone|ipad/i.test(navigator.userAgent);
+
+            if (isNative) {
+                // 네이티브 앱으로 딥링크 전달
+                window.location.href = 'balanceteam://kakao-callback?code=' + encodeURIComponent(code);
+                // fallback: 3초 뒤에도 이동 안 되면 안내
+                setTimeout(function() {
+                    document.querySelector('p').textContent = '앱으로 이동하지 못했습니다. Belo 앱을 열어주세요.';
+                }, 3000);
+            } else {
+                // 웹: 메인 페이지로 code 전달
+                window.location.href = '/?kakao_code=' + encodeURIComponent(code);
+            }
+        })();
+    </script>
+</body>
+</html>

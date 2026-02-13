@@ -74,6 +74,7 @@ export const HostRoomModal: React.FC<{
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
   const [isPickerSelectionMode, setIsPickerSelectionMode] = useState(false);
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
 
   useEffect(() => {
     if (isOpen && !activeRoom) {
@@ -96,6 +97,7 @@ export const HostRoomModal: React.FC<{
       setSelectedSport(initialSport);
       // 제목 자동 초기화 제거하여 플레이스홀더 노출 유도
       setTitle("");
+      setVisibility('PRIVATE');
     }
 
     if (activeRoom?.id && isOpen) {
@@ -173,6 +175,7 @@ export const HostRoomModal: React.FC<{
         matchEndTime: endTime,
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
         tierMode: '5TIER',
+        visibility,
         ...(localStorage.getItem('fcm_token') ? { fcmToken: localStorage.getItem('fcm_token')! } : {}),
         ...(venue.trim() ? { venue: venue.trim() } : {}),
       });
@@ -378,6 +381,24 @@ export const HostRoomModal: React.FC<{
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* 공개/비공개 토글 */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('publicMatch' as any)}</label>
+                    <button
+                      onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${visibility === 'PUBLIC' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${visibility === 'PUBLIC' ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('publicMatchDesc' as any)}</p>
+                </div>
               </div>
             </div>
 

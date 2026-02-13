@@ -5,10 +5,11 @@ import { AdMob, RewardAdPluginEvents, RewardAdOptions } from '@capacitor-communi
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { AnalyticsService } from '../services/analyticsService';
 import { paymentService, PRODUCT_IDS } from '../services/paymentService';
-import { checkAppVersion, updateRoomFcmToken } from '../services/firebaseService';
+import { checkAppVersion, updateRoomFcmToken, saveUserFcmToken } from '../services/firebaseService';
 import { compareVersions } from '../utils/helpers';
 import { Language } from '../translations';
 
@@ -16,7 +17,7 @@ export const useInitialization = (
   lang: Language,
   setLang: (lang: Language) => void,
   user: any,
-  loginLater: boolean,
+  currentUserId: string,
   setShowLoginModal: (v: boolean) => void,
   setIsAdFree: (v: boolean) => void,
   currentActiveRoomId: string | undefined,
@@ -26,6 +27,7 @@ export const useInitialization = (
   setUpdateInfo: (info: any) => void,
   handleRewardAdComplete: () => void,
   t: (key: string, ...args: any[]) => string,
+  onKakaoCode?: (code: string) => void,
 ) => {
   // Version check
   useEffect(() => {
@@ -105,7 +107,7 @@ export const useInitialization = (
     initSystemLang();
     AnalyticsService.logAppOpen();
 
-    if (!user && !loginLater) {
+    if (!user) {
       setShowLoginModal(true);
     }
 
@@ -176,17 +178,19 @@ export const useInitialization = (
 
     const addPushListeners = () => {
       PushNotifications.addListener('registration', (token) => {
-        console.log('Push registration success, token: ' + token.value);
         localStorage.setItem('fcm_token', token.value);
+        // FCM 토큰을 사용자 문서에 저장 (Cloud Functions에서 조회용)
+        if (currentUserId) {
+          saveUserFcmToken(currentUserId, token.value);
+        }
         if (currentActiveRoomId) {
-          updateRoomFcmToken(currentActiveRoomId, token.value);
+          updateRoomFcmToken(currentActiveRoomId, token.value, currentUserId);
         }
       });
       PushNotifications.addListener('registrationError', (error) => {
         console.error('Error on registration: ' + JSON.stringify(error));
       });
       PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        console.log('Push received: ' + JSON.stringify(notification));
         if (notification.body) {
           setAlertState({
             isOpen: true,
@@ -195,12 +199,28 @@ export const useInitialization = (
           });
         }
       });
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        const data = action.notification.data;
+        if (data?.roomId) {
+          setPendingJoinRoomId(data.roomId);
+        }
+      });
     };
 
     const addDeepLinkListener = () => {
-      CapApp.addListener('appUrlOpen', (data) => {
+      CapApp.addListener('appUrlOpen', async (data) => {
         try {
-          console.log('App opened with URL:', data.url);
+          // 카카오 로그인 콜백 처리
+          if (data.url.includes('kakao-callback')) {
+            const url = new URL(data.url);
+            const code = url.searchParams.get('code');
+            if (code && onKakaoCode) {
+              try { await Browser.close(); } catch (e) { /* ignore */ }
+              onKakaoCode(code);
+            }
+            return;
+          }
+
           if (data.url.includes('room=')) {
             const url = new URL(data.url);
             const roomId = url.searchParams.get('room');
@@ -221,5 +241,5 @@ export const useInitialization = (
     return () => {
       PushNotifications.removeAllListeners();
     };
-  }, [currentActiveRoomId, lang]);
+  }, [currentActiveRoomId, currentUserId, lang]);
 };

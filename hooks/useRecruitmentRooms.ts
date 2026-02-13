@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Player, Tier, SportType, Position } from '../types';
 import {
   subscribeToUserRooms,
+  subscribeToPublicRooms,
   updateRoomFcmToken,
   cancelApplication,
   RecruitmentRoom,
@@ -9,11 +10,10 @@ import {
   db,
 } from '../services/firebaseService';
 import { upsertPlayerFromApplicant } from '../utils/helpers';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
-import { LocalNotifications } from '@capacitor/local-notifications';
 
 export const useRecruitmentRooms = (
   currentUserId: string,
@@ -26,6 +26,8 @@ export const useRecruitmentRooms = (
   setActiveTab: (tab: SportType) => void,
 ) => {
   const [activeRooms, setActiveRooms] = useState<RecruitmentRoom[]>([]);
+  const [publicRooms, setPublicRooms] = useState<RecruitmentRoom[]>([]);
+  const [homeTab, setHomeTab] = useState<'MY' | 'PUBLIC'>('MY');
   const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
   const [showHostRoomModal, setShowHostRoomModal] = useState(false);
   const [showApplyRoomModal, setShowApplyRoomModal] = useState(false);
@@ -72,6 +74,41 @@ export const useRecruitmentRooms = (
     });
   }, [activeRooms, activeTab]);
 
+  // 공개방 필터링 (만료된 방 제거 + 본인 방 제외)
+  const filteredPublicRooms = useMemo(() => {
+    return publicRooms.filter(r => {
+      try {
+        // 본인 방은 제외
+        if (r.hostId === currentUserId) return false;
+        if (activeTab !== SportType.ALL && r.sport !== activeTab) return false;
+        const [y, m, d] = r.matchDate.split('-').map(Number);
+        const [hh, mm] = r.matchTime.split(':').map(Number);
+        const matchTime = new Date(y, m - 1, d, hh, mm);
+        const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
+        return expiryLimit > new Date() && r.status !== 'DELETED';
+      } catch { return true; }
+    }).sort((a, b) => {
+      try {
+        const [ay, am, ad] = a.matchDate.split('-').map(Number);
+        const [ahh, amm] = a.matchTime.split(':').map(Number);
+        const aTime = new Date(ay, am - 1, ad, ahh, amm).getTime();
+        const [by, bm, bd] = b.matchDate.split('-').map(Number);
+        const [bhh, bmm] = b.matchTime.split(':').map(Number);
+        const bTime = new Date(by, bm - 1, bd, bhh, bmm).getTime();
+        return aTime - bTime;
+      } catch { return 0; }
+    });
+  }, [publicRooms, activeTab, currentUserId]);
+
+  // Subscribe to public rooms
+  useEffect(() => {
+    const sportFilter = activeTab === SportType.ALL ? null : activeTab;
+    const unsubscribe = subscribeToPublicRooms(sportFilter, 50, (rooms) => {
+      setPublicRooms(rooms);
+    });
+    return () => unsubscribe();
+  }, [activeTab]);
+
   // Subscribe to rooms
   useEffect(() => {
     if (!currentUserId) return;
@@ -86,18 +123,9 @@ export const useRecruitmentRooms = (
             const newPlayer = room.applicants.filter(a => !a.isApproved).slice(-1)[0];
             if (newPlayer) {
               const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
-              if (Capacitor.isNativePlatform()) {
-                LocalNotifications.schedule({
-                  notifications: [{
-                    title: `[${room.title}] ${t('recruitParticipants')}`,
-                    body: msg,
-                    id: Math.floor(Math.random() * 1000000),
-                    channelId: 'recruit_channel',
-                    smallIcon: 'ic_stat_icon_config_sample',
-                    sound: 'default',
-                  }]
-                }).catch(e => console.error('Local Notification failed', e));
-              } else {
+              // 네이티브: FCM이 백그라운드/포그라운드 모두 처리
+              // 웹: showAlert로 인앱 알림
+              if (!Capacitor.isNativePlatform()) {
                 showAlert(msg, `[${room.title}] ${t('recruitParticipants')}`);
               }
             }
@@ -170,59 +198,64 @@ export const useRecruitmentRooms = (
       setPlayers(prev => upsertPlayerFromApplicant(prev, applicant, room.sport as SportType));
     } catch (e) {
       console.error("Approval Error:", e);
+      showAlert(t('approveErrorMsg'));
     }
   };
 
   const handleUpdateApplicant = async (room: RecruitmentRoom, applicantId: string, updates: Partial<Applicant>) => {
     try {
       const roomRef = doc(db, 'rooms', room.id);
-      const updatedApplicants = room.applicants.map(app => {
-        if (app.id === applicantId) {
-          const newApp = { ...app, ...updates };
-          setPlayers(prev => prev.map(p => {
-            if (p.name === app.name) {
-              const playerUpdates: Partial<Player> = {};
-              if (updates.tier !== undefined) {
-                playerUpdates.tier = (Tier as any)[updates.tier] || Tier.B;
-              }
-              if (updates.primaryPositions !== undefined) {
-                playerUpdates.primaryPositions = updates.primaryPositions as Position[];
-                playerUpdates.primaryPosition = (updates.primaryPositions[0] || 'NONE') as Position;
-              }
-              if (updates.secondaryPositions !== undefined) {
-                playerUpdates.secondaryPositions = updates.secondaryPositions as Position[];
-                playerUpdates.secondaryPosition = (updates.secondaryPositions[0] || 'NONE') as Position;
-              }
-              if (updates.tertiaryPositions !== undefined) {
-                playerUpdates.tertiaryPositions = updates.tertiaryPositions as Position[];
-                playerUpdates.tertiaryPosition = (updates.tertiaryPositions[0] || 'NONE') as Position;
-              }
-              if (updates.position !== undefined) {
-                const posArr = updates.position.split('/') as Position[];
-                if (!updates.primaryPositions) {
-                  playerUpdates.primaryPositions = posArr;
-                  playerUpdates.primaryPosition = posArr[0] || 'NONE';
-                }
-              }
-              return { ...p, ...playerUpdates };
-            }
-            return p;
-          }));
-          return newApp;
-        }
-        return app;
-      });
+      const targetApp = room.applicants.find(a => a.id === applicantId);
+      const updatedApplicants = room.applicants.map(app =>
+        app.id === applicantId ? { ...app, ...updates } : app
+      );
       await updateDoc(roomRef, { applicants: updatedApplicants });
+      // Firebase 성공 후에만 로컬 상태 업데이트
+      if (targetApp) {
+        setPlayers(prev => prev.map(p => {
+          if (p.name === targetApp.name) {
+            const playerUpdates: Partial<Player> = {};
+            if (updates.tier !== undefined) {
+              playerUpdates.tier = (Tier as any)[updates.tier] || Tier.B;
+            }
+            if (updates.primaryPositions !== undefined) {
+              playerUpdates.primaryPositions = updates.primaryPositions as Position[];
+              playerUpdates.primaryPosition = (updates.primaryPositions[0] || 'NONE') as Position;
+            }
+            if (updates.secondaryPositions !== undefined) {
+              playerUpdates.secondaryPositions = updates.secondaryPositions as Position[];
+              playerUpdates.secondaryPosition = (updates.secondaryPositions[0] || 'NONE') as Position;
+            }
+            if (updates.tertiaryPositions !== undefined) {
+              playerUpdates.tertiaryPositions = updates.tertiaryPositions as Position[];
+              playerUpdates.tertiaryPosition = (updates.tertiaryPositions[0] || 'NONE') as Position;
+            }
+            if (updates.position !== undefined) {
+              const posArr = updates.position.split('/') as Position[];
+              if (!updates.primaryPositions) {
+                playerUpdates.primaryPositions = posArr;
+                playerUpdates.primaryPosition = posArr[0] || 'NONE';
+              }
+            }
+            return { ...p, ...playerUpdates };
+          }
+          return p;
+        }));
+      }
     } catch (e) {
       console.error("Update applicant error:", e);
+      showAlert(t('saveErrorMsg'));
     }
   };
 
   const handleApproveAllApplicants = async (room: RecruitmentRoom) => {
     try {
       const updatedApplicants = room.applicants.map(a => ({ ...a, isApproved: true }));
-      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      await batch.commit();
 
+      // Firebase 성공 후에만 로컬 상태 업데이트
       setPlayers(prev => {
         let result = prev;
         room.applicants.filter(a => !a.isApproved).forEach(a => {
@@ -232,6 +265,7 @@ export const useRecruitmentRooms = (
       });
     } catch (e) {
       console.error("Approve All Error:", e);
+      showAlert(t('approveErrorMsg'));
     }
   };
 
@@ -265,12 +299,14 @@ export const useRecruitmentRooms = (
       confirmText: t('delete'),
       onConfirm: async () => {
         try {
-          setShowHostRoomModal(false);
           await updateDoc(doc(db, 'rooms', room.id), { status: 'DELETED' });
+          // Firebase 성공 후에만 UI 상태 업데이트
+          setShowHostRoomModal(false);
           setActiveRooms(prev => prev.filter(r => r.id !== room.id));
           setCurrentActiveRoom(null);
         } catch (e) {
           console.error("Delete Room Error:", e);
+          showAlert(t('saveErrorMsg'));
         }
         if (onConfirm) onConfirm();
       }
@@ -313,6 +349,8 @@ export const useRecruitmentRooms = (
   return {
     activeRooms, setActiveRooms,
     filteredRooms,
+    publicRooms: filteredPublicRooms,
+    homeTab, setHomeTab,
     currentActiveRoom, setCurrentActiveRoom,
     showHostRoomModal, setShowHostRoomModal,
     showApplyRoomModal, setShowApplyRoomModal,
