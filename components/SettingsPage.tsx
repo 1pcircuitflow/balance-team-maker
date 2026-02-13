@@ -58,7 +58,7 @@ const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
 );
 
 export const SettingsPage: React.FC = () => {
-  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled } = useAppContext();
+  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled, setShowGuideModal } = useAppContext();
   const { user, userNickname: nickname, setUserNickname, handleLogout, setShowLoginModal, isAdFree, setIsAdFree } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
   const { showTier, setShowTier, sortMode, setSortMode, useTeamColors, setUseTeamColors } = useTeamBalanceContext();
@@ -70,7 +70,7 @@ export const SettingsPage: React.FC = () => {
   };
   const onUpdateNickname = (name: string) => { setUserNickname(name); localStorage.setItem('app_user_nickname', name); };
   const onLogin = () => setShowLoginModal(true);
-  const onLogout = () => handleLogout(setPlayers, setIsDataLoaded);
+  const onLogout = () => showConfirm(t('logoutConfirm'), () => handleLogout(setPlayers, setIsDataLoaded), t('logoutTitle'));
   const [langOpen, setLangOpen] = useState(false);
   const [editingNickname, setEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
@@ -341,6 +341,15 @@ export const SettingsPage: React.FC = () => {
           <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAbout')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          {/* Usage Guide */}
+          <button
+            type="button"
+            className="w-full px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
+            onClick={() => setShowGuideModal(true)}
+          >
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('usageGuide')}</span>
+            <span className="text-slate-400"><ExternalLinkIcon /></span>
+          </button>
           {/* Rate App */}
           <button
             type="button"

@@ -83,5 +83,6 @@ export enum AppPageType {
 
 export enum DetailPageTab {
   PENDING = 'PENDING',
-  APPROVED = 'APPROVED'
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED'
 }

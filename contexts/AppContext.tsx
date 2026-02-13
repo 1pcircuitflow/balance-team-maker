@@ -33,6 +33,8 @@ interface AppContextValue {
   confirmState: ConfirmState;
   setConfirmState: React.Dispatch<React.SetStateAction<ConfirmState>>;
   showConfirm: (message: string, onConfirm: () => void, title?: string, confirmText?: string, cancelText?: string) => void;
+  showGuideModal: boolean;
+  setShowGuideModal: (v: boolean) => void;
 }
 
 const AppContext = createContext<AppContextValue>(null!);
@@ -65,6 +67,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     message: '',
     onConfirm: () => {},
   });
+
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   const t = useCallback((key: TranslationKey | string, ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
@@ -106,7 +110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [lang]);
 
   return (
-    <AppContext.Provider value={{ lang, setLang, darkMode, setDarkMode, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showConfirm }}>
+    <AppContext.Provider value={{ lang, setLang, darkMode, setDarkMode, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showConfirm, showGuideModal, setShowGuideModal }}>
       {children}
     </AppContext.Provider>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Player, Tier, SportType, AppPageType, BottomTabType, DetailPageTab, Position } from '../types';
 import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT } from '../constants';
-import { cancelApplication } from '../services/firebaseService';
+import { cancelApplication, cancelMyApplication, applyForParticipation } from '../services/firebaseService';
 import { FormationPicker } from '../components/FormationPicker';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
 import { parseTier, tierToLabel, applicantToPlayer, upsertPlayerFromApplicant } from '../utils/helpers';
@@ -24,7 +24,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 }) => {
   const [processingApplicantId, setProcessingApplicantId] = React.useState<string | null>(null);
   const { t, lang, darkMode, showAlert, setConfirmState } = useAppContext();
-  const { isAdFree } = useAuthContext();
+  const { isAdFree, currentUserId, userNickname } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
   const { setCurrentPage, setCurrentBottomTab, detailTab, setDetailTab, touchStartX, setTouchStartX } = useNavigationContext();
   const {
@@ -43,15 +43,36 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
     setHostRoomUseLimit, setHostRoomMaxApplicants,
     setHostRoomActivePicker, setHostRoomIsPickerSelectionMode,
     handleShareRecruitLink, handleCloseRecruitRoom,
-    handleApproveApplicant, handleApproveAllApplicants, handleUpdateApplicant,
+    handleApproveApplicant, handleRejectApplicant, handleRestoreApplicant, handleApproveAllApplicants, handleUpdateApplicant,
     activeActionMenuId, setActiveActionMenuId,
     editingApplicantId, setEditingApplicantId,
     setMemberSuggestion,
   } = useRecruitmentContext();
 
+  // 게스트용 참가신청 상태
+  const [isApplyFormOpen, setIsApplyFormOpen] = React.useState(false);
+  const [applyName, setApplyName] = React.useState(userNickname);
+  const [applyTier, setApplyTier] = React.useState('B');
+  const [applyPrimaryPos, setApplyPrimaryPos] = React.useState<string[]>([]);
+  const [applySecondaryPos, setApplySecondaryPos] = React.useState<string[]>([]);
+  const [applyTertiaryPos, setApplyTertiaryPos] = React.useState<string[]>([]);
+  const [applyForbiddenPos, setApplyForbiddenPos] = React.useState<string[]>([]);
+  const [applyLoading, setApplyLoading] = React.useState(false);
+  const [applyError, setApplyError] = React.useState<string | null>(null);
+
   if (!room) return null;
+  const isHost = room.hostId === currentUserId;
   const TIER_COLORS = TIER_BADGE_COLORS;
-  const pendingApplicants = room.applicants.filter(a => !a.isApproved);
+  // status 기반 필터링 (하위 호환: status 없으면 isApproved로 판별)
+  const getApplicantStatus = (a: typeof room.applicants[0]) => {
+    if (a.status) return a.status;
+    return a.isApproved ? 'APPROVED' : 'PENDING';
+  };
+  const pendingApplicants = room.applicants.filter(a => getApplicantStatus(a) === 'PENDING');
+  const rejectedApplicants = room.applicants.filter(a => getApplicantStatus(a) === 'REJECTED');
+  const approvedApplicants = room.applicants.filter(a => getApplicantStatus(a) === 'APPROVED');
+  const myApplication = !isHost ? room.applicants.find(a => a.userId === currentUserId) : null;
+  const myStatus = myApplication ? getApplicantStatus(myApplication) : null;
   const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
   const bgImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
 
@@ -69,7 +90,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             <ArrowLeftIcon size={24} />
           </button>
           <h3 className="text-[20px] font-semibold text-slate-900 dark:text-white tracking-[-0.025em]">
-            {t('manageMatchDetail')}
+            {isHost ? t('manageMatchDetail') : t('matchDetail')}
           </h3>
           <div className="w-8" />
         </div>
@@ -94,6 +115,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   </h4>
                 </div>
 
+                {isHost && (
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="relative p-1.5 transition-colors">
                     <Icons.UsersIcon size={18} className="text-white/90" />
@@ -144,6 +166,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                     <Icons.TrashIcon size={18} className="text-white/90" />
                   </button>
                 </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between my-auto">
@@ -152,12 +175,14 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                     <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venue}</p>
                   )}
                 </div>
+                {isHost && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleShareRecruitLink(room); }}
                   className="text-[12px] font-medium text-[#FFFFFF] px-2 py-0.5 rounded-xl bg-[#F43F5E] tracking-[-0.025em] active:scale-95 transition-transform shrink-0 flex items-center gap-1"
                 >
                   <Icons.ShareIcon size={12} />{t('participationLink')}
                 </button>
+                )}
               </div>
 
               <div className="flex justify-between items-end gap-2">
@@ -177,7 +202,8 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           </div>
 
           {/* Tabs */}
-          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 gap-8 mt-4">
+          {isHost ? (
+          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 gap-6 mt-4">
             <button
               onClick={() => setDetailTab(DetailPageTab.PENDING)}
               className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.PENDING
@@ -199,31 +225,103 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 }`}
             >
               <span>{t('approvedParticipantsList')}</span>
-              <span className="text-[11px] opacity-60">({room.applicants.filter(a => a.isApproved).length})</span>
+              <span className="text-[11px] opacity-60">({approvedApplicants.length})</span>
               {detailTab === DetailPageTab.APPROVED && (
                 <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
               )}
             </button>
+            <button
+              onClick={() => setDetailTab(DetailPageTab.REJECTED)}
+              className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.REJECTED
+                ? 'text-slate-900 dark:text-white font-bold'
+                : 'text-slate-400 dark:text-slate-500 font-medium'
+                }`}
+            >
+              <span>{t('rejectedApplicantsList')}</span>
+              <span className="text-[11px] opacity-60">({rejectedApplicants.length})</span>
+              {detailTab === DetailPageTab.REJECTED && (
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
+              )}
+            </button>
           </div>
+          ) : (
+          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 mt-4">
+            <div className="px-0 py-3 text-[14px] text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+              <span>{t('approvedParticipantsList')}</span>
+              <span className="text-[11px] opacity-60">({approvedApplicants.length})</span>
+            </div>
+          </div>
+          )}
+
+          {/* 게스트: 내 신청 상태 배지 */}
+          {!isHost && myApplication && myStatus && (
+            <div className={`mt-3 px-4 py-2.5 rounded-2xl flex items-center justify-between ${
+              myStatus === 'PENDING' ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800' :
+              myStatus === 'APPROVED' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
+              'bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  myStatus === 'PENDING' ? 'bg-amber-500 animate-pulse' :
+                  myStatus === 'APPROVED' ? 'bg-emerald-500' : 'bg-rose-500'
+                }`} />
+                <span className={`text-[13px] font-medium ${
+                  myStatus === 'PENDING' ? 'text-amber-700 dark:text-amber-400' :
+                  myStatus === 'APPROVED' ? 'text-emerald-700 dark:text-emerald-400' :
+                  'text-rose-700 dark:text-rose-400'
+                }`}>
+                  {myStatus === 'PENDING' ? t('statusPending') : myStatus === 'APPROVED' ? t('statusApproved') : t('statusRejected')}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  if (!currentUserId) return;
+                  setConfirmState({
+                    isOpen: true,
+                    message: t('cancelApplicationConfirm'),
+                    onConfirm: async () => {
+                      try {
+                        await cancelMyApplication(room.id, currentUserId);
+                        showAlert(t('applicationCancelled'));
+                        setConfirmState(prev => ({ ...prev, isOpen: false }));
+                      } catch (err: any) {
+                        if (err?.message === 'APPLICATION_NOT_FOUND') {
+                          showAlert(t('applicationNotFound'));
+                        } else {
+                          showAlert(t('errorOccurred'));
+                        }
+                        setConfirmState(prev => ({ ...prev, isOpen: false }));
+                      }
+                    },
+                  });
+                }}
+                className="text-[12px] font-medium text-rose-500 dark:text-rose-400 px-3 py-1 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 transition-all active:scale-95"
+              >
+                {t('cancelMyApplication')}
+              </button>
+            </div>
+          )}
 
           {/* Swipeable content */}
           <div
             className="flex flex-col gap-6 relative mt-3 flex-1 min-h-[400px]"
-            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
-            onTouchEnd={(e) => {
+            onTouchStart={isHost ? (e) => setTouchStartX(e.touches[0].clientX) : undefined}
+            onTouchEnd={isHost ? (e) => {
               if (touchStartX === null) return;
               const touchEndX = e.changedTouches[0].clientX;
               const diff = touchStartX - touchEndX;
               const threshold = 60;
               if (Math.abs(diff) > threshold) {
-                if (diff > 0 && detailTab === DetailPageTab.PENDING) {
-                  setDetailTab(DetailPageTab.APPROVED);
-                } else if (diff < 0 && detailTab === DetailPageTab.APPROVED) {
-                  setDetailTab(DetailPageTab.PENDING);
+                const tabOrder = [DetailPageTab.PENDING, DetailPageTab.APPROVED, DetailPageTab.REJECTED];
+                const currentIdx = tabOrder.indexOf(detailTab);
+                if (diff > 0 && currentIdx < tabOrder.length - 1) {
+                  setDetailTab(tabOrder[currentIdx + 1]);
+                } else if (diff < 0 && currentIdx > 0) {
+                  setDetailTab(tabOrder[currentIdx - 1]);
                 }
               }
               setTouchStartX(null);
-            }}
+            } : undefined}
           >
             {/* Action buttons row */}
             <div className="flex items-center w-full gap-2 overflow-x-auto no-scrollbar">
@@ -234,6 +332,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 {showTier ? t('hideTier') : t('showTier')}
               </button>
 
+              {isHost && (
               <div className="flex gap-[8px] items-center shrink-0">
                 {detailTab === DetailPageTab.APPROVED && (
                   <>
@@ -254,7 +353,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   </>
                 )}
               </div>
+              )}
 
+              {isHost && (
               <div className="flex items-center shrink-0 ml-auto">
                 {detailTab === DetailPageTab.APPROVED && (
                   <button
@@ -274,10 +375,11 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   </button>
                 )}
               </div>
+              )}
             </div>
 
             {/* Constraints display */}
-            {(() => {
+            {isHost && (() => {
               const approvedIds = new Set(room.applicants.filter(a => a.isApproved).map(a => {
                 const member = players.find(p => p.name === a.name);
                 return member ? member.id : a.id;
@@ -313,7 +415,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 
             {/* Applicant list */}
             <div className="space-y-1">
-              {(detailTab === DetailPageTab.PENDING ? pendingApplicants : room.applicants.filter(a => a.isApproved)).map((app) => {
+              {(!isHost ? approvedApplicants : (detailTab === DetailPageTab.PENDING ? pendingApplicants : detailTab === DetailPageTab.REJECTED ? rejectedApplicants : approvedApplicants)).map((app) => {
                 const tierVal = parseTier(app.tier);
                 const tierLabel = tierToLabel(app.tier);
                 const member = players.find(p => p.name === app.name);
@@ -402,20 +504,21 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         </div>
                       </div>
 
+                      {isHost && (
                       <div className="flex items-center gap-1.5">
                         {detailTab === DetailPageTab.PENDING ? (
                           <>
                             <button
                               onClick={async () => {
                                 setProcessingApplicantId(app.id);
-                                try { await cancelApplication(room.id, app); } finally { setProcessingApplicantId(null); }
+                                try { await handleRejectApplicant(room, app); } finally { setProcessingApplicantId(null); }
                               }}
                               disabled={processingApplicantId === app.id}
                               className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-[12px] font-medium transition-all active:scale-95 disabled:opacity-50"
                             >
                               {processingApplicantId === app.id ? (
                                 <span className="inline-block w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                              ) : t('reject')}
+                              ) : t('rejectApplicant')}
                             </button>
                             <button
                               onClick={async () => {
@@ -430,6 +533,19 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                               ) : t('approve')}
                             </button>
                           </>
+                        ) : detailTab === DetailPageTab.REJECTED ? (
+                          <button
+                            onClick={async () => {
+                              setProcessingApplicantId(app.id);
+                              try { await handleRestoreApplicant(room, app); } finally { setProcessingApplicantId(null); }
+                            }}
+                            disabled={processingApplicantId === app.id}
+                            className="px-4 py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl text-[12px] font-medium transition-all active:scale-95 disabled:opacity-50"
+                          >
+                            {processingApplicantId === app.id ? (
+                              <span className="inline-block w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                            ) : t('restoreApplicant')}
+                          </button>
                         ) : (
                           <div className="flex items-center gap-2 relative">
                             {activeActionMenuId === app.id ? (
@@ -477,6 +593,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                           </div>
                         )}
                       </div>
+                      )}
                     </div>
 
                     {editingApplicantId === app.id && detailTab === DetailPageTab.APPROVED && (
@@ -515,19 +632,19 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 );
               })}
 
-              {(detailTab === DetailPageTab.PENDING ? pendingApplicants : room.applicants.filter(a => a.isApproved)).length === 0 && (
+              {(!isHost ? approvedApplicants : (detailTab === DetailPageTab.PENDING ? pendingApplicants : detailTab === DetailPageTab.REJECTED ? rejectedApplicants : approvedApplicants)).length === 0 && (
                 <div className="py-16 text-center space-y-4 animate-in fade-in zoom-in-95 duration-500">
                   <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
                     <Icons.UsersIcon size={24} className="text-slate-300 dark:text-slate-600" />
                   </div>
-                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : t('noPlayers')}</p>
+                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{!isHost ? t('noPlayers') : (detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : detailTab === DetailPageTab.REJECTED ? t('noRejectedApplicants') : t('noPlayers'))}</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Balance settings overlay backdrop */}
-          {isBalanceSettingsOpen && (
+          {/* Host: Balance settings overlay backdrop */}
+          {isHost && isBalanceSettingsOpen && (
             <div
               className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
               onClick={() => {
@@ -537,7 +654,8 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             />
           )}
 
-          {/* Balance settings bottom sheet */}
+          {/* Host: Balance settings bottom sheet */}
+          {isHost && (
           <div
             className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bottom-0 bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : ''}`}
             style={{
@@ -687,6 +805,137 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               </button>
             </div>
           </div>
+          )}
+
+          {/* Guest: Apply form overlay backdrop */}
+          {!isHost && isApplyFormOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+              onClick={() => setIsApplyFormOpen(false)}
+            />
+          )}
+
+          {/* Guest: Apply bottom sheet */}
+          {!isHost && (
+          <div
+            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isApplyFormOpen ? 'bottom-0 bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : ''}`}
+            style={{
+              bottom: isApplyFormOpen
+                ? 0
+                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))'),
+              paddingBottom: isApplyFormOpen
+                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))')
+                : 0,
+              maxHeight: isApplyFormOpen ? '85vh' : 'auto',
+            }}
+          >
+            <div className={`w-full max-w-lg px-5 ${isApplyFormOpen ? 'pt-5 overflow-y-auto' : ''}`} style={isApplyFormOpen ? { maxHeight: 'calc(85vh - 80px)' } : undefined}>
+              {isApplyFormOpen && (
+                <div className="w-full mb-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  {/* Name input */}
+                  <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5">
+                    <input
+                      type="text"
+                      value={applyName}
+                      onChange={(e) => setApplyName(e.target.value)}
+                      placeholder={t('inputNamePlaceholder')}
+                      className="w-full bg-transparent text-[16px] font-medium text-slate-900 dark:text-white tracking-tight outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                      style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                    />
+                  </div>
+
+                  {/* Tier selection */}
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {['S', 'A', 'B', 'C', 'D'].map(v => (
+                      <button
+                        key={v}
+                        onClick={() => setApplyTier(v)}
+                        className={`py-2 rounded-xl font-medium text-[11px] transition-all ${applyTier === v ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-950 text-slate-400'}`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Position picker (hide for GENERAL sport) */}
+                  {room.sport !== SportType.GENERAL && (
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-2">
+                      <FormationPicker
+                        sport={room.sport as SportType}
+                        primaryP={applyPrimaryPos as Position[]}
+                        secondaryP={applySecondaryPos as Position[]}
+                        tertiaryP={applyTertiaryPos as Position[]}
+                        forbiddenP={applyForbiddenPos as Position[]}
+                        lang={lang}
+                        onChange={(p, s, tr, f) => {
+                          setApplyPrimaryPos(p);
+                          setApplySecondaryPos(s);
+                          setApplyTertiaryPos(tr);
+                          setApplyForbiddenPos(f);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Error message */}
+                  {applyError && (
+                    <p className="text-rose-500 text-[13px] font-medium text-center">{applyError}</p>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={async () => {
+                  if (!isApplyFormOpen) {
+                    setIsApplyFormOpen(true);
+                    return;
+                  }
+                  // Submit apply
+                  if (!applyName.trim()) return;
+                  setApplyLoading(true);
+                  setApplyError(null);
+                  try {
+                    const fcmToken = localStorage.getItem('fcm_token') || undefined;
+                    await applyForParticipation(room.id, {
+                      name: applyName.trim(),
+                      tier: applyTier,
+                      position: applyPrimaryPos[0] || 'NONE',
+                      primaryPositions: applyPrimaryPos,
+                      secondaryPositions: applySecondaryPos,
+                      tertiaryPositions: applyTertiaryPos,
+                      forbiddenPositions: applyForbiddenPos,
+                      ...(fcmToken ? { fcmToken } : {}),
+                      ...(currentUserId ? { userId: currentUserId } : {}),
+                    });
+                    setIsApplyFormOpen(false);
+                    showAlert(t('applicationComplete'));
+                    setCurrentPage(AppPageType.HOME);
+                    setCurrentBottomTab(BottomTabType.HOME);
+                  } catch (err: any) {
+                    if (err?.message === 'DUPLICATE_APPLICATION') {
+                      setApplyError(t('duplicateApplicationMsg'));
+                    } else if (err?.message === 'ROOM_FULL') {
+                      setApplyError(t('roomFullMsg'));
+                    } else if (err?.message === 'ROOM_NOT_FOUND') {
+                      setApplyError(t('roomNotFoundMsg'));
+                    } else {
+                      setApplyError(t('networkErrorMsg'));
+                    }
+                  } finally {
+                    setApplyLoading(false);
+                  }
+                }}
+                disabled={applyLoading}
+                className={`w-full py-3 rounded-[24px] text-[16px] font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50 ${isApplyFormOpen ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl shadow-slate-900/40 dark:shadow-white/20'}`}
+                style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+              >
+                {applyLoading ? (
+                  <span className="inline-block w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
+                ) : isApplyFormOpen ? t('completeApplication') : (myApplication ? t('applyJoin') : t('applyJoin'))}
+              </button>
+            </div>
+          </div>
+          )}
         </div>
       </div>
     </div>

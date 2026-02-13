@@ -72,10 +72,10 @@ const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState } = useAppContext();
+  const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showGuideModal, setShowGuideModal } = useAppContext();
   const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
-  const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab } = useNavigationContext();
+  const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab, membersTab, setMembersTab } = useNavigationContext();
   const {
     result, setResult, isSharing, isGenerating, countdown,
     showColorPicker, setShowColorPicker, showQuotaSettings, setShowQuotaSettings,
@@ -95,7 +95,6 @@ const AppContent: React.FC = () => {
 
   // Modal states
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showGuideModal, setShowGuideModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<{ message: string; forceUpdate: boolean; storeUrl: string; } | null>(null);
@@ -126,6 +125,14 @@ const AppContent: React.FC = () => {
     setShowUpdateModal, setUpdateInfo, handleRewardAdComplete, t,
     handleKakaoCode,
   );
+
+  // 첫 실행 시 가이드 모달 자동 표시
+  useEffect(() => {
+    if (!localStorage.getItem('app_has_seen_guide')) {
+      const timer = setTimeout(() => setShowGuideModal(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Web: 카카오 로그인 콜백 (URL 파라미터 감지)
   useEffect(() => {
@@ -260,16 +267,23 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Sport Tabs */}
-      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
-        <nav className="flex gap-[10px] bg-white dark:bg-slate-950 px-5 pb-2 mb-3 w-full overflow-x-auto no-scrollbar whitespace-nowrap">
-          {(Object.entries(SportType) as [string, SportType][]).filter(([, value]) => currentBottomTab !== BottomTabType.MEMBERS || value !== SportType.ALL).map(([key, value]) => (
-            <button key={value} onClick={() => { setActiveTab(value); setResult(null); AnalyticsService.logEvent('tab_change', { sport: value }); }}
-              className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border ${activeTab === value ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white' : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'}`}>
-              {t(value.toLowerCase())}
-            </button>
-          ))}
-        </nav>
-      )}
+      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (() => {
+        const isMembers = currentBottomTab === BottomTabType.MEMBERS;
+        const currentTab = isMembers ? membersTab : activeTab;
+        const onTabClick = isMembers
+          ? (value: SportType) => { setMembersTab(value); setResult(null); AnalyticsService.logEvent('tab_change', { sport: value }); }
+          : (value: SportType) => { setActiveTab(value); setResult(null); AnalyticsService.logEvent('tab_change', { sport: value }); };
+        return (
+          <nav className="flex gap-[10px] bg-white dark:bg-slate-950 px-5 pb-2 mb-3 w-full overflow-x-auto no-scrollbar whitespace-nowrap">
+            {(Object.entries(SportType) as [string, SportType][]).filter(([, value]) => !isMembers || value !== SportType.ALL).map(([key, value]) => (
+              <button key={value} onClick={() => onTabClick(value)}
+                className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border ${currentTab === value ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white' : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'}`}>
+                {t(value.toLowerCase())}
+              </button>
+            ))}
+          </nav>
+        );
+      })()}
 
       {/* HOME Page */}
       {currentBottomTab === BottomTabType.HOME && (
@@ -354,7 +368,7 @@ const AppContent: React.FC = () => {
       <ApplyRoomModal isOpen={showApplyRoomModal} roomId={pendingJoinRoomId}
         onClose={() => { setShowApplyRoomModal(false); setPendingJoinRoomId(null); }}
         onSuccess={() => { setShowApplyRoomModal(false); setPendingJoinRoomId(null); }} lang={lang} darkMode={darkMode} />
-      <GuideModal isOpen={showGuideModal} onClose={() => setShowGuideModal(false)} title={t('guideTitle')} content={t('guideContent') || t('comingSoon')} />
+      <GuideModal isOpen={showGuideModal} onClose={() => { setShowGuideModal(false); localStorage.setItem('app_has_seen_guide', 'true'); }} title={t('guideTitle')} content={t('guideContent') || t('comingSoon')} />
       {updateInfo && (
         <UpdateModal isOpen={showUpdateModal} onClose={() => setShowUpdateModal(false)}
           onUpdate={() => { if (updateInfo.storeUrl) window.open(updateInfo.storeUrl, '_system'); }}

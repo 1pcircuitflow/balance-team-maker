@@ -12,8 +12,6 @@ interface RecruitmentContextValue {
   setActiveRooms: React.Dispatch<React.SetStateAction<RecruitmentRoom[]>>;
   filteredRooms: RecruitmentRoom[];
   publicRooms: RecruitmentRoom[];
-  homeTab: 'MY' | 'PUBLIC';
-  setHomeTab: (v: 'MY' | 'PUBLIC') => void;
   currentActiveRoom: RecruitmentRoom | null;
   setCurrentActiveRoom: React.Dispatch<React.SetStateAction<RecruitmentRoom | null>>;
   showHostRoomModal: boolean;
@@ -53,6 +51,8 @@ interface RecruitmentContextValue {
   setHostRoomIsPickerSelectionMode: (v: boolean) => void;
   // Handlers
   handleApproveApplicant: (room: RecruitmentRoom, applicant: Applicant) => void;
+  handleRejectApplicant: (room: RecruitmentRoom, applicant: Applicant) => void;
+  handleRestoreApplicant: (room: RecruitmentRoom, applicant: Applicant) => void;
   handleUpdateApplicant: (room: RecruitmentRoom, applicantId: string, updates: Partial<Applicant>) => void;
   handleApproveAllApplicants: (room: RecruitmentRoom) => void;
   handleShareRecruitLink: (room: RecruitmentRoom) => void;

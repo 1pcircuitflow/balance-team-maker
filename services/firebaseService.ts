@@ -20,6 +20,25 @@ import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/re
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Player } from "../types";
 
+/**
+ * Firebase 재시도 래퍼 — unavailable/deadline-exceeded 또는 오프라인 시에만 재시도
+ */
+const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 2, delayMs = 1000): Promise<T> => {
+    let lastError: any;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error: any) {
+            lastError = error;
+            const code = error?.code || '';
+            const isRetryable = code === 'unavailable' || code === 'deadline-exceeded' || !navigator.onLine;
+            if (!isRetryable || attempt === maxRetries) throw error;
+            await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+        }
+    }
+    throw lastError;
+};
+
 // Firebase 설정 (기존 설정 유지)
 const firebaseConfig = {
     apiKey: "AIzaSyCX43ePWFhdIbCUZUtoMePqMdTXiAowlx0",
@@ -59,6 +78,8 @@ export interface Applicant {
     fcmToken?: string;
     isWaiting?: boolean; // 항목 9: 대기자 여부
     isApproved?: boolean; // 개별 승인 여부
+    userId?: string; // 게스트 식별용
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED'; // 신청 상태
 }
 
 export interface RecruitmentRoom {
@@ -148,7 +169,8 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
             ...applicant,
             id: Math.random().toString(36).substring(2, 9),
             timestamp: new Date().toISOString(),
-            isApproved: false // 명시적으로 false 설정 (동기화 안정성)
+            isApproved: false, // 명시적으로 false 설정 (동기화 안정성)
+            status: 'PENDING',
         };
         await updateDoc(roomRef, {
             applicants: arrayUnion(newApplicant)
@@ -171,6 +193,28 @@ export const cancelApplication = async (roomId: string, applicant: Applicant) =>
         });
     } catch (error) {
         console.error("Error cancelling application:", error);
+        throw error;
+    }
+};
+
+/**
+ * 4-1. 게스트 참가 취소 (userId 기반)
+ */
+export const cancelMyApplication = async (roomId: string, userId: string) => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        const snap = await getDoc(roomRef);
+        if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
+
+        const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+        const applicant = (roomData.applicants || []).find(a => a.userId === userId);
+        if (!applicant) throw new Error('APPLICATION_NOT_FOUND');
+
+        await updateDoc(roomRef, {
+            applicants: arrayRemove(applicant)
+        });
+    } catch (error) {
+        console.error("Error cancelling my application:", error);
         throw error;
     }
 };
@@ -264,28 +308,32 @@ export const subscribeToPublicRooms = (
  * 8. 플레이어 명단 클라우드 저장
  */
 export const savePlayersToCloud = async (userId: string, players: Player[]) => {
-    try {
-        await setDoc(doc(db, "users", userId), { players }, { merge: true });
-    } catch (e) {
-        console.error("Save cloud error:", e);
-        throw e;
-    }
+    return withRetry(async () => {
+        try {
+            await setDoc(doc(db, "users", userId), { players }, { merge: true });
+        } catch (e) {
+            console.error("Save cloud error:", e);
+            throw e;
+        }
+    });
 };
 
 /**
  * 9. 플레이어 명단 클라우드 로드
  */
 export const loadPlayersFromCloud = async (userId: string): Promise<Player[] | null> => {
-    try {
-        const snap = await getDoc(doc(db, "users", userId));
-        if (snap.exists() && snap.data().players) {
-            return snap.data().players as Player[];
+    return withRetry(async () => {
+        try {
+            const snap = await getDoc(doc(db, "users", userId));
+            if (snap.exists() && snap.data().players) {
+                return snap.data().players as Player[];
+            }
+            return null;
+        } catch (e) {
+            console.error("Load cloud error:", e);
+            throw e;
         }
-        return null;
-    } catch (e) {
-        console.error("Load cloud error:", e);
-        throw e;
-    }
+    });
 };
 
 /**

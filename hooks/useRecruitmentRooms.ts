@@ -27,7 +27,6 @@ export const useRecruitmentRooms = (
 ) => {
   const [activeRooms, setActiveRooms] = useState<RecruitmentRoom[]>([]);
   const [publicRooms, setPublicRooms] = useState<RecruitmentRoom[]>([]);
-  const [homeTab, setHomeTab] = useState<'MY' | 'PUBLIC'>('MY');
   const [currentActiveRoom, setCurrentActiveRoom] = useState<RecruitmentRoom | null>(null);
   const [showHostRoomModal, setShowHostRoomModal] = useState(false);
   const [showApplyRoomModal, setShowApplyRoomModal] = useState(false);
@@ -192,7 +191,7 @@ export const useRecruitmentRooms = (
   const handleApproveApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
     try {
       const updatedApplicants = room.applicants.map(a =>
-        a.id === applicant.id ? { ...a, isApproved: true } : a
+        a.id === applicant.id ? { ...a, isApproved: true, status: 'APPROVED' as const } : a
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
       setPlayers(prev => upsertPlayerFromApplicant(prev, applicant, room.sport as SportType));
@@ -248,9 +247,33 @@ export const useRecruitmentRooms = (
     }
   };
 
+  const handleRejectApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
+    try {
+      const updatedApplicants = room.applicants.map(a =>
+        a.id === applicant.id ? { ...a, isApproved: false, status: 'REJECTED' as const } : a
+      );
+      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+    } catch (e) {
+      console.error("Reject Error:", e);
+      showAlert(t('saveErrorMsg'));
+    }
+  };
+
+  const handleRestoreApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
+    try {
+      const updatedApplicants = room.applicants.map(a =>
+        a.id === applicant.id ? { ...a, isApproved: false, status: 'PENDING' as const } : a
+      );
+      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+    } catch (e) {
+      console.error("Restore Error:", e);
+      showAlert(t('saveErrorMsg'));
+    }
+  };
+
   const handleApproveAllApplicants = async (room: RecruitmentRoom) => {
     try {
-      const updatedApplicants = room.applicants.map(a => ({ ...a, isApproved: true }));
+      const updatedApplicants = room.applicants.map(a => ({ ...a, isApproved: true, status: 'APPROVED' as const }));
       const batch = writeBatch(db);
       batch.update(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
       await batch.commit();
@@ -340,7 +363,7 @@ export const useRecruitmentRooms = (
       showAlert(t('editComplete'));
     } catch (error) {
       console.error('Error updating room:', error);
-      showAlert('Update failed. Please try again.');
+      showAlert(t('saveErrorMsg'));
     } finally {
       setIsProcessing(false);
     }
@@ -350,7 +373,6 @@ export const useRecruitmentRooms = (
     activeRooms, setActiveRooms,
     filteredRooms,
     publicRooms: filteredPublicRooms,
-    homeTab, setHomeTab,
     currentActiveRoom, setCurrentActiveRoom,
     showHostRoomModal, setShowHostRoomModal,
     showApplyRoomModal, setShowApplyRoomModal,
@@ -370,6 +392,8 @@ export const useRecruitmentRooms = (
     hostRoomActivePicker, setHostRoomActivePicker,
     hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode,
     handleApproveApplicant,
+    handleRejectApplicant,
+    handleRestoreApplicant,
     handleUpdateApplicant,
     handleApproveAllApplicants,
     handleShareRecruitLink,

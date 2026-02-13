@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Player, SportType, Position, TeamConstraint, BalanceResult } from '../types';
 import { TEAM_COLORS, POSITIONS_BY_SPORT } from '../constants';
 import { generateBalancedTeams } from '../services/balanceService';
@@ -53,6 +53,19 @@ export const useBalanceGeneration = (
   });
   const [showHistory, setShowHistory] = useState(false);
 
+  // Timer refs for cleanup
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setIsGenerating(false);
+    };
+  }, []);
+
   // Reset past results on player change
   useEffect(() => {
     setPastResults(new Set());
@@ -103,10 +116,15 @@ export const useBalanceGeneration = (
     const waitTime = isAdFree ? 1000 : 5000;
     setCountdown(isAdFree ? 1 : 5);
 
+    // 이전 타이머 정리
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
+          timerRef.current = null;
           const nextTotal = totalGenCount + 1;
           setTotalGenCount(nextTotal);
           localStorage.setItem('app_total_gen_count', nextTotal.toString());
@@ -123,13 +141,15 @@ export const useBalanceGeneration = (
         return prev - 1;
       });
     }, 1000);
+    timerRef.current = timer;
 
     const participatingIds = new Set(participating.map(p => p.id));
     const activeConstraints = teamConstraints
       .map(c => ({ ...c, playerIds: c.playerIds.filter(id => participatingIds.has(id)) }))
       .filter(c => c.playerIds.length >= 2);
 
-    setTimeout(() => {
+    // countdown이 0에 도달한 뒤 React가 렌더링할 시간(200ms)을 확보
+    timeoutRef.current = setTimeout(() => {
       try {
         const res = generateBalancedTeams(participating, teamCount, filteredQuotas, activeConstraints, useRandomMix, Array.from(pastResults), targetSport);
 
@@ -161,11 +181,15 @@ export const useBalanceGeneration = (
         setCurrentPage(AppPageType.BALANCE);
 
         if (!res.isValid) {
-          if (res.isConstraintViolated) {
+          if (res.isConstraintViolated && res.isQuotaViolated) {
+            showAlert(t('validationErrorBoth'));
+          } else if (res.isConstraintViolated) {
             showAlert(t('validationErrorConstraint'));
           } else if (res.isQuotaViolated) {
             showAlert(t('validationErrorQuota'));
           }
+        } else if (res.positionWarning && res.noneAssignedCount && res.noneAssignedCount > 0) {
+          showAlert(t('positionAssignmentWarning', res.noneAssignedCount));
         } else if (res.maxDiff && res.maxDiff > 10) {
           showAlert(t('balanceWarning', res.maxDiff));
         }
@@ -199,8 +223,9 @@ export const useBalanceGeneration = (
         showAlert(t('errorOccurred'));
       } finally {
         setIsGenerating(false);
+        timeoutRef.current = null;
       }
-    }, waitTime);
+    }, waitTime + 200);
   }, [players, activeTab, teamCount, quotas, useRandomMix, useTeamColors, selectedTeamColors, teamConstraints, pastResults, lastGenContext, isAdFree, totalGenCount, showAlert, t, setCurrentPage, AppPageType, setShowQuotaSettings]);
 
   const handleReviewLater = () => {
