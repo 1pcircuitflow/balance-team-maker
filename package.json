@@ -26,13 +26,14 @@
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@google/genai": "^1.37.0",
     "firebase": "^12.8.0",
-    "html2canvas": "1.4.1",
+    "html-to-image": "^1.11.11",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -145,7 +145,7 @@ export const BalancePage: React.FC = React.memo(() => {
           )}
 
           {result && (
-            <div id="results-capture-section" className="pb-48 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div id="results-capture-section" className="pb-6 animate-in fade-in slide-in-from-top-4 duration-500">
               <div data-capture-ignore="true" className="flex gap-2 py-3">
                 {resultHistory.length > 0 && (
                   <button
@@ -285,7 +285,7 @@ export const BalancePage: React.FC = React.memo(() => {
                     <div className="space-y-1">
                       {getSortedTeamPlayers(team.players).map(p => (
                         <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm transition-all">
-                          <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-[#777777] dark:text-slate-400 shrink-0">
+                          <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
                             BELO
                           </div>
                           <div className="w-10 text-[14px] font-bold text-slate-400 shrink-0 text-center">
@@ -337,12 +337,18 @@ export const BalancePage: React.FC = React.memo(() => {
               </div>
 
               <button
+                data-capture-ignore="true"
                 onClick={() => handleGenerate()}
                 className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2 rounded-[24px] text-[16px] font-semibold tracking-tight shadow-2xl shadow-slate-900/40 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
                 style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
               >
                 {t('reshuffleTeams')}
               </button>
+              <div className="hidden px-2 pt-2" data-promo-footer="true">
+                <div className={`mt-6 py-3 px-4 rounded-2xl flex items-center justify-center ${darkMode ? 'bg-slate-900/40' : 'bg-slate-100/50'}`}>
+                  <h4 className={`text-sm font-semibold tracking-tight pt-0.5 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('promoAppTitle')}</h4>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -40,12 +40,12 @@ export const ResultOverlay: React.FC = React.memo(() => {
         </div>
       </div>
 
-      <div className={`backdrop-blur-sm ${darkMode ? 'bg-slate-900/80 text-slate-100' : 'bg-slate-100/80 text-slate-900'} rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 w-full`}>
+      <div className={`${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-100 text-slate-900'} rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 w-full`}>
         <div className="flex flex-col">
           <span className={`text-[9px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-1`}>{t('standardDeviation')}</span>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black font-mono">{result.standardDeviation.toFixed(2)}</span>
-            <span className="text-[9px] opacity-40 italic">({t('lowerFairer')})</span>
+            <span className="text-[9px] opacity-60 italic">({t('lowerFairer')})</span>
           </div>
         </div>
         {activeTab !== SportType.GENERAL && (
@@ -69,7 +69,7 @@ export const ResultOverlay: React.FC = React.memo(() => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-48">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
         {result.teams.map((team, idx) => (
           <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800">
             <div className="bg-white dark:bg-slate-950 p-5 flex items-center justify-between" style={{ borderTop: team.color ? `6px solid ${team.color}` : 'none' }}>

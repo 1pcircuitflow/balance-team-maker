@@ -1,16 +1,12 @@
 package com.balanceteammaker;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import android.webkit.JavascriptInterface;
 import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
 import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;
-import java.util.ArrayList;
 
 public class MainActivity extends BridgeActivity {
     private boolean keepSplashScreen = true;
@@ -20,9 +16,19 @@ public class MainActivity extends BridgeActivity {
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
 
-        // 스플래시 화면 유지 시간 설정 (약 1초)
+        // React가 준비될 때까지 스플래시 유지
         splashScreen.setKeepOnScreenCondition(() -> keepSplashScreen);
-        new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplashScreen = false, 1000);
+
+        // 안전 타임아웃: 최대 5초 후 자동 해제
+        new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplashScreen = false, 5000);
+
+        // JS에서 스플래시를 닫을 수 있도록 인터페이스 등록
+        getBridge().getWebView().addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void hide() {
+                new Handler(Looper.getMainLooper()).post(() -> keepSplashScreen = false);
+            }
+        }, "NativeSplash");
 
         // 구글 로그인 플러그인 등록
         registerPlugin(GoogleAuth.class);

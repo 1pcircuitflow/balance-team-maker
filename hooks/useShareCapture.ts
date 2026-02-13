@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
@@ -13,6 +13,42 @@ interface UseShareCaptureOptions {
   setIsSharing: (v: string | null) => void;
   setShowReviewPrompt: (v: boolean) => void;
 }
+
+const prepareForCapture = (element: HTMLElement): (() => void) => {
+  const restoreFns: (() => void)[] = [];
+
+  // 1. Show promo footer
+  const promoFooter = element.querySelector('[data-promo-footer]') as HTMLElement;
+  if (promoFooter) {
+    const orig = promoFooter.style.display;
+    promoFooter.style.display = 'flex';
+    restoreFns.push(() => { promoFooter.style.display = orig; });
+  }
+
+  // 2. Reduce bottom padding (pb-48 = 192px → 16px)
+  const origPB = element.style.paddingBottom;
+  element.style.paddingBottom = '16px';
+  restoreFns.push(() => { element.style.paddingBottom = origPB; });
+
+  // 3. fixed → relative for proper capture (ResultOverlay)
+  if (getComputedStyle(element).position === 'fixed') {
+    const origStyles = {
+      position: element.style.position,
+      overflow: element.style.overflow,
+      inset: element.style.inset,
+      height: element.style.height,
+    };
+    Object.assign(element.style, {
+      position: 'relative',
+      overflow: 'visible',
+      inset: 'auto',
+      height: 'auto',
+    });
+    restoreFns.push(() => Object.assign(element.style, origStyles));
+  }
+
+  return () => restoreFns.forEach(fn => fn());
+};
 
 export const useShareCapture = ({ darkMode, lang, t, setIsSharing, setShowReviewPrompt }: UseShareCaptureOptions) => {
   const downloadImage = useCallback((blob: Blob, fileName: string) => {
@@ -41,80 +77,50 @@ export const useShareCapture = ({ darkMode, lang, t, setIsSharing, setShowReview
     const element = document.getElementById(elementId);
     if (!element) return;
     setIsSharing(elementId);
-    const rect = element.getBoundingClientRect();
+
+    const restore = prepareForCapture(element);
 
     try {
       const bgColor = darkMode ? '#020617' : '#fdfcf9';
-      const canvas = await html2canvas(element, {
-        scale: 3, backgroundColor: bgColor, logging: false, useCORS: true, allowTaint: true,
-        scrollX: 0, scrollY: 0, x: 0, y: 0,
-        ignoreElements: (el) => el.hasAttribute('data-capture-ignore'),
-        onclone: (clonedDoc, clonedElement) => {
-          const html = clonedDoc.documentElement;
-          if (darkMode) {
-            html.classList.add('dark');
-            clonedDoc.body.style.backgroundColor = '#020617';
-            clonedElement.style.backgroundColor = '#020617';
-            clonedElement.style.color = '#f1f5f9';
-          } else {
-            html.classList.remove('dark');
-            clonedDoc.body.style.backgroundColor = '#FFFFFF';
-            clonedElement.style.backgroundColor = '#FFFFFF';
-            clonedElement.style.color = '#202124';
-          }
-          clonedElement.style.width = `${rect.width}px`;
-          clonedElement.style.display = 'block';
-          clonedElement.style.position = 'relative';
-
-          const style = clonedDoc.createElement('style');
-          style.innerHTML = `
-          * { transition: none !important; animation: none !important; -webkit-print-color-adjust: exact;
-            font-family: ${lang === 'ja' ? '"Pretendard JP Variable", "Pretendard JP"' : '"Pretendard Variable", Pretendard'}, sans-serif !important; }
-          .truncate { overflow: visible !important; white-space: normal !important; text-overflow: clip !important; }
-          .overflow-hidden { overflow: visible !important; }
-          span, p, h1, h2, h3, h4 { -webkit-print-color-adjust: exact; font-family: inherit !important; }
-          .animate-in {opacity: 1 !important; transform: none !important; animation: none !important; visibility: visible !important; }
-          [data-capture-ignore] {display: none !important; visibility: hidden !important; }
-          `;
-          clonedDoc.head.appendChild(style);
-          clonedElement.style.opacity = '1';
-          clonedElement.style.transform = 'none';
-
-          const promoFooter = clonedElement.querySelector('[data-promo-footer]');
-          if (promoFooter) { (promoFooter as HTMLElement).style.display = 'flex'; }
-        }
+      const dataUrl = await toPng(element, {
+        pixelRatio: 3,
+        backgroundColor: bgColor,
+        filter: (node) => {
+          if (node instanceof Element && node.hasAttribute('data-capture-ignore')) return false;
+          return true;
+        },
       });
 
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
       if (Capacitor.isNativePlatform()) {
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          try {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-              const base64data = (reader.result as string).split(',')[1];
-              try {
-                const savedFile = await Filesystem.writeFile({ path: `${fileName}_${Date.now()}.png`, data: base64data, directory: Directory.Cache });
-                await Share.share({ files: [savedFile.uri], dialogTitle: t('shareDialogTitle') });
-                triggerReviewPrompt();
-              } catch (err) { console.error('Share failed:', err); downloadImage(blob, fileName); }
-              logShareEvent('native_share');
-            };
-            reader.readAsDataURL(blob);
-          } catch (err) { console.error('File system error:', err); downloadImage(blob, fileName); }
-        }, 'image/png');
-      } else {
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          const file = new File([blob], `${fileName}.png`, { type: 'image/png' });
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: t('shareTitle') }).then(() => {
+        try {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64data = (reader.result as string).split(',')[1];
+            try {
+              const savedFile = await Filesystem.writeFile({ path: `${fileName}_${Date.now()}.png`, data: base64data, directory: Directory.Cache });
+              await Share.share({ files: [savedFile.uri], dialogTitle: t('shareDialogTitle') });
               triggerReviewPrompt();
-            });
-          } else { downloadImage(blob, fileName); }
-          logShareEvent('web_share');
-        }, 'image/png');
+            } catch (err) { console.error('Share failed:', err); downloadImage(blob, fileName); }
+            logShareEvent('native_share');
+          };
+          reader.readAsDataURL(blob);
+        } catch (err) { console.error('File system error:', err); downloadImage(blob, fileName); }
+      } else {
+        const file = new File([blob], `${fileName}.png`, { type: 'image/png' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: t('shareTitle') }).then(() => {
+            triggerReviewPrompt();
+          });
+        } else { downloadImage(blob, fileName); }
+        logShareEvent('web_share');
       }
-    } catch (err) { console.error('Capture failed:', err); } finally { setIsSharing(null); }
+    } catch (err) { console.error('Capture failed:', err); } finally {
+      restore();
+      setIsSharing(null);
+    }
   }, [darkMode, lang, t, setIsSharing, downloadImage, logShareEvent, triggerReviewPrompt]);
 
   return { handleShare };

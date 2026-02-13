@@ -58,7 +58,7 @@ const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
 );
 
 export const SettingsPage: React.FC = () => {
-  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert } = useAppContext();
+  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled } = useAppContext();
   const { user, userNickname: nickname, setUserNickname, handleLogout, setShowLoginModal, isAdFree, setIsAdFree } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
   const { showTier, setShowTier, sortMode, setSortMode, useTeamColors, setUseTeamColors } = useTeamBalanceContext();
@@ -134,96 +134,12 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRateApp = () => {
-    window.open('https://play.google.com/store/apps/details?id=com.devmaker.balanceteammaker', '_blank');
+    window.open('https://play.google.com/store/apps/details?id=com.balanceteammaker', '_blank');
   };
 
   return (
     <div className="w-full px-4 pt-4 pb-8 animate-in fade-in duration-500">
-      {/* Section 1: Appearance */}
-      <div className="mb-6">
-        <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAppearance')}</span>
-        </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
-          {/* Dark Mode */}
-          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('darkMode')}</span>
-            <ToggleSwitch value={darkMode} onChange={setDarkMode} />
-          </div>
-          {/* Language */}
-          <div>
-            <div
-              className="px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
-              onClick={() => setLangOpen(!langOpen)}
-            >
-              <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('language')}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[12px] text-slate-400">{currentLang?.flag} {currentLang?.name}</span>
-                <ChevronIcon open={langOpen} />
-              </div>
-            </div>
-            {langOpen && (
-              <div className="border-t border-slate-100 dark:border-slate-800">
-                {LANGUAGES.map(l => (
-                  <button
-                    key={l.code}
-                    onClick={() => { setLang(l.code); setLangOpen(false); }}
-                    className={`w-full px-5 py-3 flex items-center justify-between transition-all ${lang === l.code ? 'bg-slate-50 dark:bg-slate-800' : 'active:bg-slate-50 dark:active:bg-slate-800'}`}
-                  >
-                    <span className={`text-[14px] ${lang === l.code ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'font-normal text-slate-700 dark:text-slate-300'}`}>
-                      {l.flag} {l.name}
-                    </span>
-                    {lang === l.code && (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Defaults */}
-      <div className="mb-6">
-        <div className="px-1 pb-2">
-          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsDefaults')}</span>
-        </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
-          {/* Show Tier */}
-          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultShowTier')}</span>
-            <ToggleSwitch value={showTier} onChange={setShowTier} />
-          </div>
-          {/* Sort Mode */}
-          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultSortMode')}</span>
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setSortMode('name')}
-                className={`px-3 py-1.5 text-[12px] font-medium transition-all ${sortMode === 'name' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
-              >
-                {t('sortByName')}
-              </button>
-              <button
-                onClick={() => setSortMode('tier')}
-                className={`px-3 py-1.5 text-[12px] font-medium transition-all ${sortMode === 'tier' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
-              >
-                {t('sortByTier')}
-              </button>
-            </div>
-          </div>
-          {/* Team Colors */}
-          <div className="px-5 py-3.5 flex items-center justify-between">
-            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultTeamColors')}</span>
-            <ToggleSwitch value={useTeamColors} onChange={setUseTeamColors} />
-          </div>
-        </div>
-      </div>
-
-      {/* Section 3: Account */}
+      {/* Section: Account */}
       <div className="mb-6">
         <div className="px-1 pb-2">
           <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAccount')}</span>
@@ -279,7 +195,108 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Section 4: Data Management */}
+      {/* Section: Appearance */}
+      <div className="mb-6">
+        <div className="px-1 pb-2">
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAppearance')}</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          {/* Dark Mode */}
+          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('darkMode')}</span>
+            <ToggleSwitch value={darkMode} onChange={setDarkMode} />
+          </div>
+          {/* Language */}
+          <div>
+            <div
+              className="px-5 py-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
+              onClick={() => setLangOpen(!langOpen)}
+            >
+              <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('language')}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-slate-400">{currentLang?.flag} {currentLang?.name}</span>
+                <ChevronIcon open={langOpen} />
+              </div>
+            </div>
+            {langOpen && (
+              <div className="border-t border-slate-100 dark:border-slate-800">
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => { setLang(l.code); setLangOpen(false); }}
+                    className={`w-full px-5 py-3 flex items-center justify-between transition-all ${lang === l.code ? 'bg-slate-50 dark:bg-slate-800' : 'active:bg-slate-50 dark:active:bg-slate-800'}`}
+                  >
+                    <span className={`text-[14px] ${lang === l.code ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'font-normal text-slate-700 dark:text-slate-300'}`}>
+                      {l.flag} {l.name}
+                    </span>
+                    {lang === l.code && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Section: Notifications */}
+      <div className="mb-6">
+        <div className="px-1 pb-2">
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsNotifications')}</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('pushNotifications')}</span>
+            <ToggleSwitch value={pushEnabled} onChange={setPushEnabled} />
+          </div>
+          <div className="px-5 py-3.5 flex items-center justify-between">
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('recruitmentNotifications')}</span>
+            <ToggleSwitch value={recruitNotifEnabled} onChange={setRecruitNotifEnabled} />
+          </div>
+        </div>
+      </div>
+
+      {/* Section: Defaults */}
+      <div className="mb-6">
+        <div className="px-1 pb-2">
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsDefaults')}</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          {/* Show Tier */}
+          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultShowTier')}</span>
+            <ToggleSwitch value={showTier} onChange={setShowTier} />
+          </div>
+          {/* Sort Mode */}
+          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultSortMode')}</span>
+            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setSortMode('name')}
+                className={`px-3 py-1.5 text-[12px] font-medium transition-all ${sortMode === 'name' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+              >
+                {t('sortByName')}
+              </button>
+              <button
+                onClick={() => setSortMode('tier')}
+                className={`px-3 py-1.5 text-[12px] font-medium transition-all ${sortMode === 'tier' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+              >
+                {t('sortByTier')}
+              </button>
+            </div>
+          </div>
+          {/* Team Colors */}
+          <div className="px-5 py-3.5 flex items-center justify-between">
+            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('defaultTeamColors')}</span>
+            <ToggleSwitch value={useTeamColors} onChange={setUseTeamColors} />
+          </div>
+        </div>
+      </div>
+
+      {/* Section: Data Management */}
       <div className="mb-6">
         <div className="px-1 pb-2">
           <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsDataManagement')}</span>

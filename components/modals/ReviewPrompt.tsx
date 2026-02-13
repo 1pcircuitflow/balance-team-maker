@@ -11,22 +11,22 @@ export const ReviewPrompt: React.FC<{
 
   return (
     <BaseModal isOpen={isOpen} zIndex={Z_INDEX.REVIEW_PROMPT}>
-      <div className={`rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+      <div className={`rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'}`}>
         <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>{t('reviewTitle')}</h3>
-        <p className={`text-sm font-medium ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-8 px-2 leading-relaxed opacity-90`}>
+        <p className={`text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'} mb-8 px-2 leading-relaxed`}>
           {t('reviewMsg')}
         </p>
 
         <div className="space-y-3">
           <button
             onClick={onRate}
-            className="w-full py-4 bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-semibold rounded-2xl transition-all active:scale-95"
+            className="w-full py-3 bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-bold rounded-2xl transition-all active:scale-95 shadow-lg"
           >
             {t('now')}
           </button>
           <button
             onClick={onLater}
-            className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-500 hover:text-slate-100' : 'text-slate-400 hover:text-slate-900'}`}
+            className={`w-full py-3 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-500 dark:text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
           >
             {t('later')}
           </button>

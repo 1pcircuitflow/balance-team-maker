@@ -26,14 +26,14 @@ export const PositionLimitModal: React.FC<{
         <div className="space-y-3">
           <button
             onClick={onWatchAd}
-            className="w-full py-4 bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-2xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+            className="w-full py-3 bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-2xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
           >
             <span>📺</span>
             {t('watchAdUnlock')}
           </button>
           <button
             onClick={onClose}
-            className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`w-full py-3 font-semibold rounded-2xl transition-all active:scale-95 ${darkMode ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
           >
             {t('cancel')}
           </button>

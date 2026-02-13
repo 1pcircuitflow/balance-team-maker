@@ -198,26 +198,19 @@ export function optimizeTeamPositions(
                 }
             });
 
-            // 슬롯을 후보가 적은 순으로 정렬 (most-constrained-first)
-            const slotCandidates = slots.map((slot, idx) => {
-                const count = players.filter(p => getPositionPoint(p, slot) > -5000).length;
-                return { idx, slot, count };
-            });
-            slotCandidates.sort((a, b) => a.count - b.count);
-            const sortedSlotIndices = slotCandidates.map(sc => sc.idx);
-
-            // Phase 1: 선호 포지션만으로 백트래킹 (금지 skip)
+            // Phase 1: 선호 포지션만으로 백트래킹 (금지 skip, 동적 MRV 선택)
             let bestAssignment: (Position | null)[] = new Array(players.length).fill(null);
             let bestScore = -Infinity;
+            const totalSlots1 = slots.length;
 
             const backtrackPhase1 = (
-                orderIdx: number,
-                usedSlots: boolean[],
+                doneSlots: boolean[],
                 playerUsed: boolean[],
                 currentScore: number,
-                assignment: Map<number, number>
+                assignment: Map<number, number>,
+                doneCount: number
             ) => {
-                if (orderIdx === sortedSlotIndices.length) {
+                if (doneCount === totalSlots1) {
                     if (currentScore > bestScore) {
                         bestScore = currentScore;
                         bestAssignment = new Array(players.length).fill(null);
@@ -227,36 +220,45 @@ export function optimizeTeamPositions(
                     }
                     return;
                 }
-                const sIdx = sortedSlotIndices[orderIdx];
-                if (usedSlots[sIdx]) {
-                    backtrackPhase1(orderIdx + 1, usedSlots, playerUsed, currentScore, assignment);
-                    return;
-                }
 
-                const remaining = (sortedSlotIndices.length - orderIdx) * 100;
+                // Dynamic MRV: pick unassigned slot with fewest eligible players
+                let mrvSlot = -1, mrvCount = Infinity;
+                for (let s = 0; s < totalSlots1; s++) {
+                    if (doneSlots[s]) continue;
+                    let count = 0;
+                    for (let p = 0; p < players.length; p++) {
+                        if (playerUsed[p]) continue;
+                        if (getPositionPoint(players[p], slots[s]) > -5000) count++;
+                    }
+                    if (count < mrvCount) { mrvCount = count; mrvSlot = s; }
+                }
+                if (mrvSlot === -1) return;
+
+                const remaining = (totalSlots1 - doneCount) * 100;
                 if (currentScore + remaining <= bestScore) return;
 
+                const sIdx = mrvSlot;
                 for (let p = 0; p < players.length; p++) {
                     if (playerUsed[p]) continue;
                     const score = getPositionPoint(players[p], slots[sIdx]);
                     if (score <= -5000) continue; // 금지 포지션 skip
 
-                    usedSlots[sIdx] = true;
+                    doneSlots[sIdx] = true;
                     playerUsed[p] = true;
                     assignment.set(p, sIdx);
-                    backtrackPhase1(orderIdx + 1, usedSlots, playerUsed, currentScore + score, assignment);
-                    usedSlots[sIdx] = false;
+                    backtrackPhase1(doneSlots, playerUsed, currentScore + score, assignment, doneCount + 1);
+                    doneSlots[sIdx] = false;
                     playerUsed[p] = false;
                     assignment.delete(p);
                 }
             };
 
             backtrackPhase1(
-                0,
                 new Array(slots.length).fill(false),
                 new Array(players.length).fill(false),
                 0,
-                new Map()
+                new Map(),
+                0
             );
 
             // Phase 2: 미배정 선수가 있으면 금지 포지션도 허용 (점수 -100)
@@ -620,8 +622,8 @@ export function computeUnifiedCost(
     const w_forbidden = 1000;
     const w_constraint = 500;
     const w_quota = 200;
-    const w_sd = 20;
-    const w_pos = 10;
+    const w_sd = 80;
+    const w_pos = 40;
 
     // 1. Forbidden count
     let forbiddenCount = 0;
@@ -730,21 +732,16 @@ export function backtrackPositions(
                 // Mark quota positions for FREE slot scoring
                 const quotaPositions = new Set(Object.keys(quotas).filter(p => typeof quotas[p as Position] === 'number'));
 
-                // Backtracking: assign quota slots first (most-constrained-first),
+                // Backtracking with dynamic MRV: assign quota slots first,
                 // then assign best available non-quota position to remaining players
-                const slotCandidates = slots.map((slot, idx) => {
-                    const count = players.filter(p => getPositionPoint(p, slot) > -5000).length;
-                    return { idx, slot, count };
-                });
-                slotCandidates.sort((a, b) => a.count - b.count);
-                const sortedSlotIndices = slotCandidates.map(sc => sc.idx);
+                const totalQuotaSlots = slots.length;
 
                 let bestAssignment = new Array<Position>(players.length).fill('NONE' as Position);
                 let bestScore = -Infinity;
 
-                const bt = (orderIdx: number, usedSlots: boolean[], playerUsed: boolean[], score: number, assignment: Map<number, number>) => {
-                    if (orderIdx === sortedSlotIndices.length) {
-                        // All quota slots assigned — now assign FREE positions to remaining players
+                const bt = (doneSlots: boolean[], playerUsed: boolean[], score: number, assignment: Map<number, number>, doneCount: number) => {
+                    if (doneCount === totalQuotaSlots) {
+                        // All quota slots processed — now assign FREE positions to remaining players
                         let freeScore = 0;
                         const freeAssignment = new Map<number, Position>();
                         const freeAssignedCount: Record<string, number> = {};
@@ -809,46 +806,55 @@ export function backtrackPositions(
                         return;
                     }
 
-                    const sIdx = sortedSlotIndices[orderIdx];
-                    if (usedSlots[sIdx]) { bt(orderIdx + 1, usedSlots, playerUsed, score, assignment); return; }
-                    const remaining = (sortedSlotIndices.length - orderIdx) * 100;
+                    // Dynamic MRV: pick unprocessed slot with fewest eligible players
+                    let mrvSlot = -1, mrvCount = Infinity;
+                    for (let s = 0; s < totalQuotaSlots; s++) {
+                        if (doneSlots[s]) continue;
+                        let count = 0;
+                        for (let p = 0; p < players.length; p++) {
+                            if (playerUsed[p]) continue;
+                            if (getPositionPoint(players[p], slots[s]) > -5000) count++;
+                        }
+                        if (count < mrvCount) { mrvCount = count; mrvSlot = s; }
+                    }
+                    if (mrvSlot === -1) return;
+
+                    const remaining = (totalQuotaSlots - doneCount) * 100;
                     if (score + remaining + freeCount * 100 <= bestScore) return;
 
+                    const sIdx = mrvSlot;
+
                     // Option: skip this quota slot (no valid candidate → quota violation, not forbidden)
-                    bt(orderIdx + 1, usedSlots, playerUsed, score - 50, assignment);
+                    doneSlots[sIdx] = true;
+                    bt(doneSlots, playerUsed, score - 50, assignment, doneCount + 1);
+                    doneSlots[sIdx] = false;
 
                     for (let p = 0; p < players.length; p++) {
                         if (playerUsed[p]) continue;
                         const s = getPositionPoint(players[p], slots[sIdx]);
                         if (s <= -5000) continue; // skip forbidden — never force forbidden assignment
-                        usedSlots[sIdx] = true;
+                        doneSlots[sIdx] = true;
                         playerUsed[p] = true;
                         assignment.set(p, sIdx);
-                        bt(orderIdx + 1, usedSlots, playerUsed, score + s, assignment);
-                        usedSlots[sIdx] = false;
+                        bt(doneSlots, playerUsed, score + s, assignment, doneCount + 1);
+                        doneSlots[sIdx] = false;
                         playerUsed[p] = false;
                         assignment.delete(p);
                     }
                 };
 
-                bt(0, new Array(slots.length).fill(false), new Array(players.length).fill(false), 0, new Map());
+                bt(new Array(slots.length).fill(false), new Array(players.length).fill(false), 0, new Map(), 0);
                 return bestAssignment;
             }
 
-            // Full quota (totalQuota === players.length): exact slot backtracking
-            // Phase 1: Try without forbidden positions
-            const slotCandidates = slots.map((slot, idx) => {
-                const count = players.filter(p => getPositionPoint(p, slot) > -5000).length;
-                return { idx, slot, count };
-            });
-            slotCandidates.sort((a, b) => a.count - b.count);
-            const sortedSlotIndices = slotCandidates.map(sc => sc.idx);
+            // Full quota (totalQuota === players.length): exact slot backtracking with dynamic MRV
+            const totalFullSlots = slots.length;
 
             let bestAssignment = new Array<Position>(players.length).fill('NONE' as Position);
             let bestScore = -Infinity;
 
-            const bt = (orderIdx: number, usedSlots: boolean[], playerUsed: boolean[], score: number, assignment: Map<number, number>, allowForbidden: boolean) => {
-                if (orderIdx === sortedSlotIndices.length) {
+            const bt = (doneSlots: boolean[], playerUsed: boolean[], score: number, assignment: Map<number, number>, doneCount: number, allowForbidden: boolean) => {
+                if (doneCount === totalFullSlots) {
                     if (score > bestScore) {
                         bestScore = score;
                         bestAssignment = new Array<Position>(players.length).fill('NONE' as Position);
@@ -856,11 +862,25 @@ export function backtrackPositions(
                     }
                     return;
                 }
-                const sIdx = sortedSlotIndices[orderIdx];
-                if (usedSlots[sIdx]) { bt(orderIdx + 1, usedSlots, playerUsed, score, assignment, allowForbidden); return; }
-                const remaining = (sortedSlotIndices.length - orderIdx) * 100;
+
+                // Dynamic MRV: pick unassigned slot with fewest eligible players
+                let mrvSlot = -1, mrvCount = Infinity;
+                for (let s = 0; s < totalFullSlots; s++) {
+                    if (doneSlots[s]) continue;
+                    let count = 0;
+                    for (let p = 0; p < players.length; p++) {
+                        if (playerUsed[p]) continue;
+                        const sc = getPositionPoint(players[p], slots[s]);
+                        if (allowForbidden || sc > -5000) count++;
+                    }
+                    if (count < mrvCount) { mrvCount = count; mrvSlot = s; }
+                }
+                if (mrvSlot === -1) return;
+
+                const remaining = (totalFullSlots - doneCount) * 100;
                 if (score + remaining <= bestScore) return;
 
+                const sIdx = mrvSlot;
                 for (let p = 0; p < players.length; p++) {
                     if (playerUsed[p]) continue;
                     let s = getPositionPoint(players[p], slots[sIdx]);
@@ -868,22 +888,22 @@ export function backtrackPositions(
                         if (!allowForbidden) continue;
                         s = -100; // fallback: allow forbidden with penalty
                     }
-                    usedSlots[sIdx] = true;
+                    doneSlots[sIdx] = true;
                     playerUsed[p] = true;
                     assignment.set(p, sIdx);
-                    bt(orderIdx + 1, usedSlots, playerUsed, score + s, assignment, allowForbidden);
-                    usedSlots[sIdx] = false;
+                    bt(doneSlots, playerUsed, score + s, assignment, doneCount + 1, allowForbidden);
+                    doneSlots[sIdx] = false;
                     playerUsed[p] = false;
                     assignment.delete(p);
                 }
             };
 
             // Phase 1: no forbidden
-            bt(0, new Array(slots.length).fill(false), new Array(players.length).fill(false), 0, new Map(), false);
+            bt(new Array(slots.length).fill(false), new Array(players.length).fill(false), 0, new Map(), 0, false);
 
             // Phase 2: if incomplete, allow forbidden as fallback
             if (bestAssignment.some(p => p === ('NONE' as Position))) {
-                bt(0, new Array(slots.length).fill(false), new Array(players.length).fill(false), 0, new Map(), true);
+                bt(new Array(slots.length).fill(false), new Array(players.length).fill(false), 0, new Map(), 0, true);
             }
 
             return bestAssignment;
@@ -1601,11 +1621,11 @@ export function generateTeamsGA(
     const n = players.length;
     if (n === 0) return { teamAssignment: [], posAssignment: [] };
 
-    const POPULATION = 30;
-    const GENERATIONS = 50;
-    const ELITE_COUNT = 2;
-    const MUTATION_RATE = 0.30;
-    const STAGNATION_LIMIT = 10;
+    const POPULATION = 60;
+    const GENERATIONS = 100;
+    const ELITE_COUNT = 3;
+    const MUTATION_RATE = 0.15;
+    const STAGNATION_LIMIT = 15;
 
     // Build MATCH group map
     const matchGroupOf = new Array<number>(n).fill(-1);

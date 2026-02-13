@@ -109,6 +109,11 @@ export const useInitialization = (
       setShowLoginModal(true);
     }
 
+    // React 준비 완료 → 네이티브 스플래시 닫기
+    if ((window as any).NativeSplash?.hide) {
+      (window as any).NativeSplash.hide();
+    }
+
     const initAuth = async () => {
       try {
         await GoogleAuth.initialize();

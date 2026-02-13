@@ -215,6 +215,7 @@ const AppContent: React.FC = () => {
     const dy = e.changedTouches[0].clientY - swipeStartRef.current.y;
     swipeStartRef.current = null;
 
+    if (currentPage !== AppPageType.HOME || currentBottomTab === BottomTabType.SETTINGS) return;
     if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
 
     const tabs = getAvailableTabs();
@@ -227,12 +228,13 @@ const AppContent: React.FC = () => {
     setActiveTab(tabs[nextIdx]);
     setResult(null);
     AnalyticsService.logEvent('tab_change', { sport: tabs[nextIdx] });
-  }, [activeTab, getAvailableTabs, setActiveTab, setResult]);
+  }, [activeTab, getAvailableTabs, setActiveTab, setResult, currentPage, currentBottomTab]);
 
   // ========= RENDER =========
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'} font-sans p-0 flex flex-col items-center`}
-      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}>
+      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
+      onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
 
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
@@ -258,7 +260,7 @@ const AppContent: React.FC = () => {
 
       {/* HOME Page */}
       {currentBottomTab === BottomTabType.HOME && (
-        <div className="w-full flex-1" onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
+        <div className="w-full flex-1">
           <HomePage />
         </div>
       )}
@@ -285,7 +287,7 @@ const AppContent: React.FC = () => {
 
       {/* MEMBERS Tab */}
       {currentBottomTab === BottomTabType.MEMBERS && (
-        <div className="w-full px-5 animate-in fade-in slide-in-from-bottom-4 duration-500" onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
+        <div className="w-full px-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <MembersTabContent />
         </div>
       )}
@@ -337,7 +339,7 @@ const AppContent: React.FC = () => {
           });
         }}
         lang={lang} darkMode={darkMode} isPro={isPro} onUpgrade={() => { setShowHostRoomModal(false); setShowUpgradeModal(true); }}
-        userNickname={userNickname} currentUserId={currentUserId} />
+        userNickname={userNickname} currentUserId={currentUserId} showAlert={showAlert} />
       <ApplyRoomModal isOpen={showApplyRoomModal} roomId={pendingJoinRoomId}
         onClose={() => { setShowApplyRoomModal(false); setPendingJoinRoomId(null); }}
         onSuccess={() => { setShowApplyRoomModal(false); setPendingJoinRoomId(null); }} lang={lang} darkMode={darkMode} />
@@ -351,7 +353,7 @@ const AppContent: React.FC = () => {
       <div className="h-[180px]" />
 
       {/* Bottom Tab Bar */}
-      {currentPage === AppPageType.HOME && <BottomTabBar />}
+      {currentPage === AppPageType.HOME && !showHostRoomModal && <BottomTabBar />}
 
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} bottomOffset="0px" />
 

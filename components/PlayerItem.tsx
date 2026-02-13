@@ -46,7 +46,7 @@ export const PlayerItem = React.memo<any>(({
         setIsConfirmingDelete(false);
         setShowActionMenu(false);
       }}
-      className={`flex ${isEditing ? 'flex-col' : 'items-center justify-between'} px-2 py-1 rounded-2xl transition-all duration-200 group ${player.isActive ? 'bg-slate-100/80 dark:bg-slate-900/40 opacity-80' : 'bg-white dark:bg-slate-950'} ${isSelectionMode && isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`flex ${isEditing ? 'flex-col' : 'items-center justify-between'} px-2 py-1 rounded-2xl transition-all duration-200 group ${player.isActive ? 'bg-slate-100/80 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950'} ${isSelectionMode && isSelected ? 'ring-2 ring-blue-500' : ''}`}
       onClick={() => isSelectionMode && onSelect && onSelect(player.id)}
     >
       <div className="flex items-center justify-between w-full">
@@ -57,7 +57,7 @@ export const PlayerItem = React.memo<any>(({
             </div>
           )}
           {/* Avatar circle */}
-          <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-[#777777] dark:text-slate-400 shrink-0">
+          <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
             BELO
           </div>
           {/* Name + Position vertical stack */}
@@ -107,15 +107,14 @@ export const PlayerItem = React.memo<any>(({
             {readOnly ? (
               <button
                 type="button"
-                title={player.isActive ? t('exclude') : t('addToList')}
-                className="p-1.5 rounded-lg transition-all active:scale-95 text-slate-400 dark:text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-950"
+                className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-all active:scale-95 ${player.isActive ? 'bg-[#53B175] text-white' : 'bg-[#4685EB] text-white'}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
                   onToggle(player.id);
                 }}
               >
-                {player.isActive ? <MinusIcon /> : <PlusIcon />}
+                {player.isActive ? t('exclude') : t('addShort')}
               </button>
             ) : showActionMenu ? (
               <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">

@@ -10,7 +10,7 @@ export const ConfirmModal: React.FC<{
   const { t, darkMode } = useAppContext();
 
   return (
-    <BaseModal isOpen={isOpen} zIndex={Z_INDEX.DEFAULT_MODAL}>
+    <BaseModal isOpen={isOpen} zIndex={Z_INDEX.ALERT_MODAL}>
       <div className={`rounded-[2.5rem] p-8 text-center ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'}`}>
         <h3 className={`text-2xl font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'} mb-3 tracking-tight`}>
           {title || t('infoTitle')}
@@ -21,13 +21,13 @@ export const ConfirmModal: React.FC<{
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className={`flex-1 py-4 font-bold rounded-2xl transition-all active:scale-95 ${darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            className={`flex-1 py-3 font-bold rounded-2xl transition-all active:scale-95 ${darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           >
             {cancelText || t('cancel')}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg"
+            className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg"
           >
             {confirmText || 'OK'}
           </button>

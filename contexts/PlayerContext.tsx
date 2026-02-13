@@ -26,7 +26,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Load from localStorage on mount
   useEffect(() => {
-    const SAMPLE_DATA_VERSION = 'v4';
+    const SAMPLE_DATA_VERSION = 'v6';
     const stored = localStorage.getItem(STORAGE_KEY);
     const storedVersion = localStorage.getItem('app_sample_version');
 

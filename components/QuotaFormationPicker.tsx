@@ -107,7 +107,7 @@ export const QuotaFormationPicker: React.FC<{
                   type="button"
                   onClick={handleMinus}
                   className={`w-[14px] h-[14px] flex items-center justify-center rounded transition-all active:scale-75 ${isAuto
-                    ? 'opacity-20 cursor-not-allowed bg-white/50 dark:bg-slate-800/50 text-slate-400'
+                    ? 'opacity-40 cursor-not-allowed bg-white/50 dark:bg-slate-800/50 text-slate-400'
                     : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-rose-500 hover:text-white active:bg-rose-600 active:text-white'
                     }`}
                 >

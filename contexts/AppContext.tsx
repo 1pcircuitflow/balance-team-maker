@@ -22,6 +22,10 @@ interface AppContextValue {
   setLang: (lang: Language) => void;
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
+  pushEnabled: boolean;
+  setPushEnabled: (v: boolean) => void;
+  recruitNotifEnabled: boolean;
+  setRecruitNotifEnabled: (v: boolean) => void;
   t: (key: string, ...args: any[]) => string;
   showAlert: (message: string, title?: string) => void;
   alertState: AlertState;
@@ -41,6 +45,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('app_dark_mode');
     if (saved !== null) return saved === 'true';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  const [pushEnabled, setPushEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('app_push_enabled');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [recruitNotifEnabled, setRecruitNotifEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('app_recruit_notif_enabled');
+    return saved !== null ? saved === 'true' : true;
   });
 
   const [alertState, setAlertState] = useState<AlertState>({
@@ -75,6 +87,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     else document.documentElement.classList.remove('dark');
   }, [darkMode]);
 
+  // Notification settings sync
+  useEffect(() => {
+    localStorage.setItem('app_push_enabled', pushEnabled.toString());
+  }, [pushEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('app_recruit_notif_enabled', recruitNotifEnabled.toString());
+  }, [recruitNotifEnabled]);
+
   // Font sync for Japanese
   useEffect(() => {
     if (lang === 'ja') {
@@ -85,7 +106,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [lang]);
 
   return (
-    <AppContext.Provider value={{ lang, setLang, darkMode, setDarkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showConfirm }}>
+    <AppContext.Provider value={{ lang, setLang, darkMode, setDarkMode, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showConfirm }}>
       {children}
     </AppContext.Provider>
   );

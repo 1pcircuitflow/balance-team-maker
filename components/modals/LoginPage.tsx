@@ -28,7 +28,7 @@ export const LoginPage: React.FC<{
         </div>
 
         <div className="w-full text-center" style={{ marginBottom: '4vh' }}>
-          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
             {t('loginDescription')}
           </p>
         </div>

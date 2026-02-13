@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(npm run build:*)",
-      "Bash(npx cap:*)"
+      "Bash(npx cap:*)",
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(git checkout:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

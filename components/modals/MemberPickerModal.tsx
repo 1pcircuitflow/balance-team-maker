@@ -107,7 +107,7 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
         </div>
         <button
           onClick={handleSelectAll}
-          className={`bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium border border-slate-900 dark:border-slate-200 transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
+          className={`bg-[#4685EB] text-white px-[8px] h-[28px] rounded-xl text-[12px] font-medium transition-all whitespace-nowrap active:scale-95 flex items-center gap-1 ${selectAllConfirm ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-950' : ''}`}
         >
           {selectAllConfirm ? <><CheckIcon /> {t('confirmRetry')}</> : t('selectAll')}
         </button>
@@ -117,7 +117,7 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
           <div className="py-6 opacity-20 text-center text-xs font-black uppercase tracking-widest">{t('noPlayers')}</div>
         ) : (
           pickablePlayers.map(p => (
-            <PlayerItem key={p.id} player={p} isEditing={false} lang={lang}
+            <PlayerItem key={p.id} player={{ ...p, isActive: false }} isEditing={false} lang={lang}
               onToggle={addPlayerToRoom} onEditToggle={() => {}} onUpdate={() => {}} onRemove={() => {}}
               isSelectionMode={false} isSelected={false}
               onSelect={() => {}}

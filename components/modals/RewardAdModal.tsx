@@ -52,7 +52,7 @@ export const RewardAdModal: React.FC<{
           </button>
         ) : (
           <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-            <span className="text-white/40 text-[10px] font-black tracking-widest uppercase italic">{t('skipAvailableIn', timeLeft - 10)}</span>
+            <span className="text-white/70 text-[10px] font-black tracking-widest uppercase italic">{t('skipAvailableIn', timeLeft - 10)}</span>
           </div>
         )}
       </div>
@@ -64,7 +64,7 @@ export const RewardAdModal: React.FC<{
         <h2 className="text-3xl font-black text-white mb-4 tracking-tighter leading-tight whitespace-pre-line">
           {t('watchAndUnlock')}
         </h2>
-        <p className="text-white/50 text-sm font-medium leading-relaxed max-w-xs">
+        <p className="text-white/70 text-sm font-medium leading-relaxed max-w-xs">
           {t('thankYouSupport')}
         </p>
       </div>

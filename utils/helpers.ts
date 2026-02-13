@@ -47,9 +47,15 @@ export const applicantToPlayer = (
   sportType: SportType,
   options?: { isActive?: boolean; existingId?: string }
 ): Player => {
-  const p1 = (applicant.primaryPositions as Position[]) || (applicant.position ? [applicant.position as Position] : ['NONE' as Position]);
-  const s1 = (applicant.secondaryPositions as Position[]) || [];
-  const t1 = (applicant.tertiaryPositions as Position[]) || [];
+  const p1 = (applicant.primaryPositions as Position[])?.length > 0
+    ? (applicant.primaryPositions as Position[])
+    : (applicant.position ? [applicant.position as Position] : []);
+  const s1 = (applicant.secondaryPositions as Position[])?.length > 0
+    ? (applicant.secondaryPositions as Position[])
+    : [];
+  const t1 = (applicant.tertiaryPositions as Position[])?.length > 0
+    ? (applicant.tertiaryPositions as Position[])
+    : [];
   const f1 = (applicant.forbiddenPositions as Position[]) || [];
 
   return {
