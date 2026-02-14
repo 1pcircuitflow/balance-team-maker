@@ -156,7 +156,7 @@ const RoomCard: React.FC<{
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onRoomClick(room); }}
-                    className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative"
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative"
                   >
                     <Icons.UsersIcon size={18} className="text-slate-500 dark:text-slate-400" />
                     {pendingApplicants.length > 0 && (
@@ -167,13 +167,13 @@ const RoomCard: React.FC<{
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onShareLink(room); }}
-                    className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                   >
                     <Icons.ShareIcon size={18} className="text-slate-500 dark:text-slate-400" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDeleteRoom(room); }}
-                    className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                   >
                     <Icons.TrashIcon size={18} className="text-slate-500 dark:text-slate-400" />
                   </button>
