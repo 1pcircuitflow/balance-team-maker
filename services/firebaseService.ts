@@ -14,8 +14,7 @@ import {
     arrayUnion,
     arrayRemove,
     deleteDoc,
-    limit,
-    getDocs
+    limit
 } from "firebase/firestore";
 import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -474,45 +473,15 @@ export const loadUserNickname = async (userId: string): Promise<string | null> =
 };
 
 /**
- * 14-3. 닉네임 변경 시 모집방 동기화
+ * 14-3. 닉네임 변경 시 모집방 동기화 (Cloud Function 호출)
  */
 export const updateNicknameInRooms = async (userId: string, newName: string) => {
     try {
-        const updates: Promise<void>[] = [];
-        const processedIds = new Set<string>();
-
-        // 1. 방장인 방: hostName + applicants 업데이트
-        const hostSnap = await getDocs(
-            query(collection(db, "rooms"), where("hostId", "==", userId))
-        );
-        hostSnap.docs.forEach(docSnap => {
-            processedIds.add(docSnap.id);
-            const data = docSnap.data();
-            const updatedApplicants = (data.applicants || []).map((a: any) =>
-                a.userId === userId ? { ...a, name: newName } : a
-            );
-            updates.push(updateDoc(docSnap.ref, {
-                hostName: newName,
-                applicants: updatedApplicants
-            }));
+        await fetch('https://us-central1-balance-team-maker.cloudfunctions.net/updateNickname', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, newName }),
         });
-
-        // 2. 참가자인 방 (OPEN 상태): applicants의 name 업데이트
-        const openSnap = await getDocs(
-            query(collection(db, "rooms"), where("status", "==", "OPEN"))
-        );
-        openSnap.docs.forEach(docSnap => {
-            if (processedIds.has(docSnap.id)) return;
-            const data = docSnap.data();
-            const applicants = data.applicants || [];
-            if (!applicants.some((a: any) => a.userId === userId)) return;
-            const updatedApplicants = applicants.map((a: any) =>
-                a.userId === userId ? { ...a, name: newName } : a
-            );
-            updates.push(updateDoc(docSnap.ref, { applicants: updatedApplicants }));
-        });
-
-        await Promise.all(updates);
     } catch (error) {
         console.error("Error updating nickname in rooms:", error);
     }

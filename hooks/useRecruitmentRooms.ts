@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Player, Tier, SportType, Position } from '../types';
+import { Player, Tier, SportType, Position, BottomTabType } from '../types';
 import {
   subscribeToUserRooms,
   subscribeToPublicRooms,
@@ -18,6 +18,7 @@ import { Clipboard } from '@capacitor/clipboard';
 export const useRecruitmentRooms = (
   currentUserId: string,
   activeTab: SportType,
+  currentBottomTab: BottomTabType,
   players: Player[],
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
   showAlert: (msg: string, title?: string) => void,
@@ -95,14 +96,18 @@ export const useRecruitmentRooms = (
     }).sort(sortByMatchTime);
   }, [publicRooms, activeTab, currentUserId]);
 
-  // Subscribe to public rooms
+  // Subscribe to public rooms — HOME 탭일 때만 구독
   useEffect(() => {
+    if (currentBottomTab !== BottomTabType.HOME) {
+      setPublicRooms([]);
+      return;
+    }
     const sportFilter = activeTab === SportType.ALL ? null : activeTab;
-    const unsubscribe = subscribeToPublicRooms(sportFilter, 50, (rooms) => {
+    const unsubscribe = subscribeToPublicRooms(sportFilter, 20, (rooms) => {
       setPublicRooms(rooms);
     });
     return () => unsubscribe();
-  }, [activeTab]);
+  }, [activeTab, currentBottomTab]);
 
   // Subscribe to rooms
   useEffect(() => {
@@ -297,7 +302,7 @@ export const useRecruitmentRooms = (
         try {
           await Share.share({
             title: t('shareRecruitLink'),
-            text: t('shareRecruitMessage', room.title, room.matchDate, room.matchTime, t(room.sport.toLowerCase()), webUrl),
+            text: t('shareRecruitMessage', room.title, room.matchDate, room.matchTime, t(room.sport.toLowerCase()), webUrl, room.venue),
             dialogTitle: t('shareRecruitLink'),
           });
         } catch (shareError) {

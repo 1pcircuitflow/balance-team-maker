@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BTM Recruitment</title>
+    <title>Belo - Apply</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" integrity="sha384-DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4kykhOQv0b17OH4SO" crossorigin="anonymous"></script>
     <script>
@@ -13,230 +13,186 @@
             theme: {
                 extend: {
                     colors: {
-                        slate: {
-                            950: '#020617',
-                        }
+                        slate: { 950: '#020617' }
                     }
                 }
             }
         };
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .tier-btn.active-S {
-            background-color: #f3e8ff;
-            color: #7e22ce;
-            border-color: #e9d5ff;
-        }
+        .tier-btn.active-S { background-color: #f3e8ff; color: #7e22ce; border-color: #e9d5ff; }
+        .dark .tier-btn.active-S { background-color: rgba(126, 34, 206, 0.3); color: #d8b4fe; border-color: #9333ea; }
+        .tier-btn.active-A { background-color: #fff1f2; color: #be123c; border-color: #ffe4e6; }
+        .dark .tier-btn.active-A { background-color: rgba(190, 18, 60, 0.3); color: #fda4af; border-color: #e11d48; }
+        .tier-btn.active-B { background-color: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+        .dark .tier-btn.active-B { background-color: rgba(29, 78, 216, 0.3); color: #93c5fd; border-color: #2563eb; }
+        .tier-btn.active-C { background-color: #ecfdf5; color: #047857; border-color: #d1fae5; }
+        .dark .tier-btn.active-C { background-color: rgba(4, 120, 87, 0.3); color: #6ee7b7; border-color: #059669; }
+        .tier-btn.active-D { background-color: #f8fafc; color: #64748b; border-color: #f1f5f9; }
+        .dark .tier-btn.active-D { background-color: rgba(30, 41, 59, 0.5); color: #94a3b8; border-color: #475569; }
 
-        .dark .tier-btn.active-S {
-            background-color: rgba(126, 34, 206, 0.3);
-            color: #d8b4fe;
-            border-color: #9333ea;
-        }
+        .menu-popup { z-index: 1000; }
+        .node { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .tier-btn.active-A {
-            background-color: #fff1f2;
-            color: #be123c;
-            border-color: #ffe4e6;
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+        .delay-75 { animation-delay: 75ms; }
+        .delay-150 { animation-delay: 150ms; }
+        .delay-300 { animation-delay: 300ms; }
 
-        .dark .tier-btn.active-A {
-            background-color: rgba(190, 18, 60, 0.3);
-            color: #fda4af;
-            border-color: #e11d48;
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
-
-        .tier-btn.active-B {
-            background-color: #eff6ff;
-            color: #1d4ed8;
-            border-color: #dbeafe;
-        }
-
-        .dark .tier-btn.active-B {
-            background-color: rgba(29, 78, 216, 0.3);
-            color: #93c5fd;
-            border-color: #2563eb;
-        }
-
-        .tier-btn.active-C {
-            background-color: #ecfdf5;
-            color: #047857;
-            border-color: #d1fae5;
-        }
-
-        .dark .tier-btn.active-C {
-            background-color: rgba(4, 120, 87, 0.3);
-            color: #6ee7b7;
-            border-color: #059669;
-        }
-
-        .tier-btn.active-D {
-            background-color: #f8fafc;
-            color: #64748b;
-            border-color: #f1f5f9;
-        }
-
-        .dark .tier-btn.active-D {
-            background-color: rgba(30, 41, 59, 0.5);
-            color: #94a3b8;
-            border-color: #475569;
-        }
-
-        .menu-popup {
-            z-index: 1000;
-        }
-
-        .node {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .animate-zoom-in { animation: zoomIn 0.4s ease-out forwards; }
     </style>
 </head>
 
-<body
-    class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col items-center py-4 px-4 sm:px-6">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col items-center py-4 px-4 sm:px-6">
+
     <!-- 인앱 브라우저 차단 안내 레이어 -->
-    <div id="inAppOverlay"
-        class="hidden fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-8 text-center space-y-6">
+    <div id="inAppOverlay" class="hidden fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-8 text-center space-y-6">
         <!-- 기본 안내 (네이버/인스타 등 일반 인앱) -->
         <div id="inAppDefault">
-            <div
-                class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shadow-inner animate-bounce mx-auto mb-6">
+            <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shadow-inner animate-bounce mx-auto mb-6">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
             </div>
             <div class="space-y-2">
-                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">보안 브라우저로 이동 중</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    구글 보안 정책에 따라<br>안전한 외부 브라우저로 이동합니다...
-                </p>
+                <h2 id="inAppTitle" class="text-xl font-black text-slate-800 dark:text-slate-100"></h2>
+                <p id="inAppDesc" class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium"></p>
             </div>
         </div>
         <!-- 카카오톡+Android 전용 안내 -->
         <div id="inAppKakao" class="hidden">
             <img src="/assets/logo.png" alt="Belo" class="w-20 h-20 mx-auto mb-4">
             <div class="space-y-2">
-                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">Belo 앱으로 이동 중...</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    카카오 로그인 후 앱으로 연결됩니다.
-                </p>
+                <h2 id="kakaoOverlayTitle" class="text-xl font-black text-slate-800 dark:text-slate-100"></h2>
+                <p id="kakaoOverlayDesc" class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium"></p>
             </div>
             <div class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mx-auto mt-6"></div>
             <button type="button" id="kakaoWebFallbackBtn"
                 class="mt-8 text-[13px] font-bold text-slate-400 dark:text-slate-500 underline underline-offset-4 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                웹에서 참가하기
             </button>
         </div>
-        <div id="iosGuide"
-            class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
-            <p class="text-xs text-slate-500 font-bold italic">아이폰(iOS) 사용자는 아래 순서대로 진행해주세요.</p>
+        <div id="iosGuide" class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+            <p id="iosGuideTitle" class="text-xs text-slate-500 font-bold italic"></p>
             <div class="flex items-center justify-center gap-3 text-slate-700 dark:text-slate-300">
-                <span
-                    class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center font-black border border-slate-200 dark:border-slate-700">1</span>
-                <p class="text-[11px] font-black text-left leading-snug">하단 바의 <span
-                        class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1 rounded font-black italic">내보내기
-                        아이콘(위로 화살표 📤)</span> 또는 <span
-                        class="bg-slate-100 dark:bg-slate-800 px-1 rounded font-black">나침반</span> 클릭</p>
+                <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center font-black border border-slate-200 dark:border-slate-700">1</span>
+                <p id="iosStep1" class="text-[11px] font-black text-left leading-snug"></p>
             </div>
             <div class="flex items-center justify-center gap-3 text-slate-700 dark:text-slate-300">
-                <span
-                    class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center font-black border border-slate-200 dark:border-slate-700">2</span>
-                <p class="text-[11px] font-black text-left leading-snug">'Safari로 열기' 또는 '기본 브라우저로 앱 열기' 선택</p>
+                <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center font-black border border-slate-200 dark:border-slate-700">2</span>
+                <p id="iosStep2" class="text-[11px] font-black text-left leading-snug"></p>
             </div>
         </div>
     </div>
-    <button id="themeToggle"
-        class="fixed top-4 right-4 p-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm z-50 transition-all hover:scale-110 active:scale-95">
-        <span id="themeIcon" class="text-xl leading-none block">🌙</span>
-    </button>
+
+    <!-- 상단 바: 다크모드 + 언어 선택 -->
+    <div class="fixed top-4 right-4 flex items-center gap-2 z-50">
+        <div class="relative">
+            <button id="langToggle" class="p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:scale-110 active:scale-95">
+                <span id="langIcon" class="text-[13px] font-black text-slate-500 dark:text-slate-400 leading-none block w-6 h-6 flex items-center justify-center">KO</span>
+            </button>
+            <div id="langMenu" class="hidden absolute right-0 top-12 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden z-[100]">
+                <button data-lang="ko" class="lang-opt w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">한국어</button>
+                <button data-lang="en" class="lang-opt w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">English</button>
+                <button data-lang="ja" class="lang-opt w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">日本語</button>
+                <button data-lang="es" class="lang-opt w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Español</button>
+                <button data-lang="pt" class="lang-opt w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Português</button>
+            </div>
+        </div>
+        <button id="themeToggle" class="p-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:scale-110 active:scale-95">
+            <span id="themeIcon" class="text-xl leading-none block">🌙</span>
+        </button>
+    </div>
 
     <div class="max-w-md w-full space-y-3">
-        <header class="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-4 duration-700">
+        <!-- 헤더 -->
+        <header class="flex items-center justify-center gap-3 animate-fade-in-up">
             <img src="/assets/logo.png" alt="Belo Logo" class="w-16 h-16">
             <h1 class="text-4xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">Belo</h1>
         </header>
 
+        <!-- 로딩 -->
         <div id="loading" class="flex flex-col items-center justify-center py-20 space-y-4">
             <div class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
-            <p class="text-slate-400 dark:text-slate-500 font-bold text-[13px]">운동장을 준비하고 있습니다...</p>
+            <p id="loadingText" class="text-slate-400 dark:text-slate-500 font-bold text-[13px]"></p>
         </div>
 
-        <div id="roomInfo"
-            class="hidden p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 animate-in fade-in zoom-in-95 duration-500">
+        <!-- 방 정보 카드 -->
+        <div id="roomInfo" class="hidden p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 animate-fade-in-up">
             <div class="flex items-center justify-between">
-                <span id="roomSport"
-                    class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider">---</span>
-                <span id="roomDateTime" class="text-[11px] font-bold text-slate-400 dark:text-slate-500">---</span>
+                <span id="roomSport" class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider">---</span>
+                <span id="roomStatus" class="px-2.5 py-0.5 rounded-full text-[10px] font-black"></span>
+            </div>
+            <div id="roomTitle" class="text-[16px] font-black text-slate-800 dark:text-slate-100 hidden"></div>
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span id="roomDateTime" class="font-bold">---</span>
+                </div>
+                <div id="roomVenueRow" class="hidden flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span id="roomVenue" class="font-bold">---</span>
+                </div>
+                <div class="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span id="roomCapacity" class="font-bold">---</span>
+                </div>
             </div>
         </div>
 
-        <div id="participantsInfo"
-            class="hidden p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 animate-in fade-in zoom-in-95 duration-500 delay-75">
-            <div class="flex items-center justify-between px-1">
-                <h3 class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">인원 현황
-                </h3>
-                <span id="participantCount" class="text-xs font-black text-blue-600 dark:text-blue-400">0명</span>
+        <!-- 앱 다운로드 배너 -->
+        <a id="appBanner" href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank"
+            class="hidden group relative flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 overflow-hidden shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.01] active:scale-[0.98] animate-fade-in-up delay-75 no-underline">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(255,255,255,0.1),transparent)] pointer-events-none"></div>
+            <img src="/assets/logo.png" alt="Belo" class="relative w-10 h-10 rounded-xl shadow-md flex-shrink-0 bg-white p-0.5">
+            <div class="relative flex-1 min-w-0">
+                <p id="appBannerTitle" class="text-[12px] font-black text-white leading-tight"></p>
+                <p id="appBannerDesc" class="text-[10px] font-bold text-blue-200 leading-tight mt-0.5"></p>
             </div>
-            <div id="participantList" class="flex flex-wrap gap-1.5"></div>
-
-            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank"
-                    class="group relative flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                    <div class="relative z-10 flex flex-col text-left">
-                        <span class="text-[10px] font-black text-blue-100/70 uppercase tracking-tight mb-0.5">오늘 경기도
-                            공정하게!</span>
-                        <span class="text-[12px] font-black text-white">Belo 앱으로 팀 나누기</span>
-                    </div>
-                    <div
-                        class="relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black group-hover:bg-white/30 transition-colors">
-                        앱 다운로드
-                    </div>
-                </a>
+            <div class="relative flex-shrink-0 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[10px] font-black group-hover:bg-white/30 transition-colors">
+                <span id="appBannerBtn"></span>
             </div>
-        </div>
+        </a>
 
-        <form id="applyForm" class="hidden space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-            <div
-                class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <!-- 신청 폼 -->
+        <form id="applyForm" class="hidden space-y-3 animate-fade-in-up delay-150">
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <!-- 로그인 섹션 -->
                 <div id="loginSection" class="hidden space-y-4">
-                    <div id="authError"
-                        class="hidden mx-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 text-[11px] font-bold text-rose-600 dark:text-rose-400 text-center animate-in fade-in duration-300">
-                    </div>
+                    <div id="authError" class="hidden mx-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 text-[11px] font-bold text-rose-600 dark:text-rose-400 text-center"></div>
                     <div id="loginPrompt" class="text-center py-4 space-y-3">
-                        <div
-                            class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <p class="text-[14px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">
-                            구글 로그인 후 신청하실 수 있습니다.</p>
-                        <p class="text-[12px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed px-4">타인 사칭이나
-                            허위 신청을 방지하기 위해<br>구글 로그인을 해주세요.</p>
+                        <p id="loginRequiredTitle" class="text-[14px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter"></p>
+                        <p id="loginRequiredDesc" class="text-[12px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed px-4"></p>
                     </div>
 
                     <button type="button" id="loginBtn"
                         class="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group shadow-sm">
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
-                            <path fill="#4285F4"
-                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                            <path fill="#34A853"
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                            <path fill="#FBBC05"
-                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-                            <path fill="#EA4335"
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        <span class="text-[14px] font-black text-slate-700 dark:text-slate-300">Google로 계속하기</span>
+                        <span id="googleLoginText" class="text-[14px] font-black text-slate-700 dark:text-slate-300"></span>
                     </button>
 
                     <button type="button" id="kakaoLoginBtn"
@@ -245,21 +201,15 @@
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
                             <path fill="#000000" d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.8 5.108 4.513 6.467-.197.736-.714 2.666-.818 3.079-.128.506.186.499.39.363.16-.107 2.554-1.736 3.588-2.442.742.104 1.507.16 2.327.16 5.523 0 10-3.463 10-7.627S17.523 3 12 3" />
                         </svg>
-                        <span class="text-[14px] font-black text-black">카카오로 계속하기</span>
+                        <span id="kakaoLoginText" class="text-[14px] font-black text-black"></span>
                     </button>
 
-                    <div id="userInfo"
-                        class="hidden flex items-center justify-between p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50">
+                    <div id="userInfo" class="hidden flex items-center justify-between p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50">
                         <div class="flex items-center gap-3 text-left">
-                            <img id="userPhoto" src=""
-                                class="w-9 h-9 rounded-full border-2 border-white dark:border-slate-700 shadow-sm"
-                                alt="P">
+                            <img id="userPhoto" src="" class="w-9 h-9 rounded-full border-2 border-white dark:border-slate-700 shadow-sm" alt="P">
                             <div class="flex flex-col">
-                                <span id="userName"
-                                    class="text-[13px] font-black text-slate-800 dark:text-slate-100 leading-tight">User</span>
-                                <span
-                                    class="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-tight">Verified
-                                    Applicant</span>
+                                <span id="userName" class="text-[13px] font-black text-slate-800 dark:text-slate-100 leading-tight">User</span>
+                                <span class="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-tight">Verified</span>
                             </div>
                         </div>
                         <button type="button" id="logoutBtn"
@@ -267,12 +217,11 @@
                     </div>
                 </div>
 
+                <!-- 폼 내용 -->
                 <div id="formContent" class="hidden space-y-4 pt-2">
-
                     <div class="space-y-1 text-left">
-                        <label
-                            class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">이름</label>
-                        <input type="text" id="name" required readonly maxlength="10" placeholder="로그인하면 자동으로 입력됩니다"
+                        <label id="nameLabel" class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1"></label>
+                        <input type="text" id="name" required readonly maxlength="10"
                             class="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 font-bold focus:ring-0 transition-all outline-none text-[13px] cursor-not-allowed">
                     </div>
 
@@ -280,21 +229,14 @@
                         <div class="flex items-center gap-1.5">
                             <button type="button" id="tierGuideBtn"
                                 class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">?</button>
-                            <label
-                                class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">티어(경기
-                                승패에 미치는 영향력을 기준으로 선택)</label>
+                            <label id="tierLabel" class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest"></label>
                         </div>
                         <div id="tierGroup" class="grid grid-cols-5 gap-2">
-                            <button type="button" data-tier="S"
-                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">S</button>
-                            <button type="button" data-tier="A"
-                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">A</button>
-                            <button type="button" data-tier="B"
-                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">B</button>
-                            <button type="button" data-tier="C"
-                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">C</button>
-                            <button type="button" data-tier="D"
-                                class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">D</button>
+                            <button type="button" data-tier="S" class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">S</button>
+                            <button type="button" data-tier="A" class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">A</button>
+                            <button type="button" data-tier="B" class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">B</button>
+                            <button type="button" data-tier="C" class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">C</button>
+                            <button type="button" data-tier="D" class="tier-btn p-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-600 font-black text-sm border border-slate-100 dark:border-slate-800 transition-all">D</button>
                         </div>
                     </div>
 
@@ -302,172 +244,145 @@
                         <div class="flex items-center gap-1.5">
                             <button type="button" id="posGuideBtn"
                                 class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">?</button>
-                            <label
-                                class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">포지션(가능한
-                                포지션을 모두 선택)</label>
+                            <label id="posLabel" class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest"></label>
                         </div>
-                        <div class="relative aspect-[1.1/1] w-[85%] mx-auto bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900"
-                            id="pitch">
+                        <div class="relative aspect-[1.1/1] w-[85%] mx-auto bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900" id="pitch">
                             <div id="pitchLines" class="absolute inset-0 opacity-10 pointer-events-none"></div>
                         </div>
                     </div>
                 </div>
 
                 <button type="submit" id="submitBtn"
-                    class="w-full p-4 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-900/20 hover:bg-blue-500 hover:scale-[1.01] active:scale-[0.98] transition-all">
-                    참가 신청하기
+                    class="w-full p-4 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-[14px] shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all">
                 </button>
+            </div>
         </form>
 
+        <!-- 이미 신청한 경우 표시 -->
+        <div id="alreadyApplied" class="hidden p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-4 animate-zoom-in">
+            <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="space-y-1">
+                <h3 id="alreadyAppliedTitle" class="text-[16px] font-black text-slate-800 dark:text-slate-100"></h3>
+                <p id="alreadyAppliedStatus" class="text-[13px] font-bold text-slate-500 dark:text-slate-400"></p>
+            </div>
+            <button type="button" id="cancelApplyBtn"
+                class="w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-rose-500 font-bold text-[13px] transition-all active:scale-95 hover:bg-rose-50 dark:hover:bg-rose-900/20">
+            </button>
+        </div>
+
         <!-- 티어 가이드 모달 -->
-        <div id="tierModal"
-            class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+        <div id="tierModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6">
             <div id="tierModalOverlay" class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
-            <div
-                class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-zoom-in">
                 <div class="text-center space-y-1">
-                    <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">티어 가이드</h3>
-                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500">실력에 맞는 티어를 선택해 주세요</p>
+                    <h3 id="tierModalTitle" class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter"></h3>
+                    <p id="tierModalDesc" class="text-[10px] font-bold text-slate-400 dark:text-slate-500"></p>
                 </div>
-
                 <div class="space-y-2">
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50">
                         <span class="text-base font-black text-purple-600 dark:text-purple-400">S</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">경기를 지배하는
-                                압도적인 실력</p>
-                        </div>
+                        <p id="tierDescS" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50">
                         <span class="text-base font-black text-rose-600 dark:text-rose-400">A</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">확실한 실력과 전술
-                                이해도</p>
-                        </div>
+                        <p id="tierDescA" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50">
                         <span class="text-base font-black text-blue-600 dark:text-blue-400">B</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">기본기가 탄탄한
-                                일반적인 실력</p>
-                        </div>
+                        <p id="tierDescB" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50">
                         <span class="text-base font-black text-emerald-600 dark:text-emerald-400">C</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">이제 막 재미를
-                                붙인 초보자</p>
-                        </div>
+                        <p id="tierDescC" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50">
                         <span class="text-base font-black text-slate-600 dark:text-slate-400">D</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">처음 시작하는
-                                왕초보 입문자</p>
-                        </div>
+                        <p id="tierDescD" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
                 </div>
-
                 <button type="button" id="closeTierModal"
-                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95">
-                    확인
-                </button>
+                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95" data-t="confirm"></button>
             </div>
         </div>
 
         <!-- 포지션 가이드 모달 -->
-        <div id="posModal"
-            class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+        <div id="posModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6">
             <div id="posModalOverlay" class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
-            <div
-                class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-zoom-in">
                 <div class="text-center space-y-1">
-                    <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">포지션 가이드
-                    </h3>
-                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500">포지션 숙련도를 선택해 주세요</p>
+                    <h3 id="posModalTitle" class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter"></h3>
+                    <p id="posModalDesc" class="text-[10px] font-bold text-slate-400 dark:text-slate-500"></p>
                 </div>
-
                 <div class="space-y-2">
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50">
                         <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">100</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">자연스러움 : 본인
-                                실력 100% 발휘</p>
-                        </div>
+                        <p id="posDesc100" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800/50">
                         <span class="text-sm font-black text-yellow-600 dark:text-yellow-400">75</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">능숙함 : 본인
-                                실력의 75% 발휘</p>
-                        </div>
+                        <p id="posDesc75" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
-                    <div
-                        class="flex items-center gap-4 p-3 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/50">
+                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/50">
                         <span class="text-sm font-black text-orange-600 dark:text-orange-400">50</span>
-                        <div class="flex items-center">
-                            <p class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">가능함 : 본인
-                                실력의 50% 발휘</p>
-                        </div>
+                        <p id="posDesc50" class="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight"></p>
                     </div>
                 </div>
-
                 <button type="button" id="closePosModal"
-                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95">
-                    확인
-                </button>
+                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95" data-t="confirm"></button>
             </div>
         </div>
 
-        <div id="success"
-            class="hidden p-8 rounded-[40px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6 animate-in zoom-in-95 duration-500">
-            <div
-                class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+        <!-- 성공 화면 -->
+        <div id="success" class="hidden p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6 animate-zoom-in">
+            <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
                 <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
             <div class="space-y-2">
-                <h3 class="text-2xl font-black text-slate-900 dark:text-white">참가 신청이 완료되었습니다.</h3>
-                <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">팀 편성이 완료되면 알려드릴게요.<br>방장의 승인을
-                    기다려주세요.</p>
+                <h3 id="successTitle" class="text-[20px] font-black text-slate-900 dark:text-white"></h3>
+                <p id="successDesc" class="text-[13px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed"></p>
             </div>
-            <div class="flex flex-col gap-3 pt-4">
+            <div class="pt-4">
                 <button type="button" id="closeSuccessBtn"
-                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm shadow-xl transition-all active:scale-95">
-                    닫기
+                    class="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[14px] transition-all active:scale-95">
                 </button>
-                <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank"
-                    class="inline-block px-8 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                    Belo 앱 다운로드 하기
-                </a>
             </div>
         </div>
 
-        <div class="text-center py-4 animate-in fade-in duration-1000">
-            <p class="text-[11px] font-bold text-slate-400 dark:text-slate-600">
-                참가 취소가 필요하시면 방장에게 말씀해 주세요.
-            </p>
+        <!-- 참가자 목록 카드 -->
+        <div id="participantsInfo" class="hidden p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 animate-fade-in-up delay-75">
+            <div class="flex items-center justify-between px-1">
+                <h3 id="participantsLabel" class="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest"></h3>
+                <span id="participantCount" class="text-xs font-black text-blue-600 dark:text-blue-400">0</span>
+            </div>
+            <div id="participantList" class="space-y-1.5"></div>
         </div>
 
-        <footer class="text-center pt-8 pb-4">
-            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">Powered by
-                Belo System</p>
+        <!-- 하단 안내 -->
+        <div class="text-center py-4">
+            <p id="cancelNotice" class="text-[11px] font-bold text-slate-400 dark:text-slate-600"></p>
+        </div>
+
+        <footer class="text-center pt-4 pb-4 space-y-2">
+            <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank"
+                class="text-[10px] font-bold text-slate-300 dark:text-slate-700 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                Download Belo App
+            </a>
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">Powered by Belo System</p>
         </footer>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
         import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion, onSnapshot } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
+        // ===================== Firebase =====================
         const firebaseConfig = {
             apiKey: "AIzaSyCX43ePWFhdIbCUZUtoMePqMdTXiAowlx0",
             authDomain: "belo-apply.web.app",
@@ -476,15 +391,408 @@
             messagingSenderId: "834065889708",
             appId: "1:834065889708:web:0fb72121f685619d406209"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // ===================== 다국어 번역 =====================
+        const T = {
+            ko: {
+                loading: '운동장을 준비하고 있습니다...',
+                invalidLink: '유효하지 않은 링크예요',
+                invalidLinkDesc: '방 정보를 불러올 수 없습니다.\n올바른 신청 링크로 접속해주세요.',
+                roomNotFound: '존재하지 않는 방이에요',
+                expired: '모집이 종료되었거나 존재하지 않는 페이지입니다.',
+                matchStarted: '경기가 시작되어 모집이 마감되었습니다.',
+                roomClosed: '모집이 마감되었습니다.',
+                roomFull: '정원이 가득 찼어요',
+                participants: '참가자',
+                participantCount: (n) => `${n}명`,
+                capacityText: (cur, max) => max > 0 ? `${cur} / ${max}명` : `${cur}명`,
+                noParticipants: '아직 참가자가 없습니다.',
+                name: '이름',
+                namePlaceholder: '로그인하면 자동으로 입력됩니다',
+                tier: '티어(경기 승패에 미치는 영향력을 기준으로 선택)',
+                position: '포지션(가능한 포지션을 모두 선택)',
+                apply: '참가 신청하기',
+                applying: '신청 중...',
+                loginRequired: '로그인 후 신청할 수 있어요',
+                loginRequiredDesc: '타인 사칭이나 허위 신청을 방지하기 위해\n로그인을 해주세요.',
+                googleLogin: 'Google로 계속하기',
+                kakaoLogin: '카카오로 계속하기',
+                alreadyApplied: '이미 신청했어요',
+                alreadyAppliedPending: '호스트의 승인을 기다리고 있어요',
+                alreadyAppliedApproved: '참가가 승인되었어요!',
+                successTitle: '참가 신청 완료!',
+                successDesc: '호스트가 승인하면\n알림을 받을 수 있어요',
+                appDownload: 'Belo 앱 다운로드',
+                close: '닫기',
+                confirm: '확인',
+                cancelApply: '참가 신청 취소',
+                cancelConfirm: '정말 참가 신청을 취소할까요?',
+                cancelSuccess: '참가 신청이 취소되었어요',
+                cancelling: '취소 중...',
+                appBannerTitle: '편하게, 공정하게, 재미있게 BELO!',
+                appBannerDesc: '경기 생성부터 모집, 공정한 팀 편성까지 한번에',
+                appBannerBtn: '무료 다운로드',
+                cancelNotice: '참가 취소가 필요하시면 아래 취소 버튼을 눌러주세요.',
+                tierGuide: '티어 가이드',
+                tierGuideDesc: '경기 승패에 미치는 영향력을 기준으로 선택해 주세요',
+                tierSDesc: '경기를 지배하는 압도적인 실력',
+                tierADesc: '확실한 실력과 전술 이해도',
+                tierBDesc: '기본기가 탄탄한 일반적인 실력',
+                tierCDesc: '이제 막 재미를 붙인 초보자',
+                tierDDesc: '처음 시작하는 왕초보 입문자',
+                posGuide: '포지션 가이드',
+                posGuideDesc: '포지션 숙련도를 선택해 주세요',
+                posDesc100: '자연스러움 : 본인 실력 100% 발휘',
+                posDesc75: '능숙함 : 본인 실력의 75% 발휘',
+                posDesc50: '가능함 : 본인 실력의 50% 발휘',
+                recruiting: '모집중',
+                recruitClosed: '마감',
+                soccer: '축구', futsal: '풋살', basketball: '농구', general: '테니스',
+                inAppTitle: '보안 브라우저로 이동 중',
+                inAppDesc: '구글 보안 정책에 따라\n안전한 외부 브라우저로 이동합니다...',
+                kakaoOverlayTitle: '카카오 로그인 중...',
+                kakaoOverlayDesc: '카카오 로그인 후 신청을 진행합니다.',
+                kakaoWebFallback: '웹에서 참가하기',
+                iosGuideTitle: '아이폰(iOS) 사용자는 아래 순서대로 진행해주세요.',
+                iosStep1: '하단 바의 내보내기 아이콘(위로 화살표) 또는 나침반 클릭',
+                iosStep2: "'Safari로 열기' 또는 '기본 브라우저로 앱 열기' 선택",
+                dateFormat: (d, t, ed, et) => {
+                    let s = `${d} ${t}`;
+                    if (ed && et) s += ` ~ ${ed === d ? '' : ed + ' '}${et}`;
+                    return s;
+                },
+            },
+            en: {
+                loading: 'Preparing the field...',
+                invalidLink: 'Invalid link',
+                invalidLinkDesc: 'Cannot load room info.\nPlease use a valid application link.',
+                roomNotFound: 'Room not found',
+                expired: 'This recruitment has ended or the page does not exist.',
+                matchStarted: 'The match has started and recruitment is closed.',
+                roomClosed: 'Recruitment is closed.',
+                roomFull: 'The room is full',
+                participants: 'Participants',
+                participantCount: (n) => `${n}`,
+                capacityText: (cur, max) => max > 0 ? `${cur} / ${max}` : `${cur}`,
+                noParticipants: 'No participants yet.',
+                name: 'Name',
+                namePlaceholder: 'Auto-filled after login',
+                tier: 'Tier (Select based on game impact)',
+                position: 'Position (Select all possible positions)',
+                apply: 'Apply',
+                applying: 'Applying...',
+                loginRequired: 'Please log in to apply',
+                loginRequiredDesc: 'Login is required to prevent\nimpersonation and false applications.',
+                googleLogin: 'Continue with Google',
+                kakaoLogin: 'Continue with Kakao',
+                alreadyApplied: 'Already applied',
+                alreadyAppliedPending: 'Waiting for host approval',
+                alreadyAppliedApproved: 'Your participation is approved!',
+                successTitle: 'Application Complete!',
+                successDesc: "You'll be notified\nwhen the host approves",
+                appDownload: 'Download Belo App',
+                close: 'Close',
+                confirm: 'OK',
+                cancelApply: 'Cancel Application',
+                cancelConfirm: 'Are you sure you want to cancel?',
+                cancelSuccess: 'Your application has been cancelled',
+                cancelling: 'Cancelling...',
+                appBannerTitle: 'Easy, Fair, and Fun — BELO!',
+                appBannerDesc: 'Create matches, recruit players, and balance teams all in one',
+                appBannerBtn: 'Free Download',
+                cancelNotice: 'You can cancel your application using the cancel button.',
+                tierGuide: 'Tier Guide',
+                tierGuideDesc: 'Select a tier that matches your skill level',
+                tierSDesc: 'Dominant force that controls the game',
+                tierADesc: 'Strong skills with tactical understanding',
+                tierBDesc: 'Solid fundamentals, average player',
+                tierCDesc: 'Beginner just getting into it',
+                tierDDesc: 'Complete beginner, just starting out',
+                posGuide: 'Position Guide',
+                posGuideDesc: 'Select your position proficiency',
+                posDesc100: 'Natural : 100% of your skill',
+                posDesc75: 'Proficient : 75% of your skill',
+                posDesc50: 'Capable : 50% of your skill',
+                recruiting: 'Open',
+                recruitClosed: 'Closed',
+                soccer: 'Soccer', futsal: 'Futsal', basketball: 'Basketball', general: 'Tennis',
+                inAppTitle: 'Moving to secure browser',
+                inAppDesc: 'Redirecting to an external browser\nfor Google security...',
+                kakaoOverlayTitle: 'Logging in with Kakao...',
+                kakaoOverlayDesc: 'Proceeding with Kakao login.',
+                kakaoWebFallback: 'Continue on web',
+                iosGuideTitle: 'iPhone users, please follow these steps:',
+                iosStep1: 'Tap the Share icon (arrow up) or compass at the bottom',
+                iosStep2: "Select 'Open in Safari' or 'Open in default browser'",
+                dateFormat: (d, t, ed, et) => {
+                    let s = `${d} ${t}`;
+                    if (ed && et) s += ` ~ ${ed === d ? '' : ed + ' '}${et}`;
+                    return s;
+                },
+            },
+            ja: {
+                loading: 'フィールドを準備中...',
+                invalidLink: '無効なリンクです',
+                invalidLinkDesc: 'ルーム情報を読み込めません。\n正しい申請リンクでアクセスしてください。',
+                roomNotFound: 'ルームが見つかりません',
+                expired: '募集が終了したか、存在しないページです。',
+                matchStarted: '試合が始まったため、募集は締め切られました。',
+                roomClosed: '募集が締め切られました。',
+                roomFull: '定員に達しました',
+                participants: '参加者',
+                participantCount: (n) => `${n}名`,
+                capacityText: (cur, max) => max > 0 ? `${cur} / ${max}名` : `${cur}名`,
+                noParticipants: 'まだ参加者がいません。',
+                name: '名前',
+                namePlaceholder: 'ログイン後に自動入力されます',
+                tier: 'ティア（試合への影響力を基準に選択）',
+                position: 'ポジション（可能なポジションをすべて選択）',
+                apply: '参加申請',
+                applying: '申請中...',
+                loginRequired: 'ログイン後に申請できます',
+                loginRequiredDesc: 'なりすましや虚偽申請を防止するため\nログインしてください。',
+                googleLogin: 'Googleで続ける',
+                kakaoLogin: 'Kakaoで続ける',
+                alreadyApplied: '既に申請済みです',
+                alreadyAppliedPending: 'ホストの承認を待っています',
+                alreadyAppliedApproved: '参加が承認されました！',
+                successTitle: '参加申請完了！',
+                successDesc: 'ホストが承認すると\n通知を受け取れます',
+                appDownload: 'Beloアプリをダウンロード',
+                close: '閉じる',
+                confirm: '確認',
+                cancelApply: '参加申請を取り消す',
+                cancelConfirm: '本当に参加申請を取り消しますか？',
+                cancelSuccess: '参加申請が取り消されました',
+                cancelling: '取り消し中...',
+                appBannerTitle: '気軽に、公平に、楽しく BELO!',
+                appBannerDesc: '試合作成から募集、公平なチーム編成まで一度に',
+                appBannerBtn: '無料ダウンロード',
+                cancelNotice: 'キャンセルは下のボタンから行えます。',
+                tierGuide: 'ティアガイド',
+                tierGuideDesc: '自分の実力に合ったティアを選んでください',
+                tierSDesc: '試合を支配する圧倒的な実力',
+                tierADesc: '確かな実力と戦術理解',
+                tierBDesc: '基礎がしっかりした一般的な実力',
+                tierCDesc: 'これから楽しみ始めた初心者',
+                tierDDesc: '始めたばかりの完全初心者',
+                posGuide: 'ポジションガイド',
+                posGuideDesc: 'ポジション習熟度を選択してください',
+                posDesc100: '自然：実力の100%を発揮',
+                posDesc75: '熟練：実力の75%を発揮',
+                posDesc50: '可能：実力の50%を発揮',
+                recruiting: '募集中',
+                recruitClosed: '締切',
+                soccer: 'サッカー', futsal: 'フットサル', basketball: 'バスケットボール', general: 'テニス',
+                inAppTitle: 'セキュアブラウザに移動中',
+                inAppDesc: 'Googleセキュリティのため\n外部ブラウザに移動します...',
+                kakaoOverlayTitle: 'Kakaoログイン中...',
+                kakaoOverlayDesc: 'Kakaoログイン後に申請を進めます。',
+                kakaoWebFallback: 'ウェブで参加する',
+                iosGuideTitle: 'iPhone(iOS)ユーザーは以下の手順で進めてください。',
+                iosStep1: '下部バーの共有アイコン（上向き矢印）またはコンパスをタップ',
+                iosStep2: "'Safariで開く'または'デフォルトブラウザで開く'を選択",
+                dateFormat: (d, t, ed, et) => {
+                    let s = `${d} ${t}`;
+                    if (ed && et) s += ` ~ ${ed === d ? '' : ed + ' '}${et}`;
+                    return s;
+                },
+            },
+            es: {
+                loading: 'Preparando el campo...',
+                invalidLink: 'Enlace no válido',
+                invalidLinkDesc: 'No se puede cargar la información.\nPor favor usa un enlace válido.',
+                roomNotFound: 'Sala no encontrada',
+                expired: 'Este reclutamiento ha terminado o la página no existe.',
+                matchStarted: 'El partido ha comenzado y el reclutamiento está cerrado.',
+                roomClosed: 'El reclutamiento está cerrado.',
+                roomFull: 'La sala está llena',
+                participants: 'Participantes',
+                participantCount: (n) => `${n}`,
+                capacityText: (cur, max) => max > 0 ? `${cur} / ${max}` : `${cur}`,
+                noParticipants: 'Aún no hay participantes.',
+                name: 'Nombre',
+                namePlaceholder: 'Se completa automáticamente después de iniciar sesión',
+                tier: 'Nivel (Seleccionar según impacto en el juego)',
+                position: 'Posición (Seleccionar todas las posiciones posibles)',
+                apply: 'Solicitar',
+                applying: 'Enviando...',
+                loginRequired: 'Inicia sesión para solicitar',
+                loginRequiredDesc: 'Se requiere inicio de sesión para prevenir\nsuplantación y solicitudes falsas.',
+                googleLogin: 'Continuar con Google',
+                kakaoLogin: 'Continuar con Kakao',
+                alreadyApplied: 'Ya solicitado',
+                alreadyAppliedPending: 'Esperando aprobación del anfitrión',
+                alreadyAppliedApproved: '¡Tu participación está aprobada!',
+                successTitle: '¡Solicitud completada!',
+                successDesc: 'Serás notificado\ncuando el anfitrión apruebe',
+                appDownload: 'Descargar Belo App',
+                close: 'Cerrar',
+                confirm: 'OK',
+                cancelApply: 'Cancelar solicitud',
+                cancelConfirm: '¿Seguro que quieres cancelar tu solicitud?',
+                cancelSuccess: 'Tu solicitud ha sido cancelada',
+                cancelling: 'Cancelando...',
+                appBannerTitle: 'Fácil, justo y divertido — BELO!',
+                appBannerDesc: 'Crea partidos, recluta y equilibra equipos en un solo lugar',
+                appBannerBtn: 'Descarga gratis',
+                cancelNotice: 'Puedes cancelar tu solicitud con el botón de abajo.',
+                tierGuide: 'Guía de Nivel',
+                tierGuideDesc: 'Selecciona el nivel que corresponda a tu habilidad',
+                tierSDesc: 'Fuerza dominante que controla el juego',
+                tierADesc: 'Habilidades sólidas con comprensión táctica',
+                tierBDesc: 'Fundamentos sólidos, jugador promedio',
+                tierCDesc: 'Principiante que recién comienza',
+                tierDDesc: 'Principiante total, recién iniciando',
+                posGuide: 'Guía de Posición',
+                posGuideDesc: 'Selecciona tu nivel de competencia en cada posición',
+                posDesc100: 'Natural : 100% de tu habilidad',
+                posDesc75: 'Competente : 75% de tu habilidad',
+                posDesc50: 'Capaz : 50% de tu habilidad',
+                recruiting: 'Abierto',
+                recruitClosed: 'Cerrado',
+                soccer: 'Fútbol', futsal: 'Futsal', basketball: 'Baloncesto', general: 'Tenis',
+                inAppTitle: 'Moviendo al navegador seguro',
+                inAppDesc: 'Redirigiendo a un navegador externo\npor seguridad de Google...',
+                kakaoOverlayTitle: 'Iniciando sesión con Kakao...',
+                kakaoOverlayDesc: 'Procediendo con el inicio de sesión de Kakao.',
+                kakaoWebFallback: 'Continuar en la web',
+                iosGuideTitle: 'Usuarios de iPhone, sigan estos pasos:',
+                iosStep1: 'Toca el ícono de Compartir (flecha arriba) o la brújula',
+                iosStep2: "Selecciona 'Abrir en Safari' o 'Abrir en navegador predeterminado'",
+                dateFormat: (d, t, ed, et) => {
+                    let s = `${d} ${t}`;
+                    if (ed && et) s += ` ~ ${ed === d ? '' : ed + ' '}${et}`;
+                    return s;
+                },
+            },
+            pt: {
+                loading: 'Preparando o campo...',
+                invalidLink: 'Link inválido',
+                invalidLinkDesc: 'Não foi possível carregar as informações.\nPor favor use um link válido.',
+                roomNotFound: 'Sala não encontrada',
+                expired: 'Este recrutamento terminou ou a página não existe.',
+                matchStarted: 'A partida começou e o recrutamento está encerrado.',
+                roomClosed: 'O recrutamento está encerrado.',
+                roomFull: 'A sala está lotada',
+                participants: 'Participantes',
+                participantCount: (n) => `${n}`,
+                capacityText: (cur, max) => max > 0 ? `${cur} / ${max}` : `${cur}`,
+                noParticipants: 'Ainda não há participantes.',
+                name: 'Nome',
+                namePlaceholder: 'Preenchido automaticamente após login',
+                tier: 'Nível (Selecione com base no impacto no jogo)',
+                position: 'Posição (Selecione todas as posições possíveis)',
+                apply: 'Inscrever-se',
+                applying: 'Enviando...',
+                loginRequired: 'Faça login para se inscrever',
+                loginRequiredDesc: 'Login é necessário para prevenir\nimpostura e inscrições falsas.',
+                googleLogin: 'Continuar com Google',
+                kakaoLogin: 'Continuar com Kakao',
+                alreadyApplied: 'Já inscrito',
+                alreadyAppliedPending: 'Aguardando aprovação do anfitrião',
+                alreadyAppliedApproved: 'Sua participação foi aprovada!',
+                successTitle: 'Inscrição Completa!',
+                successDesc: 'Você será notificado\nquando o anfitrião aprovar',
+                appDownload: 'Baixar Belo App',
+                close: 'Fechar',
+                confirm: 'OK',
+                cancelApply: 'Cancelar inscrição',
+                cancelConfirm: 'Tem certeza que deseja cancelar?',
+                cancelSuccess: 'Sua inscrição foi cancelada',
+                cancelling: 'Cancelando...',
+                appBannerTitle: 'Fácil, justo e divertido — BELO!',
+                appBannerDesc: 'Crie partidas, recrute e equilibre times em um só lugar',
+                appBannerBtn: 'Download grátis',
+                cancelNotice: 'Você pode cancelar sua inscrição com o botão abaixo.',
+                tierGuide: 'Guia de Nível',
+                tierGuideDesc: 'Selecione o nível que corresponde à sua habilidade',
+                tierSDesc: 'Força dominante que controla o jogo',
+                tierADesc: 'Habilidades sólidas com compreensão tática',
+                tierBDesc: 'Fundamentos sólidos, jogador médio',
+                tierCDesc: 'Iniciante que está começando a se interessar',
+                tierDDesc: 'Iniciante total, recém-começando',
+                posGuide: 'Guia de Posição',
+                posGuideDesc: 'Selecione seu nível de competência em cada posição',
+                posDesc100: 'Natural : 100% da sua habilidade',
+                posDesc75: 'Proficiente : 75% da sua habilidade',
+                posDesc50: 'Capaz : 50% da sua habilidade',
+                recruiting: 'Aberto',
+                recruitClosed: 'Encerrado',
+                soccer: 'Futebol', futsal: 'Futsal', basketball: 'Basquete', general: 'Tênis',
+                inAppTitle: 'Movendo para navegador seguro',
+                inAppDesc: 'Redirecionando para um navegador externo\npor segurança do Google...',
+                kakaoOverlayTitle: 'Fazendo login com Kakao...',
+                kakaoOverlayDesc: 'Prosseguindo com o login do Kakao.',
+                kakaoWebFallback: 'Continuar na web',
+                iosGuideTitle: 'Usuários de iPhone, sigam estes passos:',
+                iosStep1: 'Toque no ícone de Compartilhar (seta para cima) ou na bússola',
+                iosStep2: "Selecione 'Abrir no Safari' ou 'Abrir no navegador padrão'",
+                dateFormat: (d, t, ed, et) => {
+                    let s = `${d} ${t}`;
+                    if (ed && et) s += ` ~ ${ed === d ? '' : ed + ' '}${et}`;
+                    return s;
+                },
+            },
+        };
+
+        // ===================== 언어 감지 & 전환 =====================
+        function detectLang() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlLang = urlParams.get('lang');
+            if (urlLang && T[urlLang]) return urlLang;
+            const stored = localStorage.getItem('btm_lang');
+            if (stored && T[stored]) return stored;
+            const nav = (navigator.language || '').toLowerCase();
+            if (nav.startsWith('ko')) return 'ko';
+            if (nav.startsWith('ja')) return 'ja';
+            if (nav.startsWith('es')) return 'es';
+            if (nav.startsWith('pt')) return 'pt';
+            if (nav.startsWith('en')) return 'en';
+            return 'ko';
+        }
+
+        let currentLang = detectLang();
+        function t(key, ...args) {
+            const val = T[currentLang]?.[key] || T['ko'][key] || key;
+            return typeof val === 'function' ? val(...args) : val;
+        }
+
+        const LANG_LABELS = { ko: 'KO', en: 'EN', ja: 'JA', es: 'ES', pt: 'PT' };
+        const langToggle = document.getElementById('langToggle');
+        const langIcon = document.getElementById('langIcon');
+        const langMenu = document.getElementById('langMenu');
+
+        langToggle.onclick = (e) => {
+            e.stopPropagation();
+            langMenu.classList.toggle('hidden');
+        };
+        document.addEventListener('click', () => langMenu.classList.add('hidden'));
+
+        document.querySelectorAll('.lang-opt').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                currentLang = btn.dataset.lang;
+                localStorage.setItem('btm_lang', currentLang);
+                langIcon.textContent = LANG_LABELS[currentLang];
+                langMenu.classList.add('hidden');
+                applyTranslations();
+                if (currentRoomData) {
+                    renderRoomInfo(currentRoomData);
+                    renderParticipants(currentRoomData.applicants || []);
+                }
+            };
+        });
+        langIcon.textContent = LANG_LABELS[currentLang];
+
+        // ===================== 포지션 설정 (앱과 동일) =====================
         const POS_CONFIG = {
             'Soccer': [
                 { id: 'GK', x: 50, y: 85 }, { id: 'LB', x: 15, y: 65 }, { id: 'DF', x: 50, y: 65 }, { id: 'RB', x: 85, y: 65 },
-                { id: 'MF', x: 50, y: 42 }, { id: 'LW', x: 15, y: 25 }, { id: 'FW', x: 50, y: 18 }, { id: 'RW', x: 85, y: 25 }
+                { id: 'MF', x: 50, y: 42 }, { id: 'LW', x: 15, y: 25 }, { id: 'ST', x: 50, y: 18 }, { id: 'RW', x: 85, y: 25 }
             ],
             'Futsal': [
                 { id: 'GK', x: 50, y: 82 }, { id: 'FIX', x: 50, y: 62 }, { id: 'ALA', x: 50, y: 40 }, { id: 'PIV', x: 50, y: 18 }
@@ -493,48 +801,27 @@
                 { id: 'PG', x: 35, y: 72 }, { id: 'SG', x: 65, y: 72 }, { id: 'SF', x: 25, y: 45 }, { id: 'PF', x: 75, y: 45 }, { id: 'C', x: 50, y: 28 }
             ]
         };
-        const KEY_NAME = 'btm_user_name';
-        const KEY_TIER = 'btm_user_tier';
+
+        // 티어 배지 색상 (앱과 동일)
+        const TIER_BADGE = {
+            S: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+            A: 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+            B: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+            C: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+            D: 'bg-slate-50 text-slate-400 dark:bg-slate-950 dark:text-slate-500',
+        };
+
+        const KAKAO_AUTH_FUNCTION_URL = 'https://us-central1-balance-team-maker.cloudfunctions.net/kakaoAuth';
+
+        // ===================== 상태 변수 =====================
         let selections = {};
         let selectedTier = 'B';
         let currentRoomData = null;
         let currentSport = 'Soccer';
+        let currentUserId = null;
+        let unsubscribeRoom = null;
 
-        const tierModal = document.getElementById('tierModal');
-        const tierGuideBtn = document.getElementById('tierGuideBtn');
-        const closeTierModal = document.getElementById('closeTierModal');
-        const tierModalOverlay = document.getElementById('tierModalOverlay');
-
-        const posModal = document.getElementById('posModal');
-        const posGuideBtn = document.getElementById('posGuideBtn');
-        const closePosModal = document.getElementById('closePosModal');
-        const posModalOverlay = document.getElementById('posModalOverlay');
-
-        function toggleModal(modal, show) {
-            if (show) {
-                modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            } else {
-                modal.classList.add('hidden');
-                document.body.style.overflow = '';
-            }
-        }
-
-        tierGuideBtn.onclick = () => toggleModal(tierModal, true);
-        closeTierModal.onclick = () => toggleModal(tierModal, false);
-        tierModalOverlay.onclick = () => toggleModal(tierModal, false);
-
-        posGuideBtn.onclick = () => toggleModal(posModal, true);
-        closePosModal.onclick = () => toggleModal(posModal, false);
-        posModalOverlay.onclick = () => toggleModal(posModal, false);
-
-        // 카카오 SDK 초기화
-        if (window.Kakao && !window.Kakao.isInitialized()) {
-            Kakao.init('878d084cb95d54a3657541f72b9bbe97');
-        }
-
-        const KAKAO_AUTH_FUNCTION_URL = 'https://us-central1-balance-team-maker.cloudfunctions.net/kakaoAuth';
-
+        // ===================== DOM 참조 =====================
         const themeBtn = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
         const loginBtn = document.getElementById('loginBtn');
@@ -544,6 +831,59 @@
         const loginSection = document.getElementById('loginSection');
         const nameInput = document.getElementById('name');
 
+        // ===================== 다국어 적용 =====================
+        function applyTranslations() {
+            document.getElementById('loadingText').textContent = t('loading');
+            document.getElementById('nameLabel').textContent = t('name');
+            nameInput.placeholder = t('namePlaceholder');
+            document.getElementById('tierLabel').textContent = t('tier');
+            document.getElementById('posLabel').textContent = t('position');
+            document.getElementById('submitBtn').textContent = t('apply');
+            document.getElementById('loginRequiredTitle').textContent = t('loginRequired');
+            document.getElementById('loginRequiredDesc').textContent = t('loginRequiredDesc');
+            document.getElementById('googleLoginText').textContent = t('googleLogin');
+            document.getElementById('kakaoLoginText').textContent = t('kakaoLogin');
+            document.getElementById('participantsLabel').textContent = t('participants');
+            document.getElementById('cancelNotice').textContent = t('cancelNotice');
+            // 모달
+            document.getElementById('tierModalTitle').textContent = t('tierGuide');
+            document.getElementById('tierModalDesc').textContent = t('tierGuideDesc');
+            document.getElementById('tierDescS').textContent = t('tierSDesc');
+            document.getElementById('tierDescA').textContent = t('tierADesc');
+            document.getElementById('tierDescB').textContent = t('tierBDesc');
+            document.getElementById('tierDescC').textContent = t('tierCDesc');
+            document.getElementById('tierDescD').textContent = t('tierDDesc');
+            document.getElementById('posModalTitle').textContent = t('posGuide');
+            document.getElementById('posModalDesc').textContent = t('posGuideDesc');
+            document.getElementById('posDesc100').textContent = t('posDesc100');
+            document.getElementById('posDesc75').textContent = t('posDesc75');
+            document.getElementById('posDesc50').textContent = t('posDesc50');
+            // 성공 화면
+            document.getElementById('successTitle').textContent = t('successTitle');
+            document.getElementById('successDesc').textContent = t('successDesc');
+            document.getElementById('closeSuccessBtn').textContent = t('close');
+            // 이미 신청
+            document.getElementById('alreadyAppliedTitle').textContent = t('alreadyApplied');
+            document.getElementById('cancelApplyBtn').textContent = t('cancelApply');
+            // 앱 배너
+            document.getElementById('appBannerTitle').textContent = t('appBannerTitle');
+            document.getElementById('appBannerDesc').textContent = t('appBannerDesc');
+            document.getElementById('appBannerBtn').textContent = t('appBannerBtn');
+            // 인앱 오버레이
+            document.getElementById('inAppTitle').textContent = t('inAppTitle');
+            document.getElementById('inAppDesc').textContent = t('inAppDesc');
+            document.getElementById('kakaoOverlayTitle').textContent = t('kakaoOverlayTitle');
+            document.getElementById('kakaoOverlayDesc').textContent = t('kakaoOverlayDesc');
+            document.getElementById('kakaoWebFallbackBtn').textContent = t('kakaoWebFallback');
+            document.getElementById('iosGuideTitle').textContent = t('iosGuideTitle');
+            document.getElementById('iosStep1').textContent = t('iosStep1');
+            document.getElementById('iosStep2').textContent = t('iosStep2');
+            // 모달 확인 버튼
+            document.querySelectorAll('[data-t="confirm"]').forEach(el => el.textContent = t('confirm'));
+        }
+        applyTranslations();
+
+        // ===================== 테마 (다크모드) =====================
         function setTheme(isDark) {
             if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -556,7 +896,11 @@
             }
             if (currentRoomData) renderPitch();
         }
+        themeBtn.onclick = () => setTheme(!document.documentElement.classList.contains('dark'));
+        const savedTheme = localStorage.getItem('btm_theme');
+        setTheme(savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches));
 
+        // ===================== 티어 선택 =====================
         function selectTier(tier) {
             selectedTier = tier;
             document.querySelectorAll('.tier-btn').forEach(b => {
@@ -564,19 +908,134 @@
                 if (b.dataset.tier === tier) b.classList.add('active-' + tier, 'shadow-lg', 'shadow-blue-500/10');
             });
         }
+        document.querySelectorAll('.tier-btn').forEach(btn => btn.onclick = () => selectTier(btn.dataset.tier));
 
-        function renderParticipants(participants) {
-            const countEl = document.getElementById('participantCount');
-            const listEl = document.getElementById('participantList');
-            const approved = participants[0]?.isApproved !== undefined ? participants.filter(a => a.isApproved) : participants;
-            countEl.textContent = `${approved.length}명`;
-            if (approved.length === 0) {
-                listEl.innerHTML = '<p class="text-[10px] text-slate-400 font-bold ml-1">아직 참가자가 없습니다.</p>';
+        const localTier = localStorage.getItem('btm_user_tier');
+        if (localTier) selectTier(localTier);
+
+        // ===================== 모달 =====================
+        function toggleModal(modal, show) {
+            if (show) { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+            else { modal.classList.add('hidden'); document.body.style.overflow = ''; }
+        }
+
+        const tierModal = document.getElementById('tierModal');
+        const posModal = document.getElementById('posModal');
+        document.getElementById('tierGuideBtn').onclick = () => toggleModal(tierModal, true);
+        document.getElementById('closeTierModal').onclick = () => toggleModal(tierModal, false);
+        document.getElementById('tierModalOverlay').onclick = () => toggleModal(tierModal, false);
+        document.getElementById('posGuideBtn').onclick = () => toggleModal(posModal, true);
+        document.getElementById('closePosModal').onclick = () => toggleModal(posModal, false);
+        document.getElementById('posModalOverlay').onclick = () => toggleModal(posModal, false);
+
+        // ===================== 카카오 SDK =====================
+        if (window.Kakao && !window.Kakao.isInitialized()) {
+            Kakao.init('878d084cb95d54a3657541f72b9bbe97');
+        }
+
+        // ===================== 방 정보 렌더링 =====================
+        function normalizeSport(raw) {
+            const s = (raw || 'Soccer').toUpperCase();
+            if (s === 'SOCCER') return 'Soccer';
+            if (s === 'FUTSAL') return 'Futsal';
+            if (s === 'BASKETBALL') return 'Basketball';
+            if (s === 'GENERAL' || s === '일반') return 'General';
+            return 'Soccer';
+        }
+
+        function getSportLabel(sport) {
+            const key = sport.toLowerCase();
+            return t(key) || sport;
+        }
+
+        function renderRoomInfo(data) {
+            const sport = normalizeSport(data.sport);
+            document.getElementById('roomSport').textContent = getSportLabel(sport);
+
+            // 제목
+            const titleEl = document.getElementById('roomTitle');
+            if (data.title) {
+                titleEl.textContent = data.title;
+                titleEl.classList.remove('hidden');
             } else {
-                listEl.innerHTML = approved.map(a => `<span class="px-2 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[11px] font-black text-slate-600 dark:text-slate-300 animate-in fade-in zoom-in-50 duration-300">${a.name}</span>`).join('');
+                titleEl.classList.add('hidden');
+            }
+
+            // 날짜/시간
+            document.getElementById('roomDateTime').textContent = t('dateFormat',
+                data.matchDate || '', data.matchTime || '',
+                data.matchEndDate || '', data.matchEndTime || '');
+
+            // 장소
+            const venueRow = document.getElementById('roomVenueRow');
+            if (data.venue) {
+                document.getElementById('roomVenue').textContent = data.venue;
+                venueRow.classList.remove('hidden');
+            } else {
+                venueRow.classList.add('hidden');
+            }
+
+            // 인원
+            const approved = (data.applicants || []).filter(a =>
+                a.isApproved === true || a.status === 'APPROVED'
+            );
+            const max = data.maxApplicants || 0;
+            document.getElementById('roomCapacity').textContent = t('capacityText', approved.length, max);
+
+            // 상태 배지
+            const statusEl = document.getElementById('roomStatus');
+            if (data.status === 'CLOSED') {
+                statusEl.textContent = t('recruitClosed');
+                statusEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+            } else {
+                statusEl.textContent = t('recruiting');
+                statusEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
             }
         }
 
+        // ===================== 참가자 목록 렌더링 =====================
+        function renderParticipants(applicants) {
+            const countEl = document.getElementById('participantCount');
+            const listEl = document.getElementById('participantList');
+            const approved = (applicants || []).filter(a =>
+                a.isApproved === true || a.status === 'APPROVED'
+            );
+            countEl.textContent = t('participantCount', approved.length);
+
+            if (approved.length === 0) {
+                listEl.innerHTML = `<p class="text-[11px] text-slate-400 dark:text-slate-500 font-bold ml-1">${t('noParticipants')}</p>`;
+                return;
+            }
+
+            listEl.innerHTML = approved.map(a => {
+                const tierBadge = TIER_BADGE[a.tier] || TIER_BADGE['B'];
+                const positions = [
+                    ...(a.primaryPositions || []),
+                    ...(a.secondaryPositions || [])
+                ].filter(p => p && p !== 'NONE').slice(0, 3);
+
+                const posHtml = positions.map(p =>
+                    `<span class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-500 dark:text-slate-400">${p}</span>`
+                ).join('');
+
+                return `
+                    <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                            <span class="text-[10px] font-black text-blue-600 dark:text-blue-400 italic">BELO</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">${a.name}</span>
+                                <span class="px-1.5 py-0.5 rounded-md ${tierBadge} text-[10px] font-black flex-shrink-0">${a.tier || 'B'}</span>
+                            </div>
+                            ${posHtml ? `<div class="flex flex-wrap gap-1 mt-0.5">${posHtml}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===================== 피치 렌더링 =====================
         function renderPitch() {
             const container = document.getElementById('pitch');
             const lines = document.getElementById('pitchLines');
@@ -584,6 +1043,7 @@
             const isDark = document.documentElement.classList.contains('dark');
             const lineColor = isDark ? 'white' : 'slate-300';
             container.querySelectorAll('.node').forEach(n => n.remove());
+
             if (currentSport === 'Basketball') {
                 lines.innerHTML = `<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1/4 border-2 border-${lineColor} opacity-10 rounded-b-3xl"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-${lineColor} opacity-10 rounded-full"></div>`;
             } else if (currentSport === 'Futsal') {
@@ -591,6 +1051,7 @@
             } else {
                 lines.innerHTML = `<div class="absolute top-1/2 left-0 right-0 h-px bg-${lineColor} opacity-10"></div><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border border-${lineColor} opacity-10 rounded-full"></div><div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-b border-${lineColor} opacity-10"></div><div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-x border-t border-${lineColor} opacity-10"></div>`;
             }
+
             config.forEach(pos => {
                 const node = document.createElement('div');
                 node.className = 'node absolute -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:scale-110 active:scale-95 z-10';
@@ -605,16 +1066,19 @@
         function showMenu(posId, anchor) {
             document.querySelectorAll('.menu-popup').forEach(m => m.remove());
             const menu = document.createElement('div');
-            // 노드 부모인 피치 컨테이너에 직접 추가하여 레이어 간섭 차단
             const container = document.getElementById('pitch');
-            menu.className = 'menu-popup absolute p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-1.5 min-w-max animate-in zoom-in-50 fade-in duration-200 origin-bottom z-50';
+            menu.className = 'menu-popup absolute p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-1.5 min-w-max z-50';
 
-            // 클릭된 노드의 위치 정보를 가져와서 메뉴 위치 설정
-            menu.style.left = anchor.style.left;
-            menu.style.top = anchor.style.top;
-            menu.style.transform = 'translate(-50%, -100%) translateY(-24px)'; // 노드 위로 띄움
-
+            // 노드 위에 메뉴 배치 (getBoundingClientRect로 정확한 위치 계산)
+            const containerRect = container.getBoundingClientRect();
+            const anchorRect = anchor.getBoundingClientRect();
+            const centerX = anchorRect.left + anchorRect.width / 2 - containerRect.left;
+            const topY = anchorRect.top - containerRect.top - 8;
+            menu.style.left = centerX + 'px';
+            menu.style.top = topY + 'px';
+            menu.style.transform = 'translate(-50%, -100%)';
             menu.onpointerdown = (e) => e.stopPropagation();
+
             [{ l: 1, v: '100', c: 'bg-emerald-500' }, { l: 2, v: '75', c: 'bg-yellow-400' }, { l: 3, v: '50', c: 'bg-orange-400' }, { l: 'X', v: 'X', c: 'bg-rose-500' }].forEach(opt => {
                 const b = document.createElement('button'); b.type = 'button';
                 b.className = `w-10 h-10 rounded-full ${opt.c} text-white text-xs font-black transition-all active:scale-95`;
@@ -648,182 +1112,148 @@
             l.textContent = o.v;
         }
 
-        async function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomId = urlParams.get('room');
+        // ===================== 마감 로직 =====================
+        function checkExpiry(data) {
+            if (!data.matchDate || !data.matchTime) return null; // 날짜 없으면 체크 안함
 
-            if (!roomId) {
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center p-8 space-y-4">
-                        <div class="text-4xl text-rose-500 font-black">!</div>
-                        <p class="text-slate-500 font-bold">방 정보를 불러올 수 없습니다.<br>올바른 신청 링크로 접속해주세요.</p>
-                    </div>
-                `;
-                return;
-            }
+            const now = new Date();
+            // 종료 시간 계산: matchEndDate/matchEndTime 우선, 없으면 matchDate/matchTime 사용
+            const endDate = data.matchEndDate || data.matchDate;
+            const endTime = data.matchEndTime || data.matchTime;
+            const matchEnd = new Date(`${endDate}T${endTime}`);
 
-            try {
-                const docRef = doc(db, "rooms", roomId);
-                const docSnap = await getDoc(docRef);
+            // 종료 시간 + 3시간 후 만료 (앱과 동일)
+            const expiryTime = new Date(matchEnd.getTime() + 3 * 60 * 60000);
+            if (now > expiryTime) return 'expired';
 
-                if (!docSnap.exists()) {
-                    console.error("Room missing:", roomId);
-                    return;
-                }
+            // 경기 시작 시간
+            const matchStart = new Date(`${data.matchDate}T${data.matchTime}`);
+            if (now >= matchStart) return 'started';
 
-                currentRoomData = docSnap.data();
-                const rawSport = currentRoomData.sport || 'Soccer';
-                currentSport = rawSport.charAt(0).toUpperCase() + rawSport.slice(1).toLowerCase();
-                if (rawSport.toUpperCase() === 'SOCCER') currentSport = 'Soccer';
-                if (rawSport.toUpperCase() === 'FUTSAL') currentSport = 'Futsal';
-                if (rawSport.toUpperCase() === 'BASKETBALL') currentSport = 'Basketball';
-
-                document.getElementById('roomSport').textContent = currentSport;
-                document.getElementById('roomDateTime').textContent = `${currentRoomData.matchDate || ''} ${currentRoomData.matchTime || ''}`;
-
-                // --- 시간 기반 자동 마감 로직 시작 ---
-                if (currentRoomData.matchDate && currentRoomData.matchTime) {
-                    const now = new Date();
-                    const matchStart = new Date(`${currentRoomData.matchDate}T${currentRoomData.matchTime}`);
-                    const matchEnd = new Date(matchStart.getTime() + 30 * 60000); // 30분 후
-
-                    // 1. 경기 시작 30분 후: 아예 페이지 차단 (URL 무효화 효과)
-                    if (now > matchEnd) {
-                        document.body.innerHTML = `
-                            <div class="min-h-screen flex flex-col items-center justify-center p-8 text-center space-y-4 bg-slate-50 dark:bg-slate-950">
-                                <div class="text-6xl mb-4">🚫</div>
-                                <h1 class="text-xl font-black text-slate-800 dark:text-slate-200">유효하지 않은 링크입니다</h1>
-                                <p class="text-slate-500 text-sm">모집이 종료되었거나 존재하지 않는 페이지입니다.</p>
-                            </div>
-                        `;
-                        return; // 이후 로직 중단
-                    }
-
-                    // 2. 경기 시작 (정시) ~ 30분 사이: 마감 안내 표시 (신청 불가)
-                    if (now >= matchStart) {
-                        document.getElementById('loading').innerHTML = `
-                             <div class="text-center p-8 space-y-4">
-                                <div class="text-4xl text-amber-500 font-black">⏳</div>
-                                <p class="text-slate-500 font-bold">경기가 시작되어 모집이 마감되었습니다.</p>
-                                <p class="text-xs text-slate-400">(${currentRoomData.matchDate} ${currentRoomData.matchTime})</p>
-                            </div>
-                        `;
-                        // 로딩 표시를 숨기지 않고 안내 메시지로 대체하여 신청 폼 등 노출 차단
-                        return;
-                    }
-                }
-                // --- 시간 기반 자동 마감 로직 끝 ---
-
-                if (currentRoomData.sport?.toUpperCase() === 'GENERAL' || currentRoomData.sport?.toUpperCase() === '일반') {
-                    document.getElementById('posSection').classList.add('hidden');
-                } else {
-                    document.getElementById('posSection').classList.remove('hidden');
-                    renderPitch();
-                }
-
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('roomInfo').classList.remove('hidden');
-                document.getElementById('participantsInfo').classList.remove('hidden');
-                document.getElementById('applyForm').classList.remove('hidden');
-                renderParticipants(currentRoomData.activeParticipants || currentRoomData.applicants || []);
-            } catch (err) {
-                console.error("Init Error:", err);
-            }
+            return null;
         }
 
-        themeBtn.onclick = () => setTheme(!document.documentElement.classList.contains('dark'));
-        const savedTheme = localStorage.getItem('btm_theme');
-        setTheme(savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches));
+        // ===================== 중복 신청 체크 =====================
+        function findExistingApplication(applicants, userId) {
+            if (!userId || !applicants) return null;
+            return applicants.find(a => a.userId === userId);
+        }
 
-        const localName = localStorage.getItem(KEY_NAME);
-        const localTier = localStorage.getItem(KEY_TIER);
-        if (localName) nameInput.value = localName;
-        if (localTier) selectTier(localTier);
+        function showAlreadyApplied(existing) {
+            document.getElementById('applyForm').classList.add('hidden');
+            const el = document.getElementById('alreadyApplied');
+            el.classList.remove('hidden');
 
-        document.querySelectorAll('.tier-btn').forEach(btn => btn.onclick = () => selectTier(btn.dataset.tier));
+            const statusEl = document.getElementById('alreadyAppliedStatus');
+            const cancelBtn = document.getElementById('cancelApplyBtn');
+            cancelBtn.textContent = t('cancelApply');
 
-        // 인증 엔진 초기화 (지속성 설정)
-        const persistencePromise = setPersistence(auth, browserLocalPersistence);
+            if (existing.isApproved || existing.status === 'APPROVED') {
+                statusEl.textContent = t('alreadyAppliedApproved');
+                statusEl.className = 'text-[13px] font-bold text-emerald-500';
+                // 승인된 경우 취소 버튼 숨김
+                cancelBtn.classList.add('hidden');
+            } else {
+                statusEl.textContent = t('alreadyAppliedPending');
+                statusEl.className = 'text-[13px] font-bold text-slate-500 dark:text-slate-400';
+                cancelBtn.classList.remove('hidden');
+            }
+
+            // 취소 버튼 이벤트
+            cancelBtn.onclick = async () => {
+                if (!confirm(t('cancelConfirm'))) return;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const rid = urlParams.get('room');
+                if (!rid || !currentRoomData) return;
+
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = t('cancelling');
+
+                try {
+                    // applicants 배열에서 본인 제거
+                    const updatedApplicants = (currentRoomData.applicants || []).filter(
+                        a => a.userId !== currentUserId
+                    );
+                    await updateDoc(doc(db, "rooms", rid), {
+                        applicants: updatedApplicants
+                    });
+
+                    // UI 복원: 신청 화면으로 돌아가기
+                    el.classList.add('hidden');
+                    document.getElementById('applyForm').classList.remove('hidden');
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = t('apply');
+                    }
+                } catch (e) {
+                    console.error('Cancel error:', e);
+                    cancelBtn.disabled = false;
+                    cancelBtn.textContent = t('cancelApply');
+                }
+            };
+        }
+
+        // ===================== 인앱 브라우저 처리 =====================
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
         function isInAppBrowser() {
             const ua = navigator.userAgent.toLowerCase();
             return ua.includes('kakao') || ua.includes('naver') || ua.includes('instagram') || ua.includes('line') || ua.includes('fbav');
         }
-        const isAndroid = /android/i.test(navigator.userAgent);
-        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
         function isKakaoInApp() {
             return /kakao/i.test(navigator.userAgent.toLowerCase());
         }
 
-        function checkAndRedirect() {
-            if (isInAppBrowser()) {
-                const overlay = document.getElementById('inAppOverlay');
-                const iosGuide = document.getElementById('iosGuide');
-                const inAppDefault = document.getElementById('inAppDefault');
-                const inAppKakao = document.getElementById('inAppKakao');
-                if (overlay) overlay.classList.remove('hidden');
+        // 카카오톡 인앱은 카카오 로그인 가능 → 오버레이 없이 페이지 정상 표시
+        // 네이버/인스타 등 다른 인앱은 Chrome/Safari로 이동
+        function checkAndRedirectNonKakaoInApp() {
+            if (!isInAppBrowser()) return false;
+            if (isKakaoInApp()) return false; // 카카오톡 인앱은 통과
 
-                if (isKakaoInApp() && isAndroid) {
-                    // 카카오톡 + Android: 카카오 로그인 자동 실행 → 앱으로 연결
-                    if (inAppDefault) inAppDefault.classList.add('hidden');
-                    if (inAppKakao) inAppKakao.classList.remove('hidden');
+            const overlay = document.getElementById('inAppOverlay');
+            const iosGuide = document.getElementById('iosGuide');
+            if (overlay) overlay.classList.remove('hidden');
 
-                    // roomId 보존
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const roomId = urlParams.get('room');
-                    if (roomId) sessionStorage.setItem('kakao_pending_room', roomId);
-
-                    // "웹에서 참가하기" 폴백 버튼
-                    const fallbackBtn = document.getElementById('kakaoWebFallbackBtn');
-                    if (fallbackBtn) {
-                        fallbackBtn.onclick = () => {
-                            overlay.classList.add('hidden');
-                        };
-                    }
-
-                    // 카카오 로그인 자동 실행 (인앱이라 원터치/자동 승인)
-                    setTimeout(() => {
-                        try {
-                            Kakao.Auth.authorize({
-                                redirectUri: window.location.origin + '/kakao-callback',
-                            });
-                        } catch (e) {
-                            console.error('Kakao auto auth failed:', e);
-                            // 실패 시 오버레이 닫고 웹 폼 사용
-                            overlay.classList.add('hidden');
-                        }
-                    }, 1000);
-                    return true;
-                }
-
-                const currentUrl = window.location.href;
-                if (isAndroid) {
-                    // 안드로이드(카카오 외 인앱)는 1.5초 후 Chrome intent 실행
-                    setTimeout(() => {
-                        const intentUrl = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
-                        window.location.href = intentUrl;
-                    }, 1500);
-                } else if (isIOS) {
-                    // iOS는 안내 가이드 즉시 노출
-                    if (iosGuide) iosGuide.classList.remove('hidden');
-                }
-                return true;
+            const currentUrl = window.location.href;
+            if (isAndroid) {
+                setTimeout(() => {
+                    const intentUrl = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+                    window.location.href = intentUrl;
+                }, 1500);
+            } else if (isIOS) {
+                if (iosGuide) iosGuide.classList.remove('hidden');
             }
-            return false;
+            return true;
         }
 
-        // 페이지 로드 시 즉시 실행
-        if (checkAndRedirect()) {
-            // 인앱 브라우저인 경우 나머지 초기화 중단 (필요시)
-            // return; // 모듈 최상위에서는 return 불가이므로 로직 제어 필요
+        // 구글 로그인 버튼 전용: 인앱에서 Chrome으로 이동
+        function redirectToChrome() {
+            const overlay = document.getElementById('inAppOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+
+            const currentUrl = window.location.href;
+            if (isAndroid) {
+                setTimeout(() => {
+                    const intentUrl = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+                    window.location.href = intentUrl;
+                }, 1500);
+            } else if (isIOS) {
+                const iosGuide = document.getElementById('iosGuide');
+                if (iosGuide) iosGuide.classList.remove('hidden');
+            }
         }
 
+        checkAndRedirectNonKakaoInApp();
+
+        // ===================== 인증 시스템 =====================
         async function startAuth() {
             try {
-                // 1. 세션 지속성 설정 (완료될 때까지 대기)
                 await setPersistence(auth, browserLocalPersistence);
-                // 2. 인증 상태 변화 감지 등록 (먼저 등록해야 함)
+
                 onAuthStateChanged(auth, async (user) => {
                     const formContent = document.getElementById('formContent');
                     const loginPrompt = document.getElementById('loginPrompt');
@@ -834,7 +1264,9 @@
                     if (loginSection) loginSection.classList.remove('hidden');
 
                     if (user) {
+                        currentUserId = user.uid;
                         if (loginBtn) loginBtn.classList.add('hidden');
+                        if (kakaoLoginBtn) kakaoLoginBtn.classList.add('hidden');
                         if (loginPrompt) loginPrompt.classList.add('hidden');
                         if (userInfo) userInfo.classList.remove('hidden');
                         if (formContent) formContent.classList.remove('hidden');
@@ -846,6 +1278,12 @@
                         nameInput.value = user.displayName;
                         nameInput.readOnly = true;
 
+                        // 중복 신청 체크
+                        if (currentRoomData) {
+                            const existing = findExistingApplication(currentRoomData.applicants, currentUserId);
+                            if (existing) { showAlreadyApplied(existing); return; }
+                        }
+
                         try {
                             const userDoc = await getDoc(doc(db, "users", user.uid));
                             if (userDoc.exists()) {
@@ -854,29 +1292,34 @@
                             }
                         } catch (e) { }
                     } else {
+                        currentUserId = null;
+                        // 카카오 로그인 상태 확인
+                        const kakaoUser = JSON.parse(localStorage.getItem('kakao_user') || 'null');
+                        if (kakaoUser) {
+                            currentUserId = kakaoUser.id || kakaoUser.uid;
+                            handleKakaoUserUI(kakaoUser);
+                            return;
+                        }
+
                         if (loginBtn) loginBtn.classList.remove('hidden');
+                        if (kakaoLoginBtn) kakaoLoginBtn.classList.remove('hidden');
                         if (loginPrompt) loginPrompt.classList.remove('hidden');
                         if (userInfo) userInfo.classList.add('hidden');
                         if (formContent) formContent.classList.add('hidden');
                         if (submitBtn) submitBtn.classList.add('hidden');
-
                         nameInput.value = '';
                         nameInput.readOnly = true;
                     }
                 });
 
-                // 3. 리다이렉트 결과 확인
                 const result = await getRedirectResult(auth);
-                if (result?.user) {
-                    // login success via redirect
-                }
             } catch (error) {
                 console.error("Auth System Error:", error);
                 const authError = document.getElementById('authError');
                 if (authError) {
-                    let msg = "오류: " + error.code;
+                    let msg = "Error: " + error.code;
                     if (error.code === 'auth/unauthorized-domain') {
-                        msg = "⚠️ [안내] 도메인 승인이 필요합니다. Firebase 콘솔 > Auth > Settings > Authorized domains에 belo-apply.web.app을 추가해주세요.";
+                        msg = "Domain authorization needed. Please add belo-apply.web.app to Firebase Auth settings.";
                     }
                     authError.textContent = msg;
                     authError.classList.remove('hidden');
@@ -885,39 +1328,57 @@
             }
         }
 
+        function handleKakaoUserUI(kakaoUser) {
+            if (loginBtn) loginBtn.classList.add('hidden');
+            if (kakaoLoginBtn) kakaoLoginBtn.classList.add('hidden');
+            const loginPrompt = document.getElementById('loginPrompt');
+            const formContent = document.getElementById('formContent');
+            const submitBtn = document.getElementById('submitBtn');
+            if (loginPrompt) loginPrompt.classList.add('hidden');
+            if (userInfo) userInfo.classList.remove('hidden');
+            if (formContent) formContent.classList.remove('hidden');
+            if (submitBtn) submitBtn.classList.remove('hidden');
+
+            document.getElementById('userPhoto').src = kakaoUser.imageUrl || '';
+            document.getElementById('userName').textContent = kakaoUser.givenName;
+            nameInput.value = kakaoUser.givenName;
+            nameInput.readOnly = true;
+
+            // 중복 신청 체크
+            if (currentRoomData) {
+                const existing = findExistingApplication(currentRoomData.applicants, currentUserId);
+                if (existing) showAlreadyApplied(existing);
+            }
+        }
+
         startAuth();
 
         loginBtn.onclick = async () => {
-            if (checkAndRedirect()) return;
-
+            // 인앱(카카오톡 포함)에서 구글 로그인 → Chrome으로 이동 필요
+            if (isInAppBrowser()) {
+                redirectToChrome();
+                return;
+            }
             try {
                 const provider = new GoogleAuthProvider();
                 await signInWithRedirect(auth, provider);
             } catch (e) {
                 console.error("Login Error:", e);
-                alert("로그인 시작 중 오류가 발생했습니다: " + e.message);
             }
         };
 
-        kakaoLoginBtn.onclick = async () => {
-            if (checkAndRedirect()) return;
+        kakaoLoginBtn.onclick = () => {
+            // SDK(Kakao.Auth.authorize) 대신 직접 OAuth URL로 리다이렉트 (앱과 동일 방식)
+            // 카카오톡 인앱에서 SDK 호출이 안 되는 문제 해결
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            if (roomId) sessionStorage.setItem('kakao_pending_room', roomId);
 
-            try {
-                // 카카오 리다이렉트 전에 room ID 보존
-                const urlParams = new URLSearchParams(window.location.search);
-                const roomId = urlParams.get('room');
-                if (roomId) sessionStorage.setItem('kakao_pending_room', roomId);
-
-                Kakao.Auth.authorize({
-                    redirectUri: window.location.origin + '/kakao-callback',
-                });
-            } catch (e) {
-                console.error("Kakao Login Error:", e);
-                alert("카카오 로그인 중 오류가 발생했습니다: " + e.message);
-            }
+            const redirectUri = encodeURIComponent(window.location.origin + '/kakao-callback');
+            window.location.href = `https://kauth.kakao.com/oauth/authorize?client_id=878d084cb95d54a3657541f72b9bbe97&redirect_uri=${redirectUri}&response_type=code`;
         };
 
-        // 카카오 콜백 처리 (리다이렉트 후 code 파라미터가 있으면 처리)
+        // 카카오 콜백 처리
         async function handleKakaoCallback() {
             const urlParams = new URLSearchParams(window.location.search);
             const kakaoCode = urlParams.get('kakao_code');
@@ -932,27 +1393,12 @@
                 const userData = await res.json();
                 if (!res.ok) throw new Error(userData.error || 'Kakao auth failed');
 
-                // 카카오 사용자 정보를 로컬스토리지에 저장하고 UI 업데이트
                 localStorage.setItem('kakao_user', JSON.stringify(userData));
-                const loginSection = document.getElementById('loginSection');
-                const formContent = document.getElementById('formContent');
-                const loginPrompt = document.getElementById('loginPrompt');
-                const submitBtn = document.getElementById('submitBtn');
+                currentUserId = userData.id || userData.uid;
+                handleKakaoUserUI(userData);
 
-                if (loginBtn) loginBtn.classList.add('hidden');
-                if (kakaoLoginBtn) kakaoLoginBtn.classList.add('hidden');
-                if (loginPrompt) loginPrompt.classList.add('hidden');
-                if (userInfo) userInfo.classList.remove('hidden');
-                if (formContent) formContent.classList.remove('hidden');
-                if (submitBtn) submitBtn.classList.remove('hidden');
-
-                document.getElementById('userPhoto').src = userData.imageUrl || '';
-                document.getElementById('userName').textContent = userData.givenName;
-                nameInput.value = userData.givenName;
-                nameInput.readOnly = true;
-
-                // URL 복원: kakao_code 제거, room 파라미터 복원
-                const pendingRoom = sessionStorage.getItem('kakao_pending_room');
+                // URL 정리
+                const pendingRoom = sessionStorage.getItem('kakao_pending_room') || urlParams.get('room');
                 sessionStorage.removeItem('kakao_pending_room');
                 const cleanUrl = pendingRoom
                     ? window.location.origin + window.location.pathname + '?room=' + pendingRoom
@@ -966,55 +1412,210 @@
         }
         handleKakaoCallback();
 
-        logoutBtn.onclick = () => signOut(auth);
+        logoutBtn.onclick = () => {
+            localStorage.removeItem('kakao_user');
+            currentUserId = null;
+            signOut(auth);
+        };
 
-        document.getElementById('applyForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const n = nameInput.value;
+        // ===================== 초기화 (실시간 구독) =====================
+        async function init() {
             const urlParams = new URLSearchParams(window.location.search);
-            const rid = urlParams.get('room');
-            if (!rid) return;
-            const kakaoUser = JSON.parse(localStorage.getItem('kakao_user') || 'null');
-            if (!auth.currentUser && !kakaoUser) {
-                alert('로그인이 필요합니다.');
+            const roomId = urlParams.get('room');
+
+            if (!roomId) {
+                document.getElementById('loading').innerHTML = `
+                    <div class="text-center p-8 space-y-4">
+                        <div class="text-4xl text-rose-500 font-black">!</div>
+                        <p class="text-slate-500 font-bold">${t('invalidLinkDesc').replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
                 return;
             }
-            localStorage.setItem(KEY_NAME, n);
-            localStorage.setItem(KEY_TIER, selectedTier);
-            const userId = auth.currentUser?.uid || kakaoUser?.id;
-            if (userId) {
-                try { await setDoc(doc(db, "users", userId), { nickname: n, tier: selectedTier }, { merge: true }); } catch (e) { }
-            }
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '신청 중...';
-            const p = [], s = [], t = [], f = [];
-            Object.entries(selections).forEach(([pos, level]) => {
-                if (level === 1) p.push(pos); else if (level === 2) s.push(pos); else if (level === 3) t.push(pos); else if (level === 'X') f.push(pos);
-            });
+
             try {
-                await updateDoc(doc(db, "rooms", rid), {
-                    applicants: arrayUnion({ id: Math.random().toString(36).substr(2, 9), name: n, tier: selectedTier, position: p[0] || 'NONE', primaryPositions: p, secondaryPositions: s, tertiaryPositions: t, forbiddenPositions: f, isApproved: false, timestamp: new Date().toISOString() })
+                const docRef = doc(db, "rooms", roomId);
+
+                // 실시간 구독
+                unsubscribeRoom = onSnapshot(docRef, (docSnap) => {
+                    if (!docSnap.exists()) {
+                        document.getElementById('loading').innerHTML = `
+                            <div class="text-center p-8 space-y-4">
+                                <div class="text-4xl text-rose-500 font-black">!</div>
+                                <p class="text-slate-500 font-bold">${t('roomNotFound')}</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    const data = docSnap.data();
+                    currentRoomData = data;
+                    const rawSport = data.sport || 'Soccer';
+                    currentSport = normalizeSport(rawSport);
+
+                    // 마감 체크
+                    const expiryStatus = checkExpiry(data);
+                    if (expiryStatus === 'expired') {
+                        document.body.innerHTML = `
+                            <div class="min-h-screen flex flex-col items-center justify-center p-8 text-center space-y-4 bg-slate-50 dark:bg-slate-950">
+                                <div class="text-5xl mb-2">🚫</div>
+                                <h1 class="text-[18px] font-black text-slate-800 dark:text-slate-200">${t('invalidLink')}</h1>
+                                <p class="text-[13px] text-slate-500 font-medium">${t('expired')}</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    if (expiryStatus === 'started') {
+                        document.getElementById('loading').innerHTML = `
+                            <div class="text-center p-8 space-y-4">
+                                <div class="text-4xl text-amber-500 font-black">⏳</div>
+                                <p class="text-slate-500 font-bold">${t('matchStarted')}</p>
+                                <p class="text-xs text-slate-400">(${data.matchDate} ${data.matchTime})</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // 렌더링
+                    renderRoomInfo(data);
+                    renderParticipants(data.applicants || []);
+
+                    // 방 상태 체크 (CLOSED)
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (data.status === 'CLOSED') {
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = t('roomClosed');
+                            submitBtn.className = 'w-full p-4 rounded-2xl bg-slate-300 dark:bg-slate-700 text-white font-bold text-[14px] cursor-not-allowed';
+                        }
+                    }
+
+                    // 정원 체크
+                    if (data.maxApplicants > 0) {
+                        const approved = (data.applicants || []).filter(a =>
+                            a.isApproved === true || a.status === 'APPROVED'
+                        );
+                        if (approved.length >= data.maxApplicants && submitBtn && data.status !== 'CLOSED') {
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = t('roomFull');
+                            submitBtn.className = 'w-full p-4 rounded-2xl bg-slate-300 dark:bg-slate-700 text-white font-bold text-[14px] cursor-not-allowed';
+                        }
+                    }
+
+                    // 포지션 섹션
+                    if (currentSport === 'General') {
+                        document.getElementById('posSection').classList.add('hidden');
+                    } else {
+                        document.getElementById('posSection').classList.remove('hidden');
+                        renderPitch();
+                    }
+
+                    // UI 표시
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('roomInfo').classList.remove('hidden');
+                    document.getElementById('appBanner').classList.remove('hidden');
+                    document.getElementById('participantsInfo').classList.remove('hidden');
+
+                    // 중복 신청 체크 (로그인 상태인 경우) → 신청 폼 or 이미 신청 분기
+                    const alreadyExists = currentUserId ? findExistingApplication(data.applicants, currentUserId) : null;
+                    if (alreadyExists) {
+                        document.getElementById('applyForm').classList.add('hidden');
+                        showAlreadyApplied(alreadyExists);
+                    } else {
+                        document.getElementById('alreadyApplied').classList.add('hidden');
+                        document.getElementById('applyForm').classList.remove('hidden');
+                    }
                 });
-                document.getElementById('applyForm').classList.add('hidden');
-                document.getElementById('success').classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } catch (e) { alert('오류가 발생했습니다: ' + e.message); submitBtn.disabled = false; }
-        };
+            } catch (err) {
+                console.error("Init Error:", err);
+            }
+        }
 
         init();
 
-        const closeSuccessBtn = document.getElementById('closeSuccessBtn');
-        if (closeSuccessBtn) {
-            closeSuccessBtn.onclick = () => {
-                // 브라우저 닫기 시도
-                window.close();
-                // 팝업 등으로 직접 닫히지 않는 경우를 대비한 안내
-                setTimeout(() => {
-                    alert("브라우저의 '탭 닫기' 기능을 이용하여 창을 닫아주세요.");
-                }, 300);
-            };
-        }
+        // ===================== 폼 제출 =====================
+        document.getElementById('applyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const n = nameInput.value.trim();
+            if (!n) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const rid = urlParams.get('room');
+            if (!rid) return;
+
+            const kakaoUser = JSON.parse(localStorage.getItem('kakao_user') || 'null');
+            if (!auth.currentUser && !kakaoUser) {
+                return;
+            }
+
+            const userId = auth.currentUser?.uid || kakaoUser?.id || kakaoUser?.uid;
+
+            // 중복 신청 체크
+            if (currentRoomData) {
+                const existing = findExistingApplication(currentRoomData.applicants, userId);
+                if (existing) {
+                    showAlreadyApplied(existing);
+                    return;
+                }
+            }
+
+            localStorage.setItem('btm_user_tier', selectedTier);
+
+            // Firestore에 사용자 정보 저장
+            if (userId) {
+                try { await setDoc(doc(db, "users", userId), { nickname: n, tier: selectedTier }, { merge: true }); } catch (e) { }
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = t('applying');
+
+            const p = [], s = [], tr = [], f = [];
+            Object.entries(selections).forEach(([pos, level]) => {
+                if (level === 1) p.push(pos);
+                else if (level === 2) s.push(pos);
+                else if (level === 3) tr.push(pos);
+                else if (level === 'X') f.push(pos);
+            });
+
+            try {
+                await updateDoc(doc(db, "rooms", rid), {
+                    applicants: arrayUnion({
+                        id: Math.random().toString(36).substr(2, 9),
+                        name: n,
+                        tier: selectedTier,
+                        position: p[0] || 'NONE',
+                        primaryPositions: p,
+                        secondaryPositions: s,
+                        tertiaryPositions: tr,
+                        forbiddenPositions: f,
+                        isApproved: false,
+                        status: 'PENDING',
+                        userId: userId || '',
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                document.getElementById('applyForm').classList.add('hidden');
+                document.getElementById('success').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = t('apply');
+                console.error('Submit error:', e);
+            }
+        };
+
+        // ===================== 성공 화면 닫기 =====================
+        document.getElementById('closeSuccessBtn').onclick = () => {
+            window.close();
+            setTimeout(() => {
+                document.getElementById('success').classList.add('hidden');
+                document.getElementById('roomInfo').classList.remove('hidden');
+                document.getElementById('participantsInfo').classList.remove('hidden');
+            }, 300);
+        };
     </script>
 </body>
 

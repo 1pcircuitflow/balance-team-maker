@@ -135,6 +135,54 @@ export const onRoomUpdated = onDocumentUpdated("rooms/{roomId}", async (event) =
 });
 
 /**
+ * 닉네임 변경 시 모집방 동기화 (클라이언트 Firestore 읽기 절약)
+ */
+export const updateNickname = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const { userId, newName } = req.body;
+  if (!userId || !newName) {
+    res.status(400).json({ error: "Missing params" });
+    return;
+  }
+
+  try {
+    const batch = db.batch();
+
+    // 1. 방장인 방: hostName + applicants 업데이트
+    const hostSnap = await db.collection("rooms").where("hostId", "==", userId).get();
+    hostSnap.docs.forEach((doc) => {
+      const data = doc.data();
+      const updatedApplicants = (data.applicants || []).map((a: any) =>
+        a.userId === userId ? { ...a, name: newName } : a
+      );
+      batch.update(doc.ref, { hostName: newName, applicants: updatedApplicants });
+    });
+
+    // 2. 참가자인 OPEN 방: applicants의 name 업데이트
+    const openSnap = await db.collection("rooms").where("status", "==", "OPEN").get();
+    openSnap.docs.forEach((doc) => {
+      if (hostSnap.docs.some((h) => h.id === doc.id)) return;
+      const applicants = doc.data().applicants || [];
+      if (!applicants.some((a: any) => a.userId === userId)) return;
+      const updated = applicants.map((a: any) =>
+        a.userId === userId ? { ...a, name: newName } : a
+      );
+      batch.update(doc.ref, { applicants: updated });
+    });
+
+    await batch.commit();
+    res.json({ success: true });
+  } catch (e) {
+    console.error("updateNickname error:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * 카카오 로그인: 인가 코드를 받아 토큰 교환 후 사용자 정보를 반환.
  */
 export const kakaoAuth = onRequest(

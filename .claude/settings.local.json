@@ -12,7 +12,23 @@
       "Bash(findstr:*)",
       "Bash(dir:*)",
       "Bash(powershell:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(for commit in ddb5f1a f29b4df f2d3401 10c1d10 686cddf 5af4df2)",
+      "Bash(do echo \"=== Commit $commit ===\")",
+      "Bash(done)",
+      "Bash(firebase deploy:*)",
+      "WebSearch",
+      "WebFetch(domain:developers.kakao.com)",
+      "Bash(keytool -exportcert:*)",
+      "Bash(openssl sha1:*)",
+      "Bash(openssl base64:*)",
+      "Bash(npm ls:*)",
+      "Bash(firebase functions:secrets:set:*)",
+      "Bash(gcloud projects add-iam-policy-binding:*)",
+      "Bash(firebase functions:log:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx firebase deploy:*)",
+      "Bash(git status:*)"
     ]
   }
 }

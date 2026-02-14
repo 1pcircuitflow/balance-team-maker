@@ -86,3 +86,16 @@ export enum DetailPageTab {
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED'
 }
+
+export interface UserSportProfile {
+  tier: string;
+  primaryPositions: string[];
+  secondaryPositions: string[];
+  tertiaryPositions: string[];
+  forbiddenPositions: string[];
+}
+
+export interface UserProfile {
+  sports: Partial<Record<SportType, UserSportProfile>>;
+  onboardingComplete: boolean;
+}

@@ -2,7 +2,8 @@
 
 ## 필수 작업 규칙 (반드시 준수)
 - **언어/말투**: 모든 답변을 한국어 반말로 할 것
-- **작업방식**: 더 좋은 방안이 있으면 반드시 3가지 이상 선택지를 제안하고, 추천안 1개를 포함할 것
+- **질문과 작업 구분**: 사용자가 질문하면 절대 바로 코드 수정하지 말 것. 반드시 대답만 → 제안 → 승인 후 진행할 것
+- **작업방식**: 더 좋은 방안이 있으면 반드시 3가지 이상 선택지를 제안하고, 추천안 1개를 포함할 것, 작업 난이도도 포함할 것.
 - **빌드/싱크**: 코드 수정 후 바로 `npm run build && npx cap sync`까지 진행할 것 (중간에 확인 받지 말 것)
 - **커밋**: 사용자가 직접 지시할 때만 커밋할 것 (절대 알아서 커밋하지 말 것)
 - **CLAUDE.md 자동 업데이트**: 파일 생성/삭제, 아키텍처 변경 시 CLAUDE.md도 함께 업데이트할 것
@@ -60,8 +61,8 @@ balance-team-maker/
 │       ├── BaseModal.tsx      # 모달 공통 베이스
 │       ├── AlertModal.tsx     # 알림 모달
 │       ├── ConfirmModal.tsx   # 확인 모달
-│       ├── GuideModal.tsx     # 가이드 모달
 │       ├── InfoModal.tsx      # 정보/프로필 모달
+│       ├── OnboardingModal.tsx # 온보딩 (종목/티어/포지션 설정)
 │       ├── UpdateModal.tsx    # 앱 업데이트 모달
 │       ├── ReviewPrompt.tsx   # 리뷰 요청 모달
 │       ├── LoginPage.tsx      # 로그인 페이지 (Google/Kakao)
@@ -211,6 +212,11 @@ AppProvider → AuthProvider → PlayerProvider → NavigationProvider
 | 카드 (일반) | `rounded-2xl p-4` |
 | 입력 필드 | `rounded-xl px-4 py-3` |
 | Pill/Chip | `rounded-full px-3 py-1.5` |
+
+**구분선:**
+| 클래스 |
+|---|
+| `h-px bg-slate-200 dark:bg-slate-700` |
 
 **주의:** `rounded-[24px]` 사용 금지 → `rounded-3xl` 사용. Primary CTA에 `bg-slate-900` 사용 금지 → `bg-blue-500` 사용.
 

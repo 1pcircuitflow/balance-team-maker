@@ -77,9 +77,9 @@ export const RecruitmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { t, showAlert, lang } = useAppContext();
   const { currentUserId } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
-  const { activeTab, setActiveTab } = useNavigationContext();
+  const { activeTab, setActiveTab, currentBottomTab } = useNavigationContext();
 
-  const rooms = useRecruitmentRooms(currentUserId, activeTab, players, setPlayers, showAlert, t, lang, setActiveTab);
+  const rooms = useRecruitmentRooms(currentUserId, activeTab, currentBottomTab, players, setPlayers, showAlert, t, lang, setActiveTab);
 
   return (
     <RecruitmentContext.Provider value={rooms}>

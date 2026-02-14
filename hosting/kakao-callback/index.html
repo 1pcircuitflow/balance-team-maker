@@ -24,30 +24,16 @@
             const error = params.get('error');
 
             if (error || !code) {
-                document.querySelector('p').textContent = '로그인에 실패했습니다. 앱으로 돌아가주세요.';
+                document.querySelector('p').textContent = '로그인에 실패했습니다. 다시 시도해주세요.';
                 return;
             }
 
             const state = params.get('state') || '';
-            const isKakaoInApp = /kakao/i.test(navigator.userAgent);
             const isAndroid = /android/i.test(navigator.userAgent);
-            // 네이티브 앱에서 열렸는지 판별 (state 파라미터 또는 모바일 User-Agent)
-            const isNative = state.includes('source=app') || /capacitor|android|iphone|ipad/i.test(navigator.userAgent);
+            // 네이티브 앱 판별: state 파라미터만 사용 (앱에서 Browser.open() 호출 시 state=source%3Dapp 전달)
+            const isNative = state.includes('source=app');
 
-            if (isKakaoInApp && isAndroid) {
-                // 카카오톡 인앱 + Android: Intent URL로 앱 열기 / Play Store 이동
-                const roomId = sessionStorage.getItem('kakao_pending_room') || '';
-                sessionStorage.removeItem('kakao_pending_room');
-
-                document.querySelector('p').textContent = 'Belo 앱으로 이동 중...';
-
-                const intentUrl = 'intent://join?room=' + encodeURIComponent(roomId)
-                    + '&kakao_code=' + encodeURIComponent(code)
-                    + '#Intent;scheme=balanceteam;package=com.balanceteammaker'
-                    + ';S.browser_fallback_url=' + encodeURIComponent('https://play.google.com/store/apps/details?id=com.balanceteammaker')
-                    + ';end';
-                window.location.href = intentUrl;
-            } else if (isNative && isAndroid) {
+            if (isNative && isAndroid) {
                 // 네이티브 앱(Android): Intent URL로 앱 복귀 (Chrome Custom Tab 호환)
                 document.querySelector('p').textContent = 'Belo 앱으로 이동 중...';
                 var intentUrl = 'intent://kakao-callback?code=' + encodeURIComponent(code)
@@ -60,7 +46,7 @@
                     document.querySelector('p').textContent = '앱으로 이동하지 못했습니다. Belo 앱을 열어주세요.';
                 }, 3000);
             } else {
-                // 웹: 메인 페이지로 code 전달
+                // 웹 (카카오톡 인앱 포함): 메인 페이지로 code 전달
                 var pendingRoom = sessionStorage.getItem('kakao_pending_room') || '';
                 sessionStorage.removeItem('kakao_pending_room');
                 var redirectUrl = pendingRoom
