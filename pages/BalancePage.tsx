@@ -282,8 +282,8 @@ export const BalancePage: React.FC = React.memo(() => {
 
                     <div className="space-y-1">
                       {getSortedTeamPlayers(team.players).map(p => (
-                        <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm transition-all">
-                          <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                        <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 transition-all">
+                          <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
                             BELO
                           </div>
                           {currentActiveRoom?.sport !== SportType.GENERAL && (

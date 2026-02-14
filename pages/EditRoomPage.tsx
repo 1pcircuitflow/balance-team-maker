@@ -123,7 +123,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
                 )}
                 <button
                   onClick={() => setHostRoomUseLimit(!hostRoomUseLimit)}
-                  className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${hostRoomUseLimit ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                  className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${hostRoomUseLimit ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                 >
                   <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${hostRoomUseLimit ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
                 </button>

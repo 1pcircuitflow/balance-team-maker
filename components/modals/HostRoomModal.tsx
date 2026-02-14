@@ -347,7 +347,7 @@ export const HostRoomModal: React.FC<{
                   )}
                   <button
                     onClick={() => setUseLimit(!useLimit)}
-                    className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${useLimit ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                    className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${useLimit ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                   >
                     <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${useLimit ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
                   </button>

@@ -216,9 +216,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             const hostApp = room.applicants.find(a => a.userId === room.hostId);
             return (
             <div className="mt-3">
-              <div className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm">
+              <div className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
                 <div className="flex items-center gap-4">
-                  <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                  <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
                     BELO
                   </div>
                   <div className="flex flex-col gap-0.5">
@@ -496,7 +496,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             {isSelected && <CheckIcon />}
                           </div>
                         )}
-                        <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                        <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
                           BELO
                         </div>
                         <div className="flex flex-col gap-0.5">

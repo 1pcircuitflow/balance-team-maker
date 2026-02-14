@@ -66,7 +66,7 @@ export const PlayerItem = React.memo<any>(({
             </div>
           )}
           {/* Avatar circle */}
-          <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+          <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
             BELO
           </div>
           {/* Name + Position vertical stack */}
