@@ -96,7 +96,6 @@ export const QuotaFormationPicker: React.FC<{
                 ? 'bg-emerald-50/90 dark:bg-emerald-950/30 border-emerald-400/60 dark:border-emerald-500/40'
                 : 'bg-white/95 dark:bg-slate-900/95 border-slate-200/50 dark:border-slate-800/50'
                 }`}
-              style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
             >
               <span className="text-[12px] font-semibold uppercase tracking-tight leading-none mb-1 transition-colors text-black dark:text-white">
                 {pos.id}

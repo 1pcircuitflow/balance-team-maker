@@ -138,7 +138,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full px-4 pt-4 pb-8 animate-in fade-in duration-500">
+    <div className="w-full px-5 pt-3 animate-in fade-in duration-500">
       {/* Section: Account */}
       <div className="mb-6">
         <div className="px-1 pb-2">

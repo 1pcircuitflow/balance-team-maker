@@ -45,58 +45,54 @@ export const useRecruitmentRooms = (
   const [hostRoomUseLimit, setHostRoomUseLimit] = useState(false);
   const [hostRoomMaxApplicants, setHostRoomMaxApplicants] = useState(0);
   const [hostRoomVenue, setHostRoomVenue] = useState('');
+  const [hostRoomDescription, setHostRoomDescription] = useState('');
+  const [hostRoomVisibility, setHostRoomVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
   const [hostRoomActivePicker, setHostRoomActivePicker] = useState<'START' | 'END'>('START');
   const [hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode] = useState(false);
 
   const prevApplicantsCount = useRef<Record<string, number>>({});
 
+  // 경기 종료 후 3시간 뒤 만료 (종료시간 없으면 시작시간 + 2시간을 종료로 간주)
+  const isRoomExpired = useCallback((r: any) => {
+    try {
+      const [y, m, d] = r.matchDate.split('-').map(Number);
+      const endDate = r.matchEndDate || r.matchDate;
+      const endTimeStr = r.matchEndTime || r.matchTime;
+      const [ey, em, ed] = endDate.split('-').map(Number);
+      const [ehh, emm] = endTimeStr.split(':').map(Number);
+      let endTime = new Date(ey, em - 1, ed, ehh, emm);
+      if (!r.matchEndTime) endTime = new Date(y, m - 1, d, ehh, emm + 120);
+      const expiryLimit = new Date(endTime.getTime() + 3 * 60 * 60 * 1000);
+      return expiryLimit <= new Date() || r.status === 'DELETED';
+    } catch { return false; }
+  }, []);
+
+  const sortByMatchTime = useCallback((a: any, b: any) => {
+    try {
+      const [ay, am, ad] = a.matchDate.split('-').map(Number);
+      const [ahh, amm] = a.matchTime.split(':').map(Number);
+      const aTime = new Date(ay, am - 1, ad, ahh, amm).getTime();
+      const [by, bm, bd] = b.matchDate.split('-').map(Number);
+      const [bhh, bmm] = b.matchTime.split(':').map(Number);
+      const bTime = new Date(by, bm - 1, bd, bhh, bmm).getTime();
+      return aTime - bTime;
+    } catch { return 0; }
+  }, []);
+
   const filteredRooms = useMemo(() => {
     return activeRooms.filter(r => {
-      try {
-        if (activeTab !== SportType.ALL && r.sport !== activeTab) return false;
-        const [y, m, d] = r.matchDate.split('-').map(Number);
-        const [hh, mm] = r.matchTime.split(':').map(Number);
-        const matchTime = new Date(y, m - 1, d, hh, mm);
-        const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
-        return expiryLimit > new Date() && r.status !== 'DELETED';
-      } catch { return true; }
-    }).sort((a, b) => {
-      try {
-        const [ay, am, ad] = a.matchDate.split('-').map(Number);
-        const [ahh, amm] = a.matchTime.split(':').map(Number);
-        const aTime = new Date(ay, am - 1, ad, ahh, amm).getTime();
-        const [by, bm, bd] = b.matchDate.split('-').map(Number);
-        const [bhh, bmm] = b.matchTime.split(':').map(Number);
-        const bTime = new Date(by, bm - 1, bd, bhh, bmm).getTime();
-        return aTime - bTime;
-      } catch { return 0; }
-    });
-  }, [activeRooms, activeTab]);
+      if (activeTab !== SportType.ALL && r.sport !== activeTab) return false;
+      return !isRoomExpired(r);
+    }).sort(sortByMatchTime);
+  }, [activeRooms, activeTab, isRoomExpired, sortByMatchTime]);
 
   // 공개방 필터링 (만료된 방 제거 + 본인 방 제외)
   const filteredPublicRooms = useMemo(() => {
     return publicRooms.filter(r => {
-      try {
-        // 본인 방은 제외
-        if (r.hostId === currentUserId) return false;
-        if (activeTab !== SportType.ALL && r.sport !== activeTab) return false;
-        const [y, m, d] = r.matchDate.split('-').map(Number);
-        const [hh, mm] = r.matchTime.split(':').map(Number);
-        const matchTime = new Date(y, m - 1, d, hh, mm);
-        const expiryLimit = new Date(matchTime.getTime() + 24 * 60 * 60 * 1000);
-        return expiryLimit > new Date() && r.status !== 'DELETED';
-      } catch { return true; }
-    }).sort((a, b) => {
-      try {
-        const [ay, am, ad] = a.matchDate.split('-').map(Number);
-        const [ahh, amm] = a.matchTime.split(':').map(Number);
-        const aTime = new Date(ay, am - 1, ad, ahh, amm).getTime();
-        const [by, bm, bd] = b.matchDate.split('-').map(Number);
-        const [bhh, bmm] = b.matchTime.split(':').map(Number);
-        const bTime = new Date(by, bm - 1, bd, bhh, bmm).getTime();
-        return aTime - bTime;
-      } catch { return 0; }
-    });
+      if (r.hostId === currentUserId) return false;
+      if (activeTab !== SportType.ALL && r.sport !== activeTab) return false;
+      return !isRoomExpired(r);
+    }).sort(sortByMatchTime);
   }, [publicRooms, activeTab, currentUserId]);
 
   // Subscribe to public rooms
@@ -356,6 +352,8 @@ export const useRecruitmentRooms = (
         maxApplicants: hostRoomUseLimit ? hostRoomMaxApplicants : 0,
         tierMode: '5TIER',
         venue: hostRoomVenue.trim() || undefined,
+        description: hostRoomDescription.trim() || undefined,
+        visibility: hostRoomVisibility,
       };
       await updateDoc(roomRef, updateData);
       setCurrentActiveRoom(prev => prev ? { ...prev, ...updateData } : null);
@@ -389,6 +387,8 @@ export const useRecruitmentRooms = (
     hostRoomUseLimit, setHostRoomUseLimit,
     hostRoomMaxApplicants, setHostRoomMaxApplicants,
     hostRoomVenue, setHostRoomVenue,
+    hostRoomDescription, setHostRoomDescription,
+    hostRoomVisibility, setHostRoomVisibility,
     hostRoomActivePicker, setHostRoomActivePicker,
     hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode,
     handleApproveApplicant,

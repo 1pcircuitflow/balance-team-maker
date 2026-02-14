@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Player, Tier, SportType, BottomTabType, AppPageType } from './types';
+import { Z_INDEX } from './constants';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdOptions } from '@capacitor-community/admob';
 import { AnalyticsService } from './services/analyticsService';
@@ -29,6 +30,8 @@ import { SelectionModeBar } from './components/SelectionModeBar';
 import { MembersTabContent } from './components/MembersTabContent';
 import { ResultOverlay } from './components/ResultOverlay';
 import { OfflineBanner } from './components/OfflineBanner';
+import { SportFilterButton } from './components/SportFilterButton';
+import { SportSegmentControl } from './components/SportSegmentControl';
 
 // Modals
 import { AlertModal } from './components/modals/AlertModal';
@@ -218,10 +221,8 @@ const AppContent: React.FC = () => {
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const getAvailableTabs = useCallback((): SportType[] => {
-    const all = Object.values(SportType) as SportType[];
-    if (currentBottomTab === BottomTabType.MEMBERS) return all.filter(v => v !== SportType.ALL);
-    return all;
-  }, [currentBottomTab]);
+    return (Object.values(SportType) as SportType[]).filter(v => v !== SportType.ALL);
+  }, []);
 
   const handleSwipeTouchStart = useCallback((e: React.TouchEvent) => {
     swipeStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -233,57 +234,56 @@ const AppContent: React.FC = () => {
     const dy = e.changedTouches[0].clientY - swipeStartRef.current.y;
     swipeStartRef.current = null;
 
-    if (currentPage !== AppPageType.HOME || currentBottomTab === BottomTabType.SETTINGS) return;
+    if (currentPage !== AppPageType.HOME || currentBottomTab !== BottomTabType.MEMBERS) return;
     if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
 
     const tabs = getAvailableTabs();
-    const currentIdx = tabs.indexOf(activeTab);
+    const currentIdx = tabs.indexOf(membersTab);
     if (currentIdx === -1) return;
 
     const nextIdx = dx < 0 ? currentIdx + 1 : currentIdx - 1;
     if (nextIdx < 0 || nextIdx >= tabs.length) return;
 
-    setActiveTab(tabs[nextIdx]);
+    setMembersTab(tabs[nextIdx]);
     setResult(null);
     AnalyticsService.logEvent('tab_change', { sport: tabs[nextIdx] });
-  }, [activeTab, getAvailableTabs, setActiveTab, setResult, currentPage, currentBottomTab]);
+  }, [membersTab, getAvailableTabs, setMembersTab, setResult, currentPage, currentBottomTab]);
 
   // ========= RENDER =========
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'} font-sans p-0 flex flex-col items-center`}
-      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
+      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: isAdFree ? 'calc(70px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' : 'calc(126px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
       onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
 
       <OfflineBanner />
 
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
-      {/* Announcement Banner */}
-      {currentPage === AppPageType.HOME && visibleAnnouncement && (
-        <AnnouncementBanner
-          visibleAnnouncement={visibleAnnouncement}
-          getAnnouncementText={getAnnouncementText}
-        />
-      )}
+      {/* Sticky Header: Announcement + Sport Tabs */}
+      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
+        <div className={`sticky w-full ${darkMode ? 'bg-slate-950' : 'bg-white'}`}
+          style={{ zIndex: Z_INDEX.STICKY_HEADER, top: 'calc(env(safe-area-inset-top, 0px))' }}>
+          {/* Announcement Banner */}
+          {visibleAnnouncement && (
+            <AnnouncementBanner
+              visibleAnnouncement={visibleAnnouncement}
+              getAnnouncementText={getAnnouncementText}
+            />
+          )}
 
-      {/* Sport Tabs */}
-      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (() => {
-        const isMembers = currentBottomTab === BottomTabType.MEMBERS;
-        const currentTab = isMembers ? membersTab : activeTab;
-        const onTabClick = isMembers
-          ? (value: SportType) => { setMembersTab(value); setResult(null); AnalyticsService.logEvent('tab_change', { sport: value }); }
-          : (value: SportType) => { setActiveTab(value); setResult(null); AnalyticsService.logEvent('tab_change', { sport: value }); };
-        return (
-          <nav className="flex gap-[10px] bg-white dark:bg-slate-950 px-5 pb-2 mb-3 w-full overflow-x-auto no-scrollbar whitespace-nowrap">
-            {(Object.entries(SportType) as [string, SportType][]).filter(([, value]) => !isMembers || value !== SportType.ALL).map(([key, value]) => (
-              <button key={value} onClick={() => onTabClick(value)}
-                className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border ${currentTab === value ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white' : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'}`}>
-                {t(value.toLowerCase())}
-              </button>
-            ))}
-          </nav>
-        );
-      })()}
+          {/* HOME: Sport Filter Dropdown */}
+          {currentBottomTab === BottomTabType.HOME && (
+            <div className="w-full px-5 pb-3">
+              <SportFilterButton />
+            </div>
+          )}
+
+          {/* MEMBERS: Segment Control */}
+          {currentBottomTab === BottomTabType.MEMBERS && (
+            <SportSegmentControl />
+          )}
+        </div>
+      )}
 
       {/* HOME Page */}
       {currentBottomTab === BottomTabType.HOME && (
@@ -342,7 +342,7 @@ const AppContent: React.FC = () => {
           setMemberSuggestion({ isOpen: false, applicant: null });
         }}
         onCancel={() => setMemberSuggestion({ isOpen: false, applicant: null })} />
-      <ConfirmModal isOpen={confirmState.isOpen} title={confirmState.title} message={confirmState.message} onConfirm={confirmState.onConfirm}
+      <ConfirmModal isOpen={confirmState.isOpen} title={confirmState.title} message={confirmState.message} onConfirm={() => { setConfirmState(prev => ({ ...prev, isOpen: false })); confirmState.onConfirm?.(); }}
         onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))} confirmText={confirmState.confirmText} cancelText={confirmState.cancelText} />
       <LoginPage isOpen={showLoginModal} onLogin={() => handleGoogleLogin(setPlayers, setIsDataLoaded)} onKakaoLogin={() => handleKakaoLogin(setPlayers, setIsDataLoaded)} />
       <PositionLimitModal isOpen={showLimitModal} onWatchAd={handleWatchRewardAd} onUpgrade={() => { setShowLimitModal(false); setShowUpgradeModal(true); }} onClose={() => setShowLimitModal(false)} />
@@ -375,25 +375,26 @@ const AppContent: React.FC = () => {
           message={updateInfo.message} forceUpdate={updateInfo.forceUpdate} />
       )}
 
-      <div className="h-[180px]" />
+      <div className="h-px" />
 
       {/* Bottom Tab Bar */}
-      {currentPage === AppPageType.HOME && !showHostRoomModal && <BottomTabBar />}
+      {currentPage === AppPageType.HOME && !showHostRoomModal && !showLoginModal && <BottomTabBar />}
 
       <AdBanner lang={lang} darkMode={darkMode} isAdFree={isAdFree} bottomOffset="0px" />
 
-      {/* Toast for undo delete */}
+      {/* Toast for add/delete */}
       <Toast
         isVisible={toastState.isVisible}
-        message={t('playerDeleted')}
-        actionLabel={t('undo')}
-        onAction={() => {
+        message={toastState.action === 'add' ? t('playerAdded') : t('playerDeleted')}
+        actionLabel={toastState.action === 'delete' ? t('undo') : undefined}
+        onAction={toastState.action === 'delete' ? () => {
           if (toastState.player) {
             setPlayers(prev => [toastState.player!, ...prev]);
           }
           setToastState({ isVisible: false, player: null });
-        }}
+        } : undefined}
         onDismiss={() => setToastState({ isVisible: false, player: null })}
+        bottom={isAdFree ? '76px' : '132px'}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tier, SportType, AppPageType } from '../types';
-import { TIER_BADGE_COLORS, TEAM_COLORS } from '../constants';
+import { TIER_BADGE_COLORS, TEAM_COLORS, Z_INDEX } from '../constants';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
 import { useAppContext } from '../contexts/AppContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
@@ -27,7 +27,7 @@ export const BalancePage: React.FC = React.memo(() => {
   const TIER_COLORS = TIER_BADGE_COLORS;
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300">
+    <div className="fixed inset-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300" style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}>
       <header className="sticky top-0 z-50 bg-white dark:bg-slate-950 px-4 pt-[40px] pb-[8px] border-b border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center w-full">
           <button
@@ -54,14 +54,13 @@ export const BalancePage: React.FC = React.memo(() => {
               <section>
                 <button
                   onClick={() => setIsQuotaSettingsExpanded(!isQuotaSettingsExpanded)}
-                  className="w-full bg-slate-900 dark:bg-slate-100 py-2 rounded-[24px] flex items-center justify-center text-white dark:text-slate-900 text-[16px] font-semibold shadow-2xl shadow-slate-900/40 dark:shadow-white/20 transition-all active:scale-[0.98] active:brightness-95"
-                  style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                  className="w-full bg-slate-100 dark:bg-slate-800 py-3 rounded-2xl flex items-center justify-center text-slate-700 dark:text-slate-200 text-[16px] font-semibold transition-all active:scale-[0.98]"
                 >
                   {t('positionSettings')}
                 </button>
 
                 {isQuotaSettingsExpanded && (
-                  <div className="mt-4 px-5 py-4 rounded-[24px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300 overflow-y-auto max-h-[60vh]">
+                  <div className="mt-4 px-5 py-4 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300 overflow-y-auto max-h-[60vh]">
                     <QuotaFormationPicker
                       sport={currentActiveRoom.sport as SportType}
                       quotas={quotas}
@@ -85,13 +84,13 @@ export const BalancePage: React.FC = React.memo(() => {
                                 setQuotas({ C: 1, PG: 1, SG: null, SF: null, PF: null });
                               }
                             }}
-                            className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl text-[11px] font-bold border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-950/50"
+                            className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 text-blue-500 dark:text-blue-400 rounded-xl text-[11px] font-bold border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-950/50"
                           >
                             ⚡ {t('recommendedPreset')}
                           </button>
                         </div>
                         <div className="mt-3 mx-2 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                          <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
+                          <p className="text-[11px] text-blue-500 dark:text-blue-400 font-medium leading-relaxed">
                             💡 {t('quotaHelpText')}
                           </p>
                         </div>
@@ -122,7 +121,7 @@ export const BalancePage: React.FC = React.memo(() => {
                   >
                     <MinusIcon size={20} />
                   </button>
-                  <span className="text-lg font-black font-mono w-4 text-center">{teamCount}</span>
+                  <span className="text-[18px] font-black font-mono w-4 text-center">{teamCount}</span>
                   <button
                     onClick={() => setTeamCount(Math.min(10, teamCount + 1))}
                     className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 active:scale-90 transition-all"
@@ -135,8 +134,7 @@ export const BalancePage: React.FC = React.memo(() => {
               <button
                 onClick={() => handleGenerate()}
                 disabled={isGenerating}
-                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2 rounded-[24px] text-[16px] font-semibold tracking-tight shadow-2xl shadow-slate-900/40 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
-                style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
               >
                 {t('generateTeams')}
               </button>
@@ -150,7 +148,7 @@ export const BalancePage: React.FC = React.memo(() => {
                 {resultHistory.length > 0 && (
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 border flex items-center justify-center gap-1.5 whitespace-nowrap ${showHistory ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'}`}
+                    className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all active:scale-95 border flex items-center justify-center gap-1.5 whitespace-nowrap ${showHistory ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'}`}
                   >
                     <RotateCcwIcon size={14} />{t('history')} ({resultHistory.length})
                   </button>
@@ -158,7 +156,7 @@ export const BalancePage: React.FC = React.memo(() => {
                 <button
                   onClick={() => handleShare('results-capture-section', 'team-balance-result')}
                   disabled={!!isSharing}
-                  className="flex-1 bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition-all whitespace-nowrap"
+                  className="flex-1 bg-slate-950 dark:bg-white text-white dark:text-slate-900 font-black py-2.5 rounded-xl text-[12px] flex items-center justify-center gap-2 active:scale-95 transition-all whitespace-nowrap"
                 >
                   {isSharing ? t('generatingImage') : <><ShareIcon /> {t('shareResult')}</>}
                 </button>
@@ -194,12 +192,12 @@ export const BalancePage: React.FC = React.memo(() => {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col items-center text-center">
                   <span className="text-[12px] font-bold uppercase text-slate-900 dark:text-slate-100 mb-1">{t('standardDeviation')}</span>
-                  <span className="text-3xl font-black font-mono leading-none">{result.standardDeviation.toFixed(2)}</span>
+                  <span className="text-[30px] font-black font-mono leading-none">{result.standardDeviation.toFixed(2)}</span>
                   <span className="text-[10px] text-slate-900 dark:text-slate-100 mt-1">({t('lowerFairer')})</span>
                 </div>
                 <div className="flex flex-col items-center text-center">
                   <span className="text-[12px] font-bold uppercase text-slate-900 dark:text-slate-100 mb-1">{t('penaltyScore')}</span>
-                  <span className="text-3xl font-black font-mono leading-none text-blue-500">{result.positionSatisfaction?.toFixed(1) || '0.0'}</span>
+                  <span className="text-[30px] font-black font-mono leading-none text-blue-500">{result.positionSatisfaction?.toFixed(1) || '0.0'}</span>
                   <span className="text-[10px] text-slate-900 dark:text-slate-100 mt-1">({t('penaltyScoreDesc')})</span>
                 </div>
               </div>
@@ -247,12 +245,12 @@ export const BalancePage: React.FC = React.memo(() => {
                     <div className="flex items-center justify-between mb-4 px-1">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm"
-                          style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: '#111111', color: 'white' }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[14px]"
+                          style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: '#0f172a', color: 'white' }}
                         >
                           {idx + 1}
                         </div>
-                        <h4 className="text-[18px] font-bold text-[#111111] dark:text-white tracking-tight uppercase">
+                        <h4 className="text-[18px] font-bold text-slate-900 dark:text-white tracking-tight uppercase">
                           {team.colorName ? t('teamNameWithColor', t(team.colorName || '')) : `TEAM ${String.fromCharCode(65 + idx)}`} ({team.players.length})
                         </h4>
                         <div
@@ -285,12 +283,14 @@ export const BalancePage: React.FC = React.memo(() => {
                     <div className="space-y-1">
                       {getSortedTeamPlayers(team.players).map(p => (
                         <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm transition-all">
-                          <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                          <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
                             BELO
                           </div>
+                          {currentActiveRoom?.sport !== SportType.GENERAL && (
                           <div className="w-10 text-[14px] font-bold text-slate-400 shrink-0 text-center">
                             {p.assignedPosition || '--'}
                           </div>
+                          )}
                           <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                             <div className="flex items-center gap-2">
                               {showTier && (
@@ -302,32 +302,34 @@ export const BalancePage: React.FC = React.memo(() => {
                                 {p.name}
                               </span>
                             </div>
+                            {currentActiveRoom?.sport !== SportType.GENERAL && (
                             <div className="flex items-center gap-1.5 overflow-hidden">
                               {p.primaryPositions?.map((pos, pIdx) => (
                                 <div key={`p-${pIdx}`} className="flex items-center gap-0.5 shrink-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
-                                  <span className="text-[11px] font-medium text-[#10B982] uppercase tracking-tight">{pos}</span>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span className="text-[11px] font-medium text-emerald-500 uppercase tracking-tight">{pos}</span>
                                 </div>
                               ))}
                               {p.secondaryPositions?.map((pos, sIdx) => (
                                 <div key={`s-${sIdx}`} className="flex items-center gap-0.5 shrink-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#FACC16]" />
-                                  <span className="text-[11px] font-medium text-[#FACC16] uppercase tracking-tight">{pos}</span>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                  <span className="text-[11px] font-medium text-yellow-400 uppercase tracking-tight">{pos}</span>
                                 </div>
                               ))}
                               {p.tertiaryPositions?.map((pos, tIdx) => (
                                 <div key={`t-${tIdx}`} className="flex items-center gap-0.5 shrink-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#FB933C]" />
-                                  <span className="text-[11px] font-medium text-[#FB933C] uppercase tracking-tight">{pos}</span>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                                  <span className="text-[11px] font-medium text-orange-400 uppercase tracking-tight">{pos}</span>
                                 </div>
                               ))}
                               {!p.primaryPositions && p.primaryPosition && (
                                 <div className="flex items-center gap-0.5 shrink-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
-                                  <span className="text-[11px] font-medium text-[#10B982] uppercase tracking-tight">{p.primaryPosition}</span>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span className="text-[11px] font-medium text-emerald-500 uppercase tracking-tight">{p.primaryPosition}</span>
                                 </div>
                               )}
                             </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -339,14 +341,13 @@ export const BalancePage: React.FC = React.memo(() => {
               <button
                 data-capture-ignore="true"
                 onClick={() => handleGenerate()}
-                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2 rounded-[24px] text-[16px] font-semibold tracking-tight shadow-2xl shadow-slate-900/40 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
-                style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
               >
                 {t('reshuffleTeams')}
               </button>
               <div className="hidden px-2 pt-2" data-promo-footer="true">
                 <div className={`mt-6 py-3 px-4 rounded-2xl flex items-center justify-center ${darkMode ? 'bg-slate-900/40' : 'bg-slate-100/50'}`}>
-                  <h4 className={`text-sm font-semibold tracking-tight pt-0.5 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('promoAppTitle')}</h4>
+                  <h4 className={`text-[14px] font-semibold tracking-tight pt-0.5 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('promoAppTitle')}</h4>
                 </div>
               </div>
             </div>

@@ -58,13 +58,13 @@ export const RewardAdModal: React.FC<{
       </div>
 
       <div className="flex flex-col items-center text-center px-10">
-        <div className="w-24 h-24 bg-blue-600 rounded-[2.5rem] mb-8 flex items-center justify-center text-5xl shadow-2xl shadow-blue-500/30 animate-bounce">
+        <div className="w-24 h-24 bg-blue-500 rounded-[2.5rem] mb-8 flex items-center justify-center text-[48px] shadow-2xl shadow-blue-500/30 animate-bounce">
           🏆
         </div>
-        <h2 className="text-3xl font-black text-white mb-4 tracking-tighter leading-tight whitespace-pre-line">
+        <h2 className="text-[30px] font-black text-white mb-4 tracking-tighter leading-tight whitespace-pre-line">
           {t('watchAndUnlock')}
         </h2>
-        <p className="text-white/70 text-sm font-medium leading-relaxed max-w-xs">
+        <p className="text-white/70 text-[14px] font-medium leading-relaxed max-w-xs">
           {t('thankYouSupport')}
         </p>
       </div>

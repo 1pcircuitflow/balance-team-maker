@@ -1,6 +1,6 @@
 import React from 'react';
 import { Player, Tier, SportType, AppPageType, BottomTabType, DetailPageTab, Position } from '../types';
-import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT } from '../constants';
+import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT, Z_INDEX } from '../constants';
 import { cancelApplication, cancelMyApplication, applyForParticipation } from '../services/firebaseService';
 import { FormationPicker } from '../components/FormationPicker';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
@@ -13,7 +13,7 @@ import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
 import { useRecruitmentContext } from '../contexts/RecruitmentContext';
 import * as Icons from '../Icons';
 
-const { ArrowLeftIcon, CheckIcon } = Icons;
+const { ArrowLeftIcon, CheckIcon, CrownIcon } = Icons;
 
 interface DetailPageProps {
   setShowMemberPickerModal: (v: boolean) => void;
@@ -38,9 +38,10 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   } = useTeamBalanceContext();
   const {
     currentActiveRoom: room,
-    setHostRoomSelectedSport, setHostRoomTitle, setHostRoomVenue,
+    setHostRoomSelectedSport, setHostRoomTitle, setHostRoomVenue, setHostRoomDescription,
     setHostRoomDate, setHostRoomTime, setHostRoomEndDate, setHostRoomEndTime,
     setHostRoomUseLimit, setHostRoomMaxApplicants,
+    setHostRoomVisibility,
     setHostRoomActivePicker, setHostRoomIsPickerSelectionMode,
     handleShareRecruitLink, handleCloseRecruitRoom,
     handleApproveApplicant, handleRejectApplicant, handleRestoreApplicant, handleApproveAllApplicants, handleUpdateApplicant,
@@ -77,7 +78,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   const bgImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
+    <div className="fixed inset-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden" style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}>
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
@@ -96,10 +97,10 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
         </div>
       </header>
 
-      <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-80' : 'pb-48'}`}>
+      <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-48' : 'pb-36'}`}>
         <div className="w-full">
           {/* Room banner */}
-          <div className="w-full h-[120px] rounded-[24px] overflow-hidden relative shadow-xl border border-slate-100 dark:border-slate-800 shrink-0">
+          <div className="w-full h-[120px] rounded-3xl overflow-hidden relative shadow-xl border border-slate-100 dark:border-slate-800 shrink-0">
             <img src={bgImg} alt={room.sport} className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
             <div className="absolute inset-0 p-3 flex flex-col justify-between text-white">
@@ -131,12 +132,14 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       setHostRoomSelectedSport(room.sport as SportType);
                       setHostRoomTitle(room.title);
                       setHostRoomVenue(room.venue || '');
+                      setHostRoomDescription(room.description || '');
                       setHostRoomDate(room.matchDate);
                       setHostRoomTime(room.matchTime);
                       setHostRoomEndDate(room.matchEndDate || room.matchDate);
                       setHostRoomEndTime(room.matchEndTime || room.matchTime);
                       setHostRoomUseLimit(room.maxApplicants > 0);
                       setHostRoomMaxApplicants(room.maxApplicants || 12);
+                      setHostRoomVisibility(room.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE');
                       setHostRoomActivePicker('START');
                       setHostRoomIsPickerSelectionMode(false);
                       setCurrentPage(AppPageType.EDIT_ROOM);
@@ -178,7 +181,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 {isHost && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleShareRecruitLink(room); }}
-                  className="text-[12px] font-medium text-[#FFFFFF] px-2 py-0.5 rounded-xl bg-[#F43F5E] tracking-[-0.025em] active:scale-95 transition-transform shrink-0 flex items-center gap-1"
+                  className="text-[12px] font-medium text-white px-2 py-0.5 rounded-xl bg-rose-500 tracking-[-0.025em] active:scale-95 transition-transform shrink-0 flex items-center gap-1"
                 >
                   <Icons.ShareIcon size={12} />{t('participationLink')}
                 </button>
@@ -187,7 +190,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 
               <div className="flex justify-between items-end gap-2">
                 <div className="space-y-0.5">
-                  <p className="text-[12px] font-medium uppercase tracking-tighter" style={{ color: '#FFFFFF' }}>{t('matchDateAndTime')}</p>
+                  <p className="text-[12px] font-medium uppercase tracking-tighter text-white">{t('matchDateAndTime')}</p>
                   <p className="text-[16px] font-medium tracking-tight leading-none">{room.matchDate} {room.matchTime}</p>
                 </div>
                 <div className="text-right leading-none">
@@ -200,6 +203,73 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               </div>
             </div>
           </div>
+
+          {/* 내용 (description) */}
+          {room.description && (
+            <div className="mt-3 px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-2xl">
+              <p className="text-[13px] font-medium text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{room.description}</p>
+            </div>
+          )}
+
+          {/* 방장 프로필 카드 */}
+          {room.hostName && (() => {
+            const hostApp = room.applicants.find(a => a.userId === room.hostId);
+            return (
+            <div className="mt-3">
+              <div className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                    BELO
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[16px] font-medium text-slate-900 dark:text-white">{room.hostName}</span>
+                      <CrownIcon size={14} className="text-amber-400" />
+                    </div>
+                    {room.sport !== SportType.GENERAL && (
+                    <div className="flex items-center gap-1.5">
+                      {hostApp?.primaryPositions?.map((pos, idx) => (
+                        <div key={`p-${idx}`} className="flex items-center gap-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span className="text-[12px] font-medium text-emerald-500 uppercase">{pos}</span>
+                        </div>
+                      ))}
+                      {hostApp?.secondaryPositions?.map((pos, idx) => (
+                        <div key={`s-${idx}`} className="flex items-center gap-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                          <span className="text-[12px] font-medium text-yellow-400 uppercase">{pos}</span>
+                        </div>
+                      ))}
+                      {hostApp?.tertiaryPositions?.map((pos, idx) => (
+                        <div key={`t-${idx}`} className="flex items-center gap-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                          <span className="text-[12px] font-medium text-orange-400 uppercase">{pos}</span>
+                        </div>
+                      ))}
+                      {!hostApp?.primaryPositions && !hostApp?.secondaryPositions && !hostApp?.tertiaryPositions && hostApp?.position && (
+                        hostApp.position.split('/').map((pos, idx) => (
+                          <div key={idx} className="flex items-center gap-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-[12px] font-medium text-emerald-500 uppercase">{pos.trim()}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-0.5 pr-2">
+                  <div className="flex items-center gap-0.5">
+                    <span className="text-[14px] font-black text-emerald-500">36.5°C</span>
+                    <span className="text-[14px]">😊</span>
+                  </div>
+                  <span className="text-[12px] font-medium text-slate-400">{t('mannerTemperature')}</span>
+                </div>
+              </div>
+              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1 mt-4" />
+            </div>
+            );
+          })()}
 
           {/* Tabs */}
           {isHost ? (
@@ -256,49 +326,23 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* 게스트: 내 신청 상태 배지 */}
           {!isHost && myApplication && myStatus && (
             <div className={`mt-3 px-4 py-2.5 rounded-2xl flex items-center justify-between ${
-              myStatus === 'PENDING' ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800' :
+              myStatus === 'PENDING' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
               myStatus === 'APPROVED' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
               'bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800'
             }`}>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
-                  myStatus === 'PENDING' ? 'bg-amber-500 animate-pulse' :
+                  myStatus === 'PENDING' ? 'bg-emerald-500 animate-pulse' :
                   myStatus === 'APPROVED' ? 'bg-emerald-500' : 'bg-rose-500'
                 }`} />
                 <span className={`text-[13px] font-medium ${
-                  myStatus === 'PENDING' ? 'text-amber-700 dark:text-amber-400' :
+                  myStatus === 'PENDING' ? 'text-emerald-700 dark:text-emerald-400' :
                   myStatus === 'APPROVED' ? 'text-emerald-700 dark:text-emerald-400' :
                   'text-rose-700 dark:text-rose-400'
                 }`}>
                   {myStatus === 'PENDING' ? t('statusPending') : myStatus === 'APPROVED' ? t('statusApproved') : t('statusRejected')}
                 </span>
               </div>
-              <button
-                onClick={() => {
-                  if (!currentUserId) return;
-                  setConfirmState({
-                    isOpen: true,
-                    message: t('cancelApplicationConfirm'),
-                    onConfirm: async () => {
-                      try {
-                        await cancelMyApplication(room.id, currentUserId);
-                        showAlert(t('applicationCancelled'));
-                        setConfirmState(prev => ({ ...prev, isOpen: false }));
-                      } catch (err: any) {
-                        if (err?.message === 'APPLICATION_NOT_FOUND') {
-                          showAlert(t('applicationNotFound'));
-                        } else {
-                          showAlert(t('errorOccurred'));
-                        }
-                        setConfirmState(prev => ({ ...prev, isOpen: false }));
-                      }
-                    },
-                  });
-                }}
-                className="text-[12px] font-medium text-rose-500 dark:text-rose-400 px-3 py-1 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 transition-all active:scale-95"
-              >
-                {t('cancelMyApplication')}
-              </button>
             </div>
           )}
 
@@ -360,7 +404,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 {detailTab === DetailPageTab.APPROVED && (
                   <button
                     onClick={() => setShowMemberPickerModal(true)}
-                    className="bg-[#4685EB] text-white rounded-xl text-[12px] font-medium px-[8px] h-[28px] flex items-center justify-center transition-all active:scale-95 mr-2 whitespace-nowrap shrink-0"
+                    className="bg-blue-500 text-white rounded-xl text-[12px] font-medium px-[8px] h-[28px] flex items-center justify-center transition-all active:scale-95 mr-2 whitespace-nowrap shrink-0"
                   >
                     {t('addParticipant')}
                   </button>
@@ -369,7 +413,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 {detailTab === DetailPageTab.PENDING && pendingApplicants.length > 0 && (
                   <button
                     onClick={() => handleApproveAllApplicants(room)}
-                    className="bg-blue-600 text-white rounded-xl text-[12px] font-medium px-6 py-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95 whitespace-nowrap shrink-0"
+                    className="bg-blue-500 text-white rounded-xl text-[12px] font-medium px-6 py-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95 whitespace-nowrap shrink-0"
                   >
                     {t('approveAll')}
                   </button>
@@ -452,7 +496,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             {isSelected && <CheckIcon />}
                           </div>
                         )}
-                        <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                        <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
                           BELO
                         </div>
                         <div className="flex flex-col gap-0.5">
@@ -471,36 +515,38 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                               </div>
                             )}
                           </div>
+                          {room.sport !== SportType.GENERAL && (
                           <div className="flex items-center gap-1.5">
                             {app.primaryPositions?.map((pos, idx) => (
                               <div key={`p-${idx}`} className="flex items-center gap-0.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
-                                <span className="text-[12px] font-medium text-[#10B982] uppercase">{pos}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-[12px] font-medium text-emerald-500 uppercase">{pos}</span>
                               </div>
                             ))}
                             {app.secondaryPositions?.map((pos, idx) => (
                               <div key={`s-${idx}`} className="flex items-center gap-0.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#FACC16]" />
-                                <span className="text-[12px] font-medium text-[#FACC16] uppercase">{pos}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                <span className="text-[12px] font-medium text-yellow-400 uppercase">{pos}</span>
                               </div>
                             ))}
                             {app.tertiaryPositions?.map((pos, idx) => (
                               <div key={`t-${idx}`} className="flex items-center gap-0.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#FB933C]" />
-                                <span className="text-[12px] font-medium text-[#FB933C] uppercase">{pos}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                                <span className="text-[12px] font-medium text-orange-400 uppercase">{pos}</span>
                               </div>
                             ))}
                             {!app.primaryPositions && !app.secondaryPositions && !app.tertiaryPositions && (
                               app.position ? app.position.split('/').map((pos, idx) => (
                                 <div key={idx} className="flex items-center gap-0.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
-                                  <span className="text-[12px] font-medium text-[#10B982] uppercase">{pos.trim()}</span>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span className="text-[12px] font-medium text-emerald-500 uppercase">{pos.trim()}</span>
                                 </div>
                               )) : (
                                 <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600 italic">{t('notSet')}</span>
                               )
                             )}
                           </div>
+                          )}
                         </div>
                       </div>
 
@@ -526,7 +572,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                 try { await handleApproveApplicant(room, app); } finally { setProcessingApplicantId(null); }
                               }}
                               disabled={processingApplicantId === app.id}
-                              className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-[12px] font-medium transition-all active:scale-95 disabled:opacity-50"
+                              className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-xl text-[12px] font-medium transition-all active:scale-95 disabled:opacity-50"
                             >
                               {processingApplicantId === app.id ? (
                                 <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -558,7 +604,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                       setActiveActionMenuId(null);
                                     }
                                   }}
-                                  className={`text-[14px] font-medium text-[#FFFFFF] px-2 py-0.5 rounded-md transition-all active:scale-95 ${editingApplicantId === app.id ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-[#EDAE73]'}`}
+                                  className={`text-[14px] font-medium text-white px-2 py-0.5 rounded-md transition-all active:scale-95 ${editingApplicantId === app.id ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-orange-300'}`}
                                 >
                                   {editingApplicantId === app.id ? t('confirm') : t('edit')}
                                 </button>
@@ -571,7 +617,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                     }
                                     setActiveActionMenuId(null);
                                   }}
-                                  className="text-[14px] font-medium text-[#FFFFFF] px-2 py-0.5 bg-[#53B175] rounded-md transition-all active:scale-95"
+                                  className="text-[14px] font-medium text-white px-2 py-0.5 bg-emerald-500 rounded-md transition-all active:scale-95"
                                 >
                                   {t('exclude')}
                                 </button>
@@ -597,7 +643,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                     </div>
 
                     {editingApplicantId === app.id && detailTab === DetailPageTab.APPROVED && (
-                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[24px] p-4 mt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-4 mt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="grid grid-cols-5 gap-1.5">
                           {['S', 'A', 'B', 'C', 'D'].map(v => (
                             <button
@@ -637,7 +683,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
                     <Icons.UsersIcon size={24} className="text-slate-300 dark:text-slate-600" />
                   </div>
-                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{!isHost ? t('noPlayers') : (detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : detailTab === DetailPageTab.REJECTED ? t('noRejectedApplicants') : t('noPlayers'))}</p>
+                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{!isHost ? t('noPlayers') : (detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : detailTab === DetailPageTab.REJECTED ? t('noRejectedApplicants') : t('noPlayersHost'))}</p>
                 </div>
               )}
             </div>
@@ -671,12 +717,13 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             <div className={`w-full max-w-lg px-5 ${isBalanceSettingsOpen ? 'pt-5 overflow-y-auto' : ''}`} style={isBalanceSettingsOpen ? { maxHeight: 'calc(85vh - 80px)' } : undefined}>
               {isBalanceSettingsOpen && (
                 <div className="w-full mb-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  {room.sport !== SportType.GENERAL && (
                   <div className="overflow-hidden">
                     <button
                       onClick={() => setIsQuotaSettingsExpanded(!isQuotaSettingsExpanded)}
-                      className="w-full py-3 relative flex items-center justify-center bg-slate-200 dark:bg-slate-800 rounded-[24px] text-slate-900 dark:text-slate-100 font-medium text-[16px] tracking-tight active:scale-[0.98] transition-all"
+                      className="w-full py-3 relative flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-700 dark:text-slate-200 font-semibold text-[16px] tracking-tight active:scale-[0.98] transition-all"
                     >
-                      <span style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>
+                      <span>
                         {t('positionSettings')}
                       </span>
                       <div className={`absolute right-6 transition-transform duration-300 ${isQuotaSettingsExpanded ? 'rotate-180' : ''} text-slate-900/50 dark:text-slate-100/50`}>
@@ -709,13 +756,13 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                     setQuotas({ C: 1, PG: 1, SG: null, SF: null, PF: null });
                                   }
                                 }}
-                                className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-xl text-[11px] font-bold border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-950/50"
+                                className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 text-blue-500 dark:text-blue-400 rounded-xl text-[11px] font-bold border border-blue-100 dark:border-blue-900/30 transition-all active:scale-95 hover:bg-blue-100 dark:hover:bg-blue-950/50"
                               >
                                 ⚡ {t('recommendedPreset')}
                               </button>
                             </div>
                             <div className="mt-3 mx-2 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
+                              <p className="text-[11px] text-blue-500 dark:text-blue-400 font-medium leading-relaxed">
                                 💡 {t('quotaHelpText')}
                               </p>
                             </div>
@@ -724,25 +771,26 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       </div>
                     )}
                   </div>
+                  )}
 
                   <div className="space-y-3 mt-1">
-                    <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5 flex items-center">
+                    <div className="py-3 bg-white dark:bg-slate-900 rounded-3xl px-5 flex items-center">
                       <button
                         onClick={() => setUseRandomMix(!useRandomMix)}
                         className="w-full flex items-center justify-between transition-all text-slate-900 dark:text-slate-100"
                       >
-                        <span className="text-[16px] font-medium tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('randomMix')}</span>
+                        <span className="text-[16px] font-medium tracking-tight">{t('randomMix')}</span>
                         <div className={`w-[18px] h-[18px] rounded-sm flex items-center justify-center border-[1.5px] transition-all ${useRandomMix ? 'bg-slate-500 dark:bg-slate-400 border-slate-500 dark:border-slate-400' : 'border-slate-400 dark:border-slate-500'}`}>
                           {useRandomMix && <Icons.CheckIcon size={12} className="text-white dark:text-slate-900" />}
                         </div>
                       </button>
                     </div>
 
-                    <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5 flex items-center justify-between">
-                      <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{t('teamCountLabel')}</span>
+                    <div className="py-3 bg-white dark:bg-slate-900 rounded-3xl px-5 flex items-center justify-between">
+                      <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight">{t('teamCountLabel')}</span>
                       <div className="flex items-center gap-4">
                         <button onClick={() => setTeamCount(Math.max(2, teamCount - 1))} aria-label={t('decreaseTeamCount')} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.MinusIcon size={16} /></button>
-                        <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight tabular-nums w-4 text-center" style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}>{teamCount}</span>
+                        <span className="text-[16px] font-medium text-slate-900 dark:text-slate-100 tracking-tight tabular-nums w-4 text-center">{teamCount}</span>
                         <button onClick={() => setTeamCount(Math.min(10, teamCount + 1))} aria-label={t('increaseTeamCount')} className="p-1 text-slate-900 dark:text-slate-100 hover:opacity-60 active:scale-90 transition-all"><Icons.PlusIcon size={16} /></button>
                       </div>
                     </div>
@@ -798,8 +846,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   handleGenerate(manualPlayers, room.sport as SportType);
                   setIsBalanceSettingsOpen(false);
                 }}
-                className={`w-full py-3 rounded-[24px] text-[16px] font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 ${isBalanceSettingsOpen ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl shadow-slate-900/40 dark:shadow-white/20'}`}
-                style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
+                className={`w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-blue-500 hover:bg-blue-600 text-white ${isBalanceSettingsOpen ? 'shadow-xl' : 'shadow-lg shadow-blue-500/30'}`}
               >
                 {t('generateTeams')}
               </button>
@@ -833,14 +880,13 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               {isApplyFormOpen && (
                 <div className="w-full mb-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
                   {/* Name input */}
-                  <div className="py-3 bg-white dark:bg-slate-900 rounded-[24px] px-5">
+                  <div className="py-3 bg-white dark:bg-slate-900 rounded-3xl px-5">
                     <input
                       type="text"
                       value={applyName}
                       onChange={(e) => setApplyName(e.target.value)}
                       placeholder={t('inputNamePlaceholder')}
                       className="w-full bg-transparent text-[16px] font-medium text-slate-900 dark:text-white tracking-tight outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                      style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
                     />
                   </div>
 
@@ -884,55 +930,83 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 </div>
               )}
 
-              <button
-                onClick={async () => {
-                  if (!isApplyFormOpen) {
-                    setIsApplyFormOpen(true);
-                    return;
-                  }
-                  // Submit apply
-                  if (!applyName.trim()) return;
-                  setApplyLoading(true);
-                  setApplyError(null);
-                  try {
-                    const fcmToken = localStorage.getItem('fcm_token') || undefined;
-                    await applyForParticipation(room.id, {
-                      name: applyName.trim(),
-                      tier: applyTier,
-                      position: applyPrimaryPos[0] || 'NONE',
-                      primaryPositions: applyPrimaryPos,
-                      secondaryPositions: applySecondaryPos,
-                      tertiaryPositions: applyTertiaryPos,
-                      forbiddenPositions: applyForbiddenPos,
-                      ...(fcmToken ? { fcmToken } : {}),
-                      ...(currentUserId ? { userId: currentUserId } : {}),
+              {myApplication ? (
+                <button
+                  onClick={() => {
+                    if (!currentUserId) return;
+                    setConfirmState({
+                      isOpen: true,
+                      message: t('cancelApplicationConfirm'),
+                      onConfirm: async () => {
+                        try {
+                          await cancelMyApplication(room.id, currentUserId);
+                          showAlert(t('applicationCancelled'));
+                          setConfirmState(prev => ({ ...prev, isOpen: false }));
+                        } catch (err: any) {
+                          if (err?.message === 'APPLICATION_NOT_FOUND') {
+                            showAlert(t('applicationNotFound'));
+                          } else {
+                            showAlert(t('errorOccurred'));
+                          }
+                          setConfirmState(prev => ({ ...prev, isOpen: false }));
+                        }
+                      },
                     });
-                    setIsApplyFormOpen(false);
-                    showAlert(t('applicationComplete'));
-                    setCurrentPage(AppPageType.HOME);
-                    setCurrentBottomTab(BottomTabType.HOME);
-                  } catch (err: any) {
-                    if (err?.message === 'DUPLICATE_APPLICATION') {
-                      setApplyError(t('duplicateApplicationMsg'));
-                    } else if (err?.message === 'ROOM_FULL') {
-                      setApplyError(t('roomFullMsg'));
-                    } else if (err?.message === 'ROOM_NOT_FOUND') {
-                      setApplyError(t('roomNotFoundMsg'));
-                    } else {
-                      setApplyError(t('networkErrorMsg'));
+                  }}
+                  className="w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/30"
+                >
+                  {t('cancelMyApplication')}
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (!isApplyFormOpen) {
+                      setIsApplyFormOpen(true);
+                      return;
                     }
-                  } finally {
-                    setApplyLoading(false);
-                  }
-                }}
-                disabled={applyLoading}
-                className={`w-full py-3 rounded-[24px] text-[16px] font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50 ${isApplyFormOpen ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl shadow-slate-900/40 dark:shadow-white/20'}`}
-                style={{ fontFamily: '"Pretendard Variable", Pretendard, sans-serif' }}
-              >
-                {applyLoading ? (
-                  <span className="inline-block w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
-                ) : isApplyFormOpen ? t('completeApplication') : (myApplication ? t('applyJoin') : t('applyJoin'))}
-              </button>
+                    // Submit apply
+                    if (!applyName.trim()) return;
+                    setApplyLoading(true);
+                    setApplyError(null);
+                    try {
+                      const fcmToken = localStorage.getItem('fcm_token') || undefined;
+                      await applyForParticipation(room.id, {
+                        name: applyName.trim(),
+                        tier: applyTier,
+                        position: applyPrimaryPos[0] || 'NONE',
+                        primaryPositions: applyPrimaryPos,
+                        secondaryPositions: applySecondaryPos,
+                        tertiaryPositions: applyTertiaryPos,
+                        forbiddenPositions: applyForbiddenPos,
+                        ...(fcmToken ? { fcmToken } : {}),
+                        ...(currentUserId ? { userId: currentUserId } : {}),
+                      });
+                      setIsApplyFormOpen(false);
+                      showAlert(t('applicationComplete'));
+                      setCurrentPage(AppPageType.HOME);
+                      setCurrentBottomTab(BottomTabType.HOME);
+                    } catch (err: any) {
+                      if (err?.message === 'DUPLICATE_APPLICATION') {
+                        setApplyError(t('duplicateApplicationMsg'));
+                      } else if (err?.message === 'ROOM_FULL') {
+                        setApplyError(t('roomFullMsg'));
+                      } else if (err?.message === 'ROOM_NOT_FOUND') {
+                        setApplyError(t('roomNotFoundMsg'));
+                      } else {
+                        setApplyError(t('networkErrorMsg'));
+                      }
+                    } finally {
+                      setApplyLoading(false);
+                    }
+                  }}
+                  disabled={applyLoading}
+                  className={`w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50 bg-blue-500 hover:bg-blue-600 text-white ${isApplyFormOpen ? 'shadow-xl' : 'shadow-lg shadow-blue-500/30'}`}
+                >
+                  {applyLoading ? (
+                    <span className="inline-block w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  ) : isApplyFormOpen ? t('completeApplication') : t('applyJoin')}
+                </button>
+              )}
             </div>
           </div>
           )}

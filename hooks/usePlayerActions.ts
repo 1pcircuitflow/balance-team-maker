@@ -19,8 +19,8 @@ export const usePlayerActions = ({ players, setPlayers, activeTab }: UsePlayerAc
   const [showNewPlayerFormation, setShowNewPlayerFormation] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
 
-  // Toast + Undo Delete
-  const [toastState, setToastState] = useState<{ isVisible: boolean; player: Player | null }>({ isVisible: false, player: null });
+  // Toast
+  const [toastState, setToastState] = useState<{ isVisible: boolean; player: Player | null; action?: 'add' | 'delete' }>({ isVisible: false, player: null });
 
   const addPlayer = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +34,7 @@ export const usePlayerActions = ({ players, setPlayers, activeTab }: UsePlayerAc
     setPlayers(prev => [player, ...prev]);
     setNewName(''); setNewP1s([]); setNewP2s([]); setNewP3s([]); setNewForbidden([]);
     setShowNewPlayerFormation(false);
+    setToastState({ isVisible: true, player, action: 'add' });
     AnalyticsService.logEvent('add_player', { sport: activeTab, tier: newTier });
   }, [newName, newTier, newP1s, newP2s, newP3s, newForbidden, activeTab, setPlayers]);
 
@@ -46,7 +47,7 @@ export const usePlayerActions = ({ players, setPlayers, activeTab }: UsePlayerAc
     const deletedPlayer = players.find(p => p.id === id);
     setPlayers(prev => prev.filter(p => p.id !== id));
     if (deletedPlayer) {
-      setToastState({ isVisible: true, player: deletedPlayer });
+      setToastState({ isVisible: true, player: deletedPlayer, action: 'delete' });
     }
   }, [setPlayers, players]);
 

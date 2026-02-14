@@ -42,7 +42,7 @@ export const AnnouncementBanner: React.FC<AnnouncementBannerProps> = React.memo(
       className="w-full px-5 py-2.5 flex items-center gap-2 cursor-pointer"
       onClick={() => { if (visibleAnnouncement.link) window.open(visibleAnnouncement.link, '_blank'); }}
     >
-      <span className="text-blue-600 dark:text-blue-400 shrink-0 text-[14px]">📢</span>
+      <span className="text-blue-500 dark:text-blue-400 shrink-0 text-[14px]">📢</span>
       <div className="flex-1 overflow-hidden">
         <div ref={wrapRef} className="overflow-hidden">
           <span ref={textRef} className="text-[12px] font-medium text-blue-800 dark:text-blue-200 whitespace-nowrap inline-block">

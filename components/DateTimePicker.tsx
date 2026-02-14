@@ -195,7 +195,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                     className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 group
                         ${viewMode === 'YEAR_MONTH_SELECT' ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 >
-                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                    <span className="text-[14px] font-black text-slate-900 dark:text-white">
                         {t('dateYearMonth', currentYear, String(currentMonth).padStart(2, '0'))}
                     </span>
                     <div className={`transition-transform duration-300 ${viewMode === 'YEAR_MONTH_SELECT' ? 'rotate-180' : ''}`}>
@@ -219,7 +219,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                     width="w-full"
                                     itemHeight={36}
                                     height={108}
-                                    fontSize="text-lg"
+                                    fontSize="text-[18px]"
                                 />
                             </div>
                             {/* Month Wheel */}
@@ -231,7 +231,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                     width="w-full"
                                     itemHeight={36}
                                     height={108}
-                                    fontSize="text-lg"
+                                    fontSize="text-[18px]"
                                 />
                             </div>
                         </div>
@@ -240,7 +240,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                         <div className="flex justify-end w-full px-4">
                             <button
                                 onClick={() => setViewMode('CALENDAR')}
-                                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-95"
+                                className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold rounded-lg shadow-sm transition-all active:scale-95"
                             >
                                 {t('select')}
                             </button>
@@ -266,9 +266,9 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                             onClick={() => handleDateSelect(d)}
                                             className={`w-8 h-8 rounded-full text-[14px] font-bold transition-all
                                                 ${isSelected(d)
-                                                    ? 'bg-blue-600 text-white shadow-sm'
+                                                    ? 'bg-blue-500 text-white shadow-sm'
                                                     : isToday(d)
-                                                        ? 'text-blue-600 dark:text-blue-400'
+                                                        ? 'text-blue-500 dark:text-blue-400'
                                                         : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                         >
                                             {d}

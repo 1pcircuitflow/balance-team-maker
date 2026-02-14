@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Player, SportType } from '../../types';
+import { Z_INDEX } from '../../constants';
 import { TRANSLATIONS, Language } from '../../translations';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
@@ -70,6 +71,7 @@ export const HostRoomModal: React.FC<{
   const [selectedSport, setSelectedSport] = useState<SportType>(activeTab === SportType.ALL ? SportType.GENERAL : activeTab);
   const [title, setTitle] = useState("");
   const [venue, setVenue] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
@@ -97,6 +99,7 @@ export const HostRoomModal: React.FC<{
       setSelectedSport(initialSport);
       // 제목 자동 초기화 제거하여 플레이스홀더 노출 유도
       setTitle("");
+      setDescription("");
       setVisibility('PRIVATE');
     }
 
@@ -162,12 +165,16 @@ export const HostRoomModal: React.FC<{
 
 
   const handleCreate = async () => {
+    if (!title.trim() || !venue.trim() || !description.trim()) {
+      showAlert(t('requiredFieldsAlert' as any));
+      return;
+    }
     setLoading(true);
     try {
       const roomId = await createRecruitmentRoom({
         hostId: currentUserId,
         hostName: userNickname,
-        title: title.trim() || `${userNickname}${t('matchOf')}`,
+        title: title.trim(),
         sport: selectedSport,
         matchDate: startDate,
         matchTime: startTime,
@@ -178,6 +185,7 @@ export const HostRoomModal: React.FC<{
         visibility,
         ...(localStorage.getItem('fcm_token') ? { fcmToken: localStorage.getItem('fcm_token')! } : {}),
         ...(venue.trim() ? { venue: venue.trim() } : {}),
+        ...(description.trim() ? { description: description.trim() } : {}),
       });
 
       // 링크생성 및 자동 복사
@@ -244,23 +252,24 @@ export const HostRoomModal: React.FC<{
   if (!isOpen || activeRoom) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
+    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden"
+      style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isPro ? '0px' : '80px' }}>
       {/* 상단 바 */}
       <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
         <button onClick={onClose} className="p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <h2 className="text-base font-black text-slate-900 dark:text-white">{activeRoom ? t('manageMatchDetail' as any) : t('recruitParticipants')}</h2>
+        <h2 className="text-[16px] font-black text-slate-900 dark:text-white">{activeRoom ? t('manageMatchDetail' as any) : t('recruitParticipants')}</h2>
         <div className="w-10" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4 pb-[148px]">
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {!activeRoom ? (
           <div className="space-y-4">
             <div className="space-y-4">
               {/* 종목 선택 */}
               <div className="flex items-center gap-4">
-                <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('sport' as any)}</label>
+                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('sport' as any)}</label>
                 <div className="flex-1 flex overflow-x-auto no-scrollbar gap-2 py-1">
                   {[SportType.GENERAL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL].map((s) => (
                     <button
@@ -271,7 +280,7 @@ export const HostRoomModal: React.FC<{
                       }}
                       className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border shrink-0 ${selectedSport === s
                         ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                        : 'bg-white text-[#2E2C2C] border-[#606060] dark:bg-slate-900 dark:text-white dark:border-slate-700'
+                        : 'bg-white text-slate-700 border-slate-400 dark:bg-slate-900 dark:text-white dark:border-slate-700'
                         }`}
                     >
                       {t(s.toLowerCase() as any)}
@@ -280,142 +289,155 @@ export const HostRoomModal: React.FC<{
                 </div>
               </div>
 
-              {/* 팀명 입력 */}
-              <div className="flex items-center gap-4">
-                <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder={t('inputRoomTitle')}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
-                />
-              </div>
-
               {/* 장소 입력 */}
               <div className="flex items-center gap-4">
-                <label className="w-12 text-sm font-medium text-slate-900 dark:text-white shrink-0">{t('venue' as any)}</label>
+                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('venue' as any)}</label>
                 <input
                   type="text"
                   value={venue}
                   onChange={e => setVenue(e.target.value)}
                   placeholder={t('venuePlaceholder' as any)}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
+                />
+              </div>
+
+              {/* 제목 입력 */}
+              <div className="flex items-center gap-4">
+                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder={t('inputRoomTitle')}
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
+                />
+              </div>
+
+              {/* 내용 입력 */}
+              <div className="flex items-start gap-4">
+                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('roomDescription' as any)}</label>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder={t('inputRoomDescription' as any)}
+                  rows={3}
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px] resize-none"
                 />
               </div>
             </div>
 
             <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
+            {/* 옵션 섹션 */}
             <div className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  {/* ... 일정 렌더링 유지 ... */}
-                  <div
-                    onClick={() => setActivePicker('START')}
-                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-40'}`}
-                  >
-                    <span className="text-[16px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
-                    <span className={`text-[16px] font-black ${activePicker === 'START' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500'}`}>
-                      {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
-                    </span>
-                  </div>
-                  <div className="text-slate-200 dark:text-slate-800">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                  </div>
-                  <div
-                    onClick={() => setActivePicker('END')}
-                    className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-40'}`}
-                  >
-                    <span className="text-[16px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
-                    <span className={`text-[16px] font-black ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
-                      {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex justify-center transition-all duration-300">
-                  {activePicker === 'START' ? (
-                    <DateTimePicker
-                      date={startDate}
-                      time={startTime}
-                      onChange={handleStartTimeChange}
-                      lang={lang}
-                      onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
-                    />
-                  ) : (
-                    <DateTimePicker
-                      date={endDate}
-                      time={endTime}
-                      onChange={(d, t) => { setEndDate(d); setEndTime(t); }}
-                      lang={lang}
-                      onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
-                    />
+              {/* 모집인원 제한 */}
+              <div className="flex items-center justify-between">
+                <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('limitApplicants')}</label>
+                <div className="flex items-center gap-3">
+                  {useLimit && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" /></svg>
+                      </button>
+                      <span className="text-center font-bold text-slate-900 dark:text-white text-[13px] min-w-[36px]">{t('peopleCount', maxApplicants)}</span>
+                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                      </button>
+                    </div>
                   )}
+                  <button
+                    onClick={() => setUseLimit(!useLimit)}
+                    className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${useLimit ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                  >
+                    <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${useLimit ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                  </button>
                 </div>
+              </div>
+
+              {/* 공개경기 */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('publicMatch' as any)}</label>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('publicMatchDesc' as any)}</p>
+                </div>
+                <button
+                  onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
+                  className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${visibility === 'PUBLIC' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                >
+                  <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${visibility === 'PUBLIC' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                </button>
               </div>
             </div>
 
             <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
+            {/* 일정 섹션 */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-3">
-                  <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('limitApplicants')}</label>
-                  <button
-                    onClick={() => setUseLimit(!useLimit)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${useLimit ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
-                  >
-                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${useLimit ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
-                  </button>
+              <div className="flex items-center justify-center gap-6">
+                <div
+                  onClick={() => setActivePicker('START')}
+                  className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-40'}`}
+                >
+                  <span className="text-[16px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
+                  <span className={`text-[16px] font-black ${activePicker === 'START' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500'}`}>
+                    {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
+                  </span>
                 </div>
+                <div className="text-slate-200 dark:text-slate-800">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div
+                  onClick={() => setActivePicker('END')}
+                  className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-40'}`}
+                >
+                  <span className="text-[16px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
+                  <span className={`text-[16px] font-black ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
+                    {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
+                  </span>
+                </div>
+              </div>
 
-                {useLimit && (
-                  <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-xl px-2 py-1 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-right-2">
-                    <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" /></svg>
-                    </button>
-                    <span className="text-center font-black dark:text-white text-[12px] min-w-[40px]">{t('peopleCount', maxApplicants)}</span>
-                    <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-                    </button>
-                  </div>
+              <div className="flex justify-center transition-all duration-300">
+                {activePicker === 'START' ? (
+                  <DateTimePicker
+                    date={startDate}
+                    time={startTime}
+                    onChange={handleStartTimeChange}
+                    lang={lang}
+                    onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                  />
+                ) : (
+                  <DateTimePicker
+                    date={endDate}
+                    time={endTime}
+                    onChange={(d, t) => { setEndDate(d); setEndTime(t); }}
+                    lang={lang}
+                    onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                  />
                 )}
               </div>
             </div>
 
-            {/* 공개/비공개 토글 */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-3">
-                    <label className="text-[16px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('publicMatch' as any)}</label>
-                    <button
-                      onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${visibility === 'PUBLIC' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`}
-                    >
-                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${visibility === 'PUBLIC' ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('publicMatchDesc' as any)}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={handleCreate}
-                  disabled={loading}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.95] shadow-md shadow-blue-500/20"
-                >
-                  {loading ? '...' : t('create' as any)}
-                </button>
-              </div>
-            </div>
           </div>
         ) : null}
       </div>
+
+      {/* 하단 고정 생성 버튼 */}
+      {!activeRoom && (
+        <div
+          className="shrink-0 px-5 pt-3 pb-5 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
+        >
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50"
+          >
+            {loading ? (
+              <span className="inline-block w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
+            ) : t('create' as any)}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

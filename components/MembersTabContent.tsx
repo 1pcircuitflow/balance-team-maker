@@ -12,7 +12,7 @@ const { PlusIcon, UserPlusIcon, EditIcon, CloseIcon } = Icons;
 
 export const MembersTabContent: React.FC = React.memo(() => {
   const { t, lang } = useAppContext();
-  const { activeTab } = useNavigationContext();
+  const { membersTab: activeTab } = useNavigationContext();
   const { memberPlayers, searchQuery, setSearchQuery, selectionMode, selectedPlayerIds, setSelectedPlayerIds, showTier } = useTeamBalanceContext();
   const {
     newName, setNewName, newTier, setNewTier,
@@ -25,7 +25,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
 
   const [isPlayerRegistrationOpen, setIsPlayerRegistrationOpen] = useState(false);
   return (
-    <div className={`space-y-2 ${selectionMode ? 'pb-80' : 'pb-44'}`}>
+    <div className={`space-y-2 ${selectionMode ? 'pb-20' : ''}`}>
       {activeTab !== SportType.ALL && (
         <section className="w-full">
           <button
@@ -35,7 +35,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
             aria-expanded={isPlayerRegistrationOpen}
           >
               <div className="text-slate-500 dark:text-slate-400"><PlusIcon /></div>
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
+              <h2 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">{t('playerRegistration')}</h2>
               <div className={`transition-transform duration-300 ${isPlayerRegistrationOpen ? 'rotate-180' : ''} text-slate-400 ml-2`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
               </div>
@@ -44,7 +44,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
             <form onSubmit={addPlayer} className="px-2 pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('playerName')}</label>
-                <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none transition-all text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                <input type="text" placeholder={t('playerNamePlaceholder')} value={newName} onChange={e => setNewName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none transition-all text-[14px] font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-0.5">{t('skillTier')}</label>
@@ -57,7 +57,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
               {activeTab !== SportType.GENERAL && (
                 <div className="space-y-3">
                   <button type="button" onClick={() => setShowNewPlayerFormation(!showNewPlayerFormation)}
-                    className={`w-full h-12 rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${showNewPlayerFormation ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 active:scale-95' : 'bg-white text-slate-400 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:hover:bg-slate-900'}`}>
+                    className={`w-full h-12 rounded-2xl text-[12px] font-semibold transition-all flex items-center justify-center gap-2 ${showNewPlayerFormation ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 active:scale-95' : 'bg-white text-slate-400 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:hover:bg-slate-900'}`}>
                     <EditIcon /> {t('visualPositionEditor')}
                   </button>
                   {showNewPlayerFormation && (
@@ -68,7 +68,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
                   )}
                 </div>
               )}
-              <button type="submit" className="w-full bg-slate-900 dark:bg-slate-200 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-semibold h-12 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs mt-2">
+              <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] mt-2 shadow-lg shadow-blue-500/30">
                 <PlusIcon /> {t('addToList')}
               </button>
             </form>
@@ -79,7 +79,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
       <div>
         <div className="px-2 py-3 flex items-center gap-2">
             <div className="text-slate-500 dark:text-slate-400"><UserPlusIcon /></div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('memberList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({memberPlayers.length})</span></h2>
+            <h2 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">{t('memberList')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">({memberPlayers.length})</span></h2>
         </div>
 
         <div className="relative mb-2">
@@ -91,7 +91,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl pl-9 pr-9 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none transition-all"
+            className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl pl-9 pr-9 py-2.5 text-[14px] font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none transition-all"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors">
@@ -107,16 +107,16 @@ export const MembersTabContent: React.FC = React.memo(() => {
                 <div className="text-slate-300 dark:text-slate-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </div>
-                <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">{t('noSearchResults')}</p>
-                <button onClick={() => setSearchQuery('')} className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors">{t('cancel')}</button>
+                <p className="text-[14px] font-semibold text-slate-400 dark:text-slate-500">{t('noSearchResults')}</p>
+                <button onClick={() => setSearchQuery('')} className="text-[12px] font-bold text-blue-500 hover:text-blue-500 transition-colors">{t('cancel')}</button>
               </div>
             ) : (
               <div className="py-12 flex flex-col items-center justify-center gap-3">
                 <div className="text-slate-300 dark:text-slate-600">
                   <UserPlusIcon size={40} />
                 </div>
-                <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">{t('noPlayersHint')}</p>
-                <button onClick={() => setIsPlayerRegistrationOpen(true)} className="bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95">
+                <p className="text-[14px] font-semibold text-slate-400 dark:text-slate-500">{t('noPlayersHint')}</p>
+                <button onClick={() => setIsPlayerRegistrationOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold px-4 py-2 rounded-xl transition-all active:scale-95">
                   {t('playerRegistration')}
                 </button>
               </div>

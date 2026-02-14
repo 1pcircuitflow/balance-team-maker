@@ -66,7 +66,7 @@ export const PlayerItem = React.memo<any>(({
             </div>
           )}
           {/* Avatar circle */}
-          <div className="w-[52px] h-[52px] rounded-full bg-[#EEEEEE] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+          <div className="w-[52px] h-[52px] rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
             BELO
           </div>
           {/* Name + Position vertical stack */}
@@ -85,24 +85,24 @@ export const PlayerItem = React.memo<any>(({
               <div className="flex items-center gap-1.5">
                 {(player.primaryPositions?.length || (player.primaryPosition !== 'NONE' ? 1 : 0)) > 0 &&
                   (player.primaryPositions || [player.primaryPosition]).map((pos: string, i: number) => (
-                    <div key={`p-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-[#10B982] uppercase">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#10B982]" />
+                    <div key={`p-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-emerald-500 uppercase">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       <span>{pos}</span>
                     </div>
                   ))
                 }
                 {(player.secondaryPositions?.length || (player.secondaryPosition !== 'NONE' ? 1 : 0)) > 0 &&
                   (player.secondaryPositions || [player.secondaryPosition]).map((pos: string, i: number) => (
-                    <div key={`s-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-[#FACC16] uppercase">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#FACC16]" />
+                    <div key={`s-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-yellow-400 uppercase">
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
                       <span>{pos}</span>
                     </div>
                   ))
                 }
                 {(player.tertiaryPositions?.length || (player.tertiaryPosition && player.tertiaryPosition !== 'NONE' ? 1 : 0)) > 0 &&
                   (player.tertiaryPositions || [player.tertiaryPosition!]).map((pos: string, i: number) => (
-                    <div key={`t-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-[#FB933C] uppercase">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#FB933C]" />
+                    <div key={`t-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-orange-400 uppercase">
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
                       <span>{pos}</span>
                     </div>
                   ))
@@ -116,7 +116,7 @@ export const PlayerItem = React.memo<any>(({
             {readOnly ? (
               <button
                 type="button"
-                className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-all active:scale-95 ${player.isActive ? 'bg-[#53B175] text-white' : 'bg-[#4685EB] text-white'}`}
+                className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-all active:scale-95 ${player.isActive ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -138,7 +138,7 @@ export const PlayerItem = React.memo<any>(({
                       setShowActionMenu(false);
                     }
                   }}
-                  className={`text-[14px] font-medium text-white px-2 py-0.5 rounded-md transition-all active:scale-95 ${isEditing ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-[#EDAE73]'}`}
+                  className={`text-[14px] font-medium text-white px-2 py-0.5 rounded-md transition-all active:scale-95 ${isEditing ? 'bg-slate-900 dark:bg-white dark:text-slate-900' : 'bg-orange-300'}`}
                 >
                   {isEditing ? t('confirm') : t('edit')}
                 </button>

@@ -16,7 +16,8 @@ function getRedirectUri(): string {
 
 export async function openKakaoAuth(): Promise<void> {
   const redirectUri = getRedirectUri();
-  const authUrl = `${KAKAO_AUTH_BASE}?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+  const state = Capacitor.isNativePlatform() ? 'source=app' : '';
+  const authUrl = `${KAKAO_AUTH_BASE}?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code${state ? '&state=' + encodeURIComponent(state) : ''}`;
 
   if (Capacitor.isNativePlatform()) {
     await Browser.open({ url: authUrl });

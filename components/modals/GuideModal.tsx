@@ -41,7 +41,7 @@ export const GuideModal: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4">
-          <h3 className={`text-xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+          <h3 className={`text-[20px] font-black tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {title}
           </h3>
           <button
@@ -71,8 +71,8 @@ export const GuideModal: React.FC<{
             ))}
           </div>
 
-          <div className={`p-4 rounded-2xl ${darkMode ? 'bg-blue-600/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
-            <h4 className={`text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+          <div className={`p-4 rounded-2xl ${darkMode ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
+            <h4 className={`text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`}>
               <div className="w-1 h-1 rounded-full bg-current" />
               {t('additionalFeatures')}
             </h4>
@@ -88,7 +88,7 @@ export const GuideModal: React.FC<{
 
           <button
             onClick={onClose}
-            className="w-full py-3.5 bg-slate-900 dark:bg-white hover:bg-black dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm rounded-2xl transition-all active:scale-95 shadow-2xl shadow-slate-900/20 dark:shadow-none"
+            className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold text-[14px] rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-500/30"
           >
             {t('gotIt')}
           </button>

@@ -21,8 +21,8 @@ interface PlayerActionsContextValue {
   setShowNewPlayerFormation: (v: boolean) => void;
   editingPlayerId: string | null;
   setEditingPlayerId: (v: string | null) => void;
-  toastState: { isVisible: boolean; player: Player | null };
-  setToastState: (v: { isVisible: boolean; player: Player | null }) => void;
+  toastState: { isVisible: boolean; player: Player | null; action?: 'add' | 'delete' };
+  setToastState: (v: { isVisible: boolean; player: Player | null; action?: 'add' | 'delete' }) => void;
   addPlayer: (e: React.FormEvent) => void;
   updatePlayer: (id: string, updates: Partial<Player>) => void;
   removePlayerFromSystem: (e: React.MouseEvent, id: string) => void;
@@ -35,9 +35,9 @@ export const usePlayerActionsContext = () => useContext(PlayerActionsContext);
 
 export const PlayerActionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { players, setPlayers } = usePlayerContext();
-  const { activeTab } = useNavigationContext();
+  const { membersTab } = useNavigationContext();
 
-  const actions = usePlayerActions({ players, setPlayers, activeTab });
+  const actions = usePlayerActions({ players, setPlayers, activeTab: membersTab });
 
   return (
     <PlayerActionsContext.Provider value={actions}>

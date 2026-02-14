@@ -1,5 +1,34 @@
 import React from 'react';
 
+export const CrownIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M2.5 19h19v2h-19zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.97 10l-2.2-6.6a1.5 1.5 0 0 0-2.84.08L8 10 2.77 8.58a1.5 1.5 0 0 0-1.81 2.17L4 17h16l3.02-6.19c.34-.7.26-1.37.05-2.17z" />
+    </svg>
+);
+
+export const LocationArrowIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M22 2 11 13" />
+        <path d="M22 2 15 22 11 13 2 9z" />
+    </svg>
+);
+
+export const CalendarIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M16 2v4" />
+        <path d="M8 2v4" />
+        <path d="M3 10h18" />
+    </svg>
+);
+
+export const ClockIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 6v6l4 2" />
+    </svg>
+);
+
 export const PlusIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12h14" />

@@ -104,18 +104,36 @@
     <!-- 인앱 브라우저 차단 안내 레이어 -->
     <div id="inAppOverlay"
         class="hidden fixed inset-0 z-[2000] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-8 text-center space-y-6">
-        <div
-            class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shadow-inner animate-bounce">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+        <!-- 기본 안내 (네이버/인스타 등 일반 인앱) -->
+        <div id="inAppDefault">
+            <div
+                class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shadow-inner animate-bounce mx-auto mb-6">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">보안 브라우저로 이동 중</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                    구글 보안 정책에 따라<br>안전한 외부 브라우저로 이동합니다...
+                </p>
+            </div>
         </div>
-        <div class="space-y-2">
-            <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">보안 브라우저로 이동 중</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                구글 보안 정책에 따라<br>안전한 외부 브라우저로 이동합니다...
-            </p>
+        <!-- 카카오톡+Android 전용 안내 -->
+        <div id="inAppKakao" class="hidden">
+            <img src="/assets/logo.png" alt="Belo" class="w-20 h-20 mx-auto mb-4">
+            <div class="space-y-2">
+                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">Belo 앱으로 이동 중...</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                    카카오 로그인 후 앱으로 연결됩니다.
+                </p>
+            </div>
+            <div class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mx-auto mt-6"></div>
+            <button type="button" id="kakaoWebFallbackBtn"
+                class="mt-8 text-[13px] font-bold text-slate-400 dark:text-slate-500 underline underline-offset-4 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                웹에서 참가하기
+            </button>
         </div>
         <div id="iosGuide"
             class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
@@ -734,15 +752,54 @@
         const isAndroid = /android/i.test(navigator.userAgent);
         const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
+        function isKakaoInApp() {
+            return /kakao/i.test(navigator.userAgent.toLowerCase());
+        }
+
         function checkAndRedirect() {
             if (isInAppBrowser()) {
                 const overlay = document.getElementById('inAppOverlay');
                 const iosGuide = document.getElementById('iosGuide');
+                const inAppDefault = document.getElementById('inAppDefault');
+                const inAppKakao = document.getElementById('inAppKakao');
                 if (overlay) overlay.classList.remove('hidden');
+
+                if (isKakaoInApp() && isAndroid) {
+                    // 카카오톡 + Android: 카카오 로그인 자동 실행 → 앱으로 연결
+                    if (inAppDefault) inAppDefault.classList.add('hidden');
+                    if (inAppKakao) inAppKakao.classList.remove('hidden');
+
+                    // roomId 보존
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const roomId = urlParams.get('room');
+                    if (roomId) sessionStorage.setItem('kakao_pending_room', roomId);
+
+                    // "웹에서 참가하기" 폴백 버튼
+                    const fallbackBtn = document.getElementById('kakaoWebFallbackBtn');
+                    if (fallbackBtn) {
+                        fallbackBtn.onclick = () => {
+                            overlay.classList.add('hidden');
+                        };
+                    }
+
+                    // 카카오 로그인 자동 실행 (인앱이라 원터치/자동 승인)
+                    setTimeout(() => {
+                        try {
+                            Kakao.Auth.authorize({
+                                redirectUri: window.location.origin + '/kakao-callback',
+                            });
+                        } catch (e) {
+                            console.error('Kakao auto auth failed:', e);
+                            // 실패 시 오버레이 닫고 웹 폼 사용
+                            overlay.classList.add('hidden');
+                        }
+                    }, 1000);
+                    return true;
+                }
 
                 const currentUrl = window.location.href;
                 if (isAndroid) {
-                    // 안드로이드는 1.5초 후 intent 실행
+                    // 안드로이드(카카오 외 인앱)는 1.5초 후 Chrome intent 실행
                     setTimeout(() => {
                         const intentUrl = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
                         window.location.href = intentUrl;

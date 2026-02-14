@@ -45,6 +45,10 @@ interface RecruitmentContextValue {
   setHostRoomMaxApplicants: (v: number) => void;
   hostRoomVenue: string;
   setHostRoomVenue: (v: string) => void;
+  hostRoomDescription: string;
+  setHostRoomDescription: (v: string) => void;
+  hostRoomVisibility: 'PUBLIC' | 'PRIVATE';
+  setHostRoomVisibility: (v: 'PUBLIC' | 'PRIVATE') => void;
   hostRoomActivePicker: 'START' | 'END';
   setHostRoomActivePicker: (v: 'START' | 'END') => void;
   hostRoomIsPickerSelectionMode: boolean;

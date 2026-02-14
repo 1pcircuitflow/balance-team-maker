@@ -33,8 +33,8 @@ export const InfoModal: React.FC<{
       <div className={`rounded-[2.5rem] p-8 ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-2xl'} space-y-8`}>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className={`text-2xl font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'} tracking-tight`}>{t('infoTitle')}</h3>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-2 text-3xl leading-none">&times;</button>
+            <h3 className={`text-[24px] font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'} tracking-tight`}>{t('infoTitle')}</h3>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-2 text-[30px] leading-none">&times;</button>
           </div>
 
           <div className={`p-5 rounded-[2rem] border ${darkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
@@ -49,15 +49,15 @@ export const InfoModal: React.FC<{
                       type="text"
                       value={tempNickname}
                       onChange={(e) => setTempNickname(e.target.value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-bold border-2 outline-none focus:border-blue-500 transition-all ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
+                      className={`px-3 py-1.5 rounded-lg text-[14px] font-bold border-2 outline-none focus:border-blue-500 transition-all ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                       placeholder={t('nicknamePlaceholder')}
                       autoFocus
                     />
-                    <button onClick={onSaveNickname} className="p-2 bg-blue-600 text-white rounded-lg shadow-lg active:scale-90"><CheckIcon /></button>
+                    <button onClick={onSaveNickname} className="p-2 bg-blue-500 text-white rounded-lg shadow-lg active:scale-90"><CheckIcon /></button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 group">
-                    <span className={`text-lg font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{nickname}</span>
+                    <span className={`text-[18px] font-black ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{nickname}</span>
                     <button onClick={() => setIsEditingName(true)} className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors pointer-events-auto"><EditIcon /></button>
                   </div>
                 )}
@@ -70,7 +70,7 @@ export const InfoModal: React.FC<{
 
           <div className="space-y-3">
             <a href="https://play.google.com/store/apps/details?id=com.balanceteammaker" target="_blank" rel="noreferrer" className={`w-full flex items-center justify-between px-6 py-4 rounded-[1.5rem] border transition-all ${darkMode ? 'bg-slate-950 border-slate-800 hover:bg-black' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}>
-              <span className={`text-sm font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('rateApp')}</span>
+              <span className={`text-[14px] font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('rateApp')}</span>
               <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}><ExternalLinkIcon /></div>
             </a>
           </div>

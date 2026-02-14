@@ -12,6 +12,7 @@ export const useTeamBalance = (
   isAdFree: boolean,
   setCurrentPage: (page: any) => void,
   AppPageType: any,
+  membersTab?: SportType,
 ) => {
   const settings = useBalanceSettings(players, activeTab);
   const generation = useBalanceGeneration(
@@ -41,7 +42,8 @@ export const useTeamBalance = (
   );
 
   const memberPlayers = useMemo(() => {
-    let currentPlayers = players.filter(p => activeTab === SportType.ALL || p.sportType === activeTab);
+    const tab = membersTab ?? activeTab;
+    let currentPlayers = players.filter(p => tab === SportType.ALL || p.sportType === tab);
     if (settings.searchQuery.trim()) {
       const q = settings.searchQuery.trim().toLowerCase();
       currentPlayers = currentPlayers.filter(p => p.name.toLowerCase().includes(q));
@@ -56,7 +58,7 @@ export const useTeamBalance = (
         return a.name.localeCompare(b.name, 'ko');
       });
     }
-  }, [players, activeTab, settings.sortMode, settings.searchQuery]);
+  }, [players, activeTab, membersTab, settings.sortMode, settings.searchQuery]);
 
   const handleUpdateResultTeamColor = (idx: number, colorValue: string, colorName: string) => {
     if (!generation.result) return;

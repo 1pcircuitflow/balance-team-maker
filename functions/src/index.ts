@@ -42,9 +42,9 @@ export const onRoomUpdated = onDocumentUpdated("rooms/{roomId}", async (event) =
   // applicants가 증가한 경우만 처리 (신규 참가신청)
   if (newApplicants.length <= prevApplicants.length) return;
 
-  // 새로 추가된 신청자 찾기
+  // 새로 추가된 신청자 중 승인대기(isApproved !== true)만 알림 대상
   const prevIds = new Set(prevApplicants.map((a) => a.id));
-  const addedApplicants = newApplicants.filter((a) => !prevIds.has(a.id));
+  const addedApplicants = newApplicants.filter((a) => !prevIds.has(a.id) && !a.isApproved);
 
   if (addedApplicants.length === 0) return;
 

@@ -77,12 +77,12 @@ export const FormationPicker: React.FC<{
         </label>
       </div>
 
-      <div className="relative aspect-[3/4] w-full max-w-[280px] mx-auto rounded-3xl overflow-hidden">
+      <div className="relative aspect-[3/4] w-full max-w-[280px] mx-auto rounded-3xl overflow-visible">
         {/* Stadium Backgrounds */}
         {sport === SportType.BASKETBALL ? (
-          <div className="absolute inset-0 bg-[#E0BA87] dark:bg-[#5c3d2e]" />
+          <div className="absolute inset-0 bg-[#E0BA87] dark:bg-[#5c3d2e] rounded-3xl overflow-hidden" />
         ) : (
-          <div className="absolute inset-0 bg-[#064e3b]">
+          <div className="absolute inset-0 bg-[#064e3b] rounded-3xl overflow-hidden">
             <div className="absolute inset-0 opacity-20"
               style={{
                 background: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 40px, transparent 40px, transparent 80px)'

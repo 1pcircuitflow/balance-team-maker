@@ -23,6 +23,9 @@ interface NavigationContextValue {
   activeTab: SportType;
   setActiveTab: (tab: SportType) => void;
   changeTab: (tab: SportType) => void;
+  // membersTab: 회원 탭 전용 종목 필터 (홈 탭에 영향 안 줌)
+  membersTab: SportType;
+  setMembersTab: (tab: SportType) => void;
 }
 
 const NavigationContext = createContext<NavigationContextValue>(null!);
@@ -33,6 +36,11 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const nav = useNavigation();
 
   const [activeTab, setActiveTab] = useState<SportType>(() => {
+    const saved = localStorage.getItem('last_active_tab');
+    return (saved as SportType) || SportType.GENERAL;
+  });
+
+  const [membersTab, setMembersTab] = useState<SportType>(() => {
     const saved = localStorage.getItem('last_active_tab');
     return (saved as SportType) || SportType.GENERAL;
   });
@@ -52,6 +60,8 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       activeTab,
       setActiveTab,
       changeTab,
+      membersTab,
+      setMembersTab,
     }}>
       {children}
     </NavigationContext.Provider>

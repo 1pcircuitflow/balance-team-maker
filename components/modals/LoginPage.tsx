@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Z_INDEX } from '../../constants';
 import { useAppContext } from '../../contexts/AppContext';
 
 export const LoginPage: React.FC<{
@@ -9,7 +10,7 @@ export const LoginPage: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex flex-col items-center justify-end bg-white dark:bg-slate-950 px-5" style={{ paddingBottom: '180px' }}>
+    <div className="fixed inset-0 flex flex-col items-center justify-end bg-white dark:bg-slate-950 px-5" style={{ zIndex: Z_INDEX.PAGE_OVERLAY, paddingBottom: '180px' }}>
       <div className="flex flex-col items-center w-full max-w-sm">
         <div className="flex flex-col items-center" style={{ marginBottom: '8vh' }}>
           <img
@@ -18,17 +19,17 @@ export const LoginPage: React.FC<{
             style={{ width: '150px', height: '180px', objectFit: 'contain' }}
           />
           <div className="text-center" style={{ marginTop: '-30px' }}>
-            <p className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 leading-relaxed" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+            <p className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
               {t('loginSlogan')}
             </p>
-            <p className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 mt-1" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+            <p className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 mt-1">
               BELO
             </p>
           </div>
         </div>
 
         <div className="w-full text-center" style={{ marginBottom: '4vh' }}>
-          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line" style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}>
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
             {t('loginDescription')}
           </p>
         </div>
@@ -37,7 +38,6 @@ export const LoginPage: React.FC<{
           <button
             onClick={onLogin}
             className="w-full max-w-[295px] h-[56px] flex items-center justify-center gap-3 active:scale-[0.98] transition-transform bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-md text-[16px] font-semibold text-slate-900 dark:text-slate-100"
-            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
           >
             <svg className="w-5 h-5" viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -51,7 +51,7 @@ export const LoginPage: React.FC<{
           <button
             onClick={onKakaoLogin}
             className="w-full max-w-[295px] h-[56px] flex items-center justify-center gap-3 active:scale-[0.98] transition-transform rounded-xl shadow-md text-[16px] font-semibold"
-            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif', backgroundColor: '#FEE500', color: '#000000' }}
+            style={{ backgroundColor: '#FEE500', color: '#000000' }}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#000000" d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.8 5.108 4.513 6.467-.197.736-.714 2.666-.818 3.079-.128.506.186.499.39.363.16-.107 2.554-1.736 3.588-2.442.742.104 1.507.16 2.327.16 5.523 0 10-3.463 10-7.627S17.523 3 12 3" />

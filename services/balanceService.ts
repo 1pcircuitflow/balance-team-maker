@@ -726,7 +726,8 @@ export function computeUnifiedCost(
 export function backtrackPositions(
     players: Player[],
     allPositions: Position[],
-    quotas: Partial<Record<Position, number | null>> | undefined
+    quotas: Partial<Record<Position, number | null>> | undefined,
+    deadline?: number
 ): Position[] {
     if (allPositions.includes('NONE') || players.length === 0) {
         return players.map(() => 'NONE' as Position);
@@ -761,8 +762,15 @@ export function backtrackPositions(
 
                 let bestAssignment = new Array<Position>(players.length).fill('NONE' as Position);
                 let bestScore = -Infinity;
+                let checkCount_p = 0;
+                let timedOut_p = false;
 
                 const bt = (doneSlots: boolean[], playerUsed: boolean[], score: number, assignment: Map<number, number>, doneCount: number) => {
+                    if (timedOut_p) return;
+                    if (deadline && ++checkCount_p % 100 === 0 && performance.now() >= deadline) {
+                        timedOut_p = true;
+                        return;
+                    }
                     if (doneCount === totalQuotaSlots) {
                         // All quota slots processed — now assign FREE positions to remaining players
                         let freeScore = 0;
@@ -875,8 +883,15 @@ export function backtrackPositions(
 
             let bestAssignment = new Array<Position>(players.length).fill('NONE' as Position);
             let bestScore = -Infinity;
+            let checkCount_f = 0;
+            let timedOut_f = false;
 
             const bt = (doneSlots: boolean[], playerUsed: boolean[], score: number, assignment: Map<number, number>, doneCount: number, allowForbidden: boolean) => {
+                if (timedOut_f) return;
+                if (deadline && ++checkCount_f % 100 === 0 && performance.now() >= deadline) {
+                    timedOut_f = true;
+                    return;
+                }
                 if (doneCount === totalFullSlots) {
                     if (score > bestScore) {
                         bestScore = score;
@@ -962,7 +977,8 @@ export function positionAwareInit(
     teamCount: number,
     constraints: TeamConstraint[],
     quotas: Partial<Record<Position, number | null>> | undefined,
-    allPositions: Position[]
+    allPositions: Position[],
+    deadline?: number
 ): { teamAssignment: number[], posAssignment: Position[] } {
     const n = players.length;
     const teamAssignment = new Array<number>(n).fill(0);
@@ -1104,7 +1120,7 @@ export function positionAwareInit(
     for (let t = 0; t < teamCount; t++) {
         const memberIndices = teamMembers[t];
         const teamPlayers = memberIndices.map(i => players[i]);
-        const positions = backtrackPositions(teamPlayers, allPositions, quotas);
+        const positions = backtrackPositions(teamPlayers, allPositions, quotas, deadline);
         for (let j = 0; j < memberIndices.length; j++) {
             posAssignment[memberIndices[j]] = positions[j];
         }
@@ -1639,7 +1655,8 @@ export function generateTeamsGA(
     teamCount: number,
     quotas: Partial<Record<Position, number | null>> | undefined,
     constraints: TeamConstraint[],
-    allPositions: Position[]
+    allPositions: Position[],
+    deadline?: number
 ): { teamAssignment: number[], posAssignment: Position[] } {
     const n = players.length;
     if (n === 0) return { teamAssignment: [], posAssignment: [] };
@@ -1680,7 +1697,7 @@ export function generateTeamsGA(
         for (let t = 0; t < teamCount; t++) {
             const members = genes.map((g, i) => g === t ? i : -1).filter(i => i >= 0);
             const teamPlayers = members.map(i => players[i]);
-            const positions = backtrackPositions(teamPlayers, allPositions, quotas);
+            const positions = backtrackPositions(teamPlayers, allPositions, quotas, deadline);
             for (let j = 0; j < members.length; j++) {
                 pa[members[j]] = positions[j];
             }
@@ -1743,11 +1760,12 @@ export function generateTeamsGA(
     const population: Individual[] = [];
 
     // Seed with position-aware init
-    const { teamAssignment: seedTA, posAssignment: seedPA } = positionAwareInit(players, teamCount, constraints, quotas, allPositions);
+    const { teamAssignment: seedTA, posAssignment: seedPA } = positionAwareInit(players, teamCount, constraints, quotas, allPositions, deadline);
     population.push({ genes: [...seedTA], fitness: evaluate(seedTA, seedPA), posAssignment: seedPA });
 
     // Rest: random initialization
     for (let i = 1; i < POPULATION; i++) {
+        if (deadline && performance.now() >= deadline) break;
         const genes = new Array(n).fill(0);
         for (let j = 0; j < n; j++) genes[j] = Math.floor(Math.random() * teamCount);
         repair(genes);
@@ -1760,6 +1778,7 @@ export function generateTeamsGA(
 
     for (let gen = 0; gen < GENERATIONS; gen++) {
         if (stagnation >= STAGNATION_LIMIT) break;
+        if (deadline && performance.now() >= deadline) break;
 
         // Sort by fitness (higher is better)
         population.sort((a, b) => b.fitness - a.fitness);
@@ -1773,6 +1792,7 @@ export function generateTeamsGA(
 
         // Generate offspring
         while (newPop.length < POPULATION) {
+            if (deadline && performance.now() >= deadline) break;
             // Tournament selection (size 3)
             const select = (): Individual => {
                 const candidates = shuffle(population.slice()).slice(0, 3);
@@ -1861,14 +1881,19 @@ export const generateBalancedTeams = (
     const sport = sportType || (activePlayers.length > 0 ? activePlayers[0].sportType : SportType.GENERAL);
     const allPositions: Position[] = POSITIONS_BY_SPORT[sport] || ['NONE'];
 
+    // 전체 시간 제한: 4초
+    const overallDeadline = performance.now() + 4000;
+
     // 중복 결과 방지를 위해 최대 MAX_RETRY_COUNT 회 재시도
     const MAX_RETRY_COUNT = 5;
     let bestResult: BalanceResult | null = null;
 
     for (let attempt = 0; attempt < MAX_RETRY_COUNT; attempt++) {
+        if (performance.now() >= overallDeadline) break;
+
         // GA (Genetic Algorithm) 기반 팀 밸런싱
         const { teamAssignment, posAssignment } = generateTeamsGA(
-            activePlayers, teamCount, customQuotas, constraints, allPositions
+            activePlayers, teamCount, customQuotas, constraints, allPositions, overallDeadline
         );
 
         // Team 객체 구성
@@ -1946,17 +1971,15 @@ export const generateBalancedTeams = (
         break;
     }
 
-    // MAX_RETRY_COUNT회 모두 중복이면 마지막 결과 반환
+    // MAX_RETRY_COUNT회 모두 중복이거나 시간 초과면 greedy fallback
     if (!bestResult) {
-        const { teamAssignment, posAssignment } = generateTeamsGA(
-            activePlayers, teamCount, customQuotas, constraints, allPositions
-        );
-        const teams: Team[] = Array.from({ length: teamCount }, (_, i) => ({
-            id: i + 1, name: `Team ${String.fromCharCode(65 + i)}`, players: [], totalSkill: 0,
+        const { teams: greedyTeams } = initialDistribute(activePlayers, teamCount, constraints);
+        const teams: Team[] = greedyTeams.map((gt, i) => ({
+            id: i + 1,
+            name: `Team ${String.fromCharCode(65 + i)}`,
+            players: gt.players.map(p => ({ ...p, assignedPosition: 'NONE' as Position })),
+            totalSkill: 0,
         }));
-        for (let i = 0; i < activePlayers.length; i++) {
-            teams[teamAssignment[i]].players.push({ ...activePlayers[i], assignedPosition: posAssignment[i] });
-        }
         teams.forEach(t => t.totalSkill = calculateTeamSkillReal(t));
         const totalSkills = teams.map(t => calculateTeamSkillReal(t));
         const avgSkill = totalSkills.reduce((a, b) => a + b, 0) / teamCount;

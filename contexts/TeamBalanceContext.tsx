@@ -82,9 +82,9 @@ export const TeamBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { t, showAlert, darkMode, lang } = useAppContext();
   const { isAdFree } = useAuthContext();
   const { players } = usePlayerContext();
-  const { activeTab, setCurrentPage } = useNavigationContext();
+  const { activeTab, setCurrentPage, membersTab } = useNavigationContext();
 
-  const balance = useTeamBalance(players, activeTab, showAlert, t, isAdFree, setCurrentPage, AppPageType);
+  const balance = useTeamBalance(players, activeTab, showAlert, t, isAdFree, setCurrentPage, AppPageType, membersTab);
 
   const { handleShare } = useShareCapture({
     darkMode,

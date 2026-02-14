@@ -190,14 +190,9 @@ export const useInitialization = (
       PushNotifications.addListener('registrationError', (error) => {
         console.error('Error on registration: ' + JSON.stringify(error));
       });
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        if (notification.body) {
-          setAlertState({
-            isOpen: true,
-            message: notification.body,
-            title: notification.title || t('appTitle')
-          });
-        }
+      PushNotifications.addListener('pushNotificationReceived', (_notification) => {
+        // 포그라운드: 시스템 배너 알림(presentationOptions "alert")으로 표시
+        // 인앱 AlertModal 중복 방지를 위해 여기서는 별도 처리하지 않음
       });
       PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
         const data = action.notification.data;
@@ -224,6 +219,13 @@ export const useInitialization = (
           if (data.url.includes('room=')) {
             const url = new URL(data.url);
             const roomId = url.searchParams.get('room');
+            const kakaoCode = url.searchParams.get('kakao_code');
+
+            // 카카오 코드가 있으면 자동 로그인 먼저 실행
+            if (kakaoCode && onKakaoCode) {
+              onKakaoCode(kakaoCode);
+            }
+
             if (roomId) {
               setPendingJoinRoomId(roomId);
             }
