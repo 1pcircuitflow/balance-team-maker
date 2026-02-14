@@ -37,7 +37,7 @@ import { SportSegmentControl } from './components/SportSegmentControl';
 import { AlertModal } from './components/modals/AlertModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { UpdateModal } from './components/modals/UpdateModal';
-import { GuideModal } from './components/modals/GuideModal';
+
 import { InfoModal } from './components/modals/InfoModal';
 import { ReviewPrompt } from './components/modals/ReviewPrompt';
 import { LoginPage } from './components/modals/LoginPage';
@@ -46,6 +46,7 @@ import { RewardAdModal } from './components/modals/RewardAdModal';
 import { HostRoomModal } from './components/modals/HostRoomModal';
 import { ApplyRoomModal } from './components/modals/ApplyRoomModal';
 import { MemberPickerModal } from './components/modals/MemberPickerModal';
+import { OnboardingModal } from './components/modals/OnboardingModal';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -75,8 +76,8 @@ const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState, showGuideModal, setShowGuideModal } = useAppContext();
-  const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal } = useAuthContext();
+  const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState } = useAppContext();
+  const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal, needsOnboarding } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
   const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab, membersTab, setMembersTab } = useNavigationContext();
   const {
@@ -128,14 +129,6 @@ const AppContent: React.FC = () => {
     setShowUpdateModal, setUpdateInfo, handleRewardAdComplete, t,
     handleKakaoCode,
   );
-
-  // 첫 실행 시 가이드 모달 자동 표시
-  useEffect(() => {
-    if (!localStorage.getItem('app_has_seen_guide')) {
-      const timer = setTimeout(() => setShowGuideModal(true), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   // Web: 카카오 로그인 콜백 (URL 파라미터 감지)
   useEffect(() => {
@@ -260,7 +253,7 @@ const AppContent: React.FC = () => {
       {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
       {/* Sticky Header: Announcement + Sport Tabs */}
-      {currentPage === AppPageType.HOME && currentBottomTab !== BottomTabType.SETTINGS && (
+      {currentPage === AppPageType.HOME && (
         <div className={`sticky w-full ${darkMode ? 'bg-slate-950' : 'bg-white'}`}
           style={{ zIndex: Z_INDEX.STICKY_HEADER, top: 'calc(env(safe-area-inset-top, 0px))' }}>
           {/* Announcement Banner */}
@@ -368,7 +361,7 @@ const AppContent: React.FC = () => {
       <ApplyRoomModal isOpen={showApplyRoomModal} roomId={pendingJoinRoomId}
         onClose={() => { setShowApplyRoomModal(false); setPendingJoinRoomId(null); }}
         onSuccess={() => { setShowApplyRoomModal(false); setPendingJoinRoomId(null); }} lang={lang} darkMode={darkMode} />
-      <GuideModal isOpen={showGuideModal} onClose={() => { setShowGuideModal(false); localStorage.setItem('app_has_seen_guide', 'true'); }} title={t('guideTitle')} content={t('guideContent') || t('comingSoon')} />
+      {needsOnboarding && <OnboardingModal />}
       {updateInfo && (
         <UpdateModal isOpen={showUpdateModal} onClose={() => setShowUpdateModal(false)}
           onUpdate={() => { if (updateInfo.storeUrl) window.open(updateInfo.storeUrl, '_system'); }}

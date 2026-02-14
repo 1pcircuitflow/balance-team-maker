@@ -5,7 +5,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
 import { AnalyticsService } from '../services/analyticsService';
 
-const SPORT_OPTIONS: SportType[] = [SportType.ALL, SportType.GENERAL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL];
+const SPORT_OPTIONS: SportType[] = [SportType.ALL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL];
 
 export const SportFilterButton: React.FC = memo(() => {
   const { t, darkMode } = useAppContext();

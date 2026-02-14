@@ -10,7 +10,7 @@ export const LoadingOverlay: React.FC<{ lang: Language; activeTab: SportType; da
     if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
     return String(translation || key);
   };
-  const icon = activeTab === SportType.BASKETBALL ? '🏀' : activeTab === SportType.SOCCER ? '⚽' : activeTab === SportType.FUTSAL ? '🥅' : '🏆';
+  const icon = activeTab === SportType.BASKETBALL ? '🏀' : activeTab === SportType.SOCCER ? '⚽' : activeTab === SportType.FUTSAL ? '🥅' : '🎾';
 
   const totalTime = isAdFree ? 1 : 5;
   const elapsed = totalTime - countdown;

@@ -68,7 +68,7 @@ export const MembersTabContent: React.FC = React.memo(() => {
                   )}
                 </div>
               )}
-              <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] mt-2 shadow-lg shadow-blue-500/30">
+              <button type="submit" className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-3 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[16px] mt-2 shadow-lg shadow-slate-900/30 dark:shadow-white/20">
                 <PlusIcon /> {t('addToList')}
               </button>
             </form>

@@ -14,11 +14,12 @@ import {
     arrayUnion,
     arrayRemove,
     deleteDoc,
-    limit
+    limit,
+    getDocs
 } from "firebase/firestore";
 import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Player } from "../types";
+import { Player, UserProfile } from "../types";
 
 /**
  * Firebase 재시도 래퍼 — unavailable/deadline-exceeded 또는 오프라인 시에만 재시도
@@ -107,13 +108,14 @@ export interface RecruitmentRoom {
 /**
  * 1. 신규 모집방 생성
  */
-export const createRecruitmentRoom = async (roomData: Omit<RecruitmentRoom, 'id' | 'createdAt' | 'applicants' | 'status'>) => {
+export const createRecruitmentRoom = async (roomData: Omit<RecruitmentRoom, 'id' | 'createdAt' | 'status'> & { applicants?: Applicant[] }) => {
     try {
+        const { applicants, ...rest } = roomData;
         const roomRef = collection(db, "rooms");
         const newDoc = await addDoc(roomRef, {
-            ...roomData,
+            ...rest,
             status: 'OPEN',
-            applicants: [],
+            applicants: applicants || [],
             createdAt: new Date().toISOString()
         });
         return newDoc.id;
@@ -427,5 +429,109 @@ export const subscribeToAnnouncements = (callback: (announcements: Announcement[
     }, (error) => {
         console.error("Announcements subscription error:", error);
         if (onError) onError(error);
+    });
+};
+
+/**
+ * 13. 유저 프로필 저장
+ */
+export const saveUserProfile = async (userId: string, profile: UserProfile) => {
+    return withRetry(async () => {
+        try {
+            await setDoc(doc(db, "users", userId), { profile }, { merge: true });
+        } catch (e) {
+            console.error("Save profile error:", e);
+            throw e;
+        }
+    });
+};
+
+/**
+ * 14-1. 유저 닉네임 Firestore 저장
+ */
+export const saveUserNickname = async (userId: string, nickname: string) => {
+    try {
+        await setDoc(doc(db, "users", userId), { nickname }, { merge: true });
+    } catch (e) {
+        console.error("Save nickname error:", e);
+    }
+};
+
+/**
+ * 14-2. 유저 닉네임 Firestore 로드
+ */
+export const loadUserNickname = async (userId: string): Promise<string | null> => {
+    try {
+        const snap = await getDoc(doc(db, "users", userId));
+        if (snap.exists() && snap.data().nickname) {
+            return snap.data().nickname as string;
+        }
+        return null;
+    } catch (e) {
+        console.error("Load nickname error:", e);
+        return null;
+    }
+};
+
+/**
+ * 14-3. 닉네임 변경 시 모집방 동기화
+ */
+export const updateNicknameInRooms = async (userId: string, newName: string) => {
+    try {
+        const updates: Promise<void>[] = [];
+        const processedIds = new Set<string>();
+
+        // 1. 방장인 방: hostName + applicants 업데이트
+        const hostSnap = await getDocs(
+            query(collection(db, "rooms"), where("hostId", "==", userId))
+        );
+        hostSnap.docs.forEach(docSnap => {
+            processedIds.add(docSnap.id);
+            const data = docSnap.data();
+            const updatedApplicants = (data.applicants || []).map((a: any) =>
+                a.userId === userId ? { ...a, name: newName } : a
+            );
+            updates.push(updateDoc(docSnap.ref, {
+                hostName: newName,
+                applicants: updatedApplicants
+            }));
+        });
+
+        // 2. 참가자인 방 (OPEN 상태): applicants의 name 업데이트
+        const openSnap = await getDocs(
+            query(collection(db, "rooms"), where("status", "==", "OPEN"))
+        );
+        openSnap.docs.forEach(docSnap => {
+            if (processedIds.has(docSnap.id)) return;
+            const data = docSnap.data();
+            const applicants = data.applicants || [];
+            if (!applicants.some((a: any) => a.userId === userId)) return;
+            const updatedApplicants = applicants.map((a: any) =>
+                a.userId === userId ? { ...a, name: newName } : a
+            );
+            updates.push(updateDoc(docSnap.ref, { applicants: updatedApplicants }));
+        });
+
+        await Promise.all(updates);
+    } catch (error) {
+        console.error("Error updating nickname in rooms:", error);
+    }
+};
+
+/**
+ * 14. 유저 프로필 로드
+ */
+export const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    return withRetry(async () => {
+        try {
+            const snap = await getDoc(doc(db, "users", userId));
+            if (snap.exists() && snap.data().profile) {
+                return snap.data().profile as UserProfile;
+            }
+            return null;
+        } catch (e) {
+            console.error("Load profile error:", e);
+            throw e;
+        }
     });
 };

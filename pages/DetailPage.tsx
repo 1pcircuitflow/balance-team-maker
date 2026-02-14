@@ -24,7 +24,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 }) => {
   const [processingApplicantId, setProcessingApplicantId] = React.useState<string | null>(null);
   const { t, lang, darkMode, showAlert, setConfirmState } = useAppContext();
-  const { isAdFree, currentUserId, userNickname } = useAuthContext();
+  const { isAdFree, currentUserId, userNickname, userProfile } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
   const { setCurrentPage, setCurrentBottomTab, detailTab, setDetailTab, touchStartX, setTouchStartX } = useNavigationContext();
   const {
@@ -50,16 +50,19 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
     setMemberSuggestion,
   } = useRecruitmentContext();
 
-  // 게스트용 참가신청 상태
+  // 게스트용 참가신청 상태 (userProfile에서 자동 채움)
+  const roomSport = room?.sport as SportType | undefined;
+  const sportProfile = roomSport ? userProfile?.sports?.[roomSport] : undefined;
   const [isApplyFormOpen, setIsApplyFormOpen] = React.useState(false);
   const [applyName, setApplyName] = React.useState(userNickname);
-  const [applyTier, setApplyTier] = React.useState('B');
-  const [applyPrimaryPos, setApplyPrimaryPos] = React.useState<string[]>([]);
-  const [applySecondaryPos, setApplySecondaryPos] = React.useState<string[]>([]);
-  const [applyTertiaryPos, setApplyTertiaryPos] = React.useState<string[]>([]);
-  const [applyForbiddenPos, setApplyForbiddenPos] = React.useState<string[]>([]);
+  const [applyTier, setApplyTier] = React.useState(sportProfile?.tier || 'B');
+  const [applyPrimaryPos, setApplyPrimaryPos] = React.useState<string[]>(sportProfile?.primaryPositions || []);
+  const [applySecondaryPos, setApplySecondaryPos] = React.useState<string[]>(sportProfile?.secondaryPositions || []);
+  const [applyTertiaryPos, setApplyTertiaryPos] = React.useState<string[]>(sportProfile?.tertiaryPositions || []);
+  const [applyForbiddenPos, setApplyForbiddenPos] = React.useState<string[]>(sportProfile?.forbiddenPositions || []);
   const [applyLoading, setApplyLoading] = React.useState(false);
   const [applyError, setApplyError] = React.useState<string | null>(null);
+  const [isDescExpanded, setIsDescExpanded] = React.useState(false);
 
   if (!room) return null;
   const isHost = room.hostId === currentUserId;
@@ -204,13 +207,6 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             </div>
           </div>
 
-          {/* 내용 (description) */}
-          {room.description && (
-            <div className="mt-3 px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-2xl">
-              <p className="text-[13px] font-medium text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{room.description}</p>
-            </div>
-          )}
-
           {/* 방장 프로필 카드 */}
           {room.hostName && (() => {
             const hostApp = room.applicants.find(a => a.userId === room.hostId);
@@ -266,10 +262,24 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   <span className="text-[12px] font-medium text-slate-400">{t('mannerTemperature')}</span>
                 </div>
               </div>
-              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1 mt-4" />
             </div>
             );
           })()}
+
+          {/* 내용 (description) */}
+          {room.description && (
+            <div className="mt-4 px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-2xl">
+              <p className={`text-[13px] font-medium text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap ${!isDescExpanded ? 'line-clamp-3' : ''}`}>{room.description}</p>
+              {room.description.length > 80 && (
+                <button
+                  onClick={() => setIsDescExpanded(!isDescExpanded)}
+                  className="mt-1.5 text-[12px] font-medium text-blue-500 transition-all active:scale-95"
+                >
+                  {isDescExpanded ? t('collapse') : t('showMore')}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Tabs */}
           {isHost ? (
@@ -509,6 +519,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             <span className="text-[16px] font-medium text-slate-900 dark:text-white">
                               {app.name}
                             </span>
+                            {app.userId === room.hostId && (
+                              <CrownIcon size={14} className="text-amber-400" />
+                            )}
                             {playerConstraint && (
                               <div className={`w-4 h-4 rounded flex items-center justify-center text-[8px] font-black text-white ${playerConstraint.type === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`}>
                                 {playerConstraint.type === 'MATCH' ? 'M' : 'S'}
@@ -846,7 +859,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                   handleGenerate(manualPlayers, room.sport as SportType);
                   setIsBalanceSettingsOpen(false);
                 }}
-                className={`w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-blue-500 hover:bg-blue-600 text-white ${isBalanceSettingsOpen ? 'shadow-xl' : 'shadow-lg shadow-blue-500/30'}`}
+                className={`w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-slate-900 dark:bg-white text-white dark:text-slate-900 ${isBalanceSettingsOpen ? 'shadow-xl' : 'shadow-lg shadow-slate-900/30 dark:shadow-white/20'}`}
               >
                 {t('generateTeams')}
               </button>

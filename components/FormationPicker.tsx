@@ -65,7 +65,7 @@ export const FormationPicker: React.FC<{
     if (secondaryP?.includes(pos)) return { color: 'bg-yellow-400', label: '75' };
     if (tertiaryP?.includes(pos)) return { color: 'bg-orange-400', label: '50' };
     if (forbiddenP?.includes(pos)) return { color: 'bg-rose-500', label: 'X' };
-    return { color: 'bg-slate-300 dark:bg-slate-600', label: '' };
+    return { color: 'bg-slate-500 dark:bg-slate-600', label: '' };
   };
 
   return (
@@ -94,7 +94,7 @@ export const FormationPicker: React.FC<{
         {/* Inner Court Container: Fixed the layout by removing redundant 'relative' */}
         <div className="absolute inset-4">
           {/* Court Lines */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-lg">
             {sport === SportType.BASKETBALL ? (
               <div className="w-full h-full border-2 border-white/60 rounded-lg overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[160%] aspect-square border-2 border-white/40 rounded-full" style={{ top: '-40%' }} />

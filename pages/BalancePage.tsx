@@ -134,7 +134,7 @@ export const BalancePage: React.FC = React.memo(() => {
               <button
                 onClick={() => handleGenerate()}
                 disabled={isGenerating}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
+                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
               >
                 {t('generateTeams')}
               </button>
@@ -341,7 +341,7 @@ export const BalancePage: React.FC = React.memo(() => {
               <button
                 data-capture-ignore="true"
                 onClick={() => handleGenerate()}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
+                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
               >
                 {t('reshuffleTeams')}
               </button>

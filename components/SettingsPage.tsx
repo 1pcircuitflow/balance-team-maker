@@ -1,13 +1,23 @@
 import React, { useState, useRef } from 'react';
+import { SportType, Position, UserSportProfile } from '../types';
 import { Language } from '../translations';
 import { useAppContext } from '../contexts/AppContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlayerContext } from '../contexts/PlayerContext';
 import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
 import { AnalyticsService } from '../services/analyticsService';
+import { FormationPicker } from './FormationPicker';
+import { updateNicknameInRooms, saveUserNickname } from '../services/firebaseService';
 import * as Icons from '../Icons';
 
 const { EditIcon, CheckIcon, ExternalLinkIcon } = Icons;
+
+const SPORT_OPTIONS: { type: SportType; emoji: string }[] = [
+  { type: SportType.SOCCER, emoji: '\u26BD' },
+  { type: SportType.FUTSAL, emoji: '\u{1F945}' },
+  { type: SportType.BASKETBALL, emoji: '\u{1F3C0}' },
+  { type: SportType.GENERAL, emoji: '\u{1F3BE}' },
+];
 
 const ToggleSwitch: React.FC<{ value: boolean; onChange: (v: boolean) => void }> = ({ value, onChange }) => (
   <button
@@ -58,8 +68,8 @@ const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
 );
 
 export const SettingsPage: React.FC = () => {
-  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled, setShowGuideModal } = useAppContext();
-  const { user, userNickname: nickname, setUserNickname, handleLogout, setShowLoginModal, isAdFree, setIsAdFree } = useAuthContext();
+  const { darkMode, setDarkMode, lang, setLang: setLangRaw, t, showConfirm, showAlert, pushEnabled, setPushEnabled, recruitNotifEnabled, setRecruitNotifEnabled } = useAppContext();
+  const { user, currentUserId, userNickname: nickname, setUserNickname, handleLogout, setShowLoginModal, isAdFree, setIsAdFree, userProfile, updateAndSaveProfile } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
   const { showTier, setShowTier, sortMode, setSortMode, useTeamColors, setUseTeamColors } = useTeamBalanceContext();
 
@@ -68,13 +78,22 @@ export const SettingsPage: React.FC = () => {
     localStorage.setItem('app_lang_manual', newLang);
     AnalyticsService.logEvent('change_language', { language: newLang });
   };
-  const onUpdateNickname = (name: string) => { setUserNickname(name); localStorage.setItem('app_user_nickname', name); };
+  const onUpdateNickname = (name: string) => {
+    setUserNickname(name);
+    localStorage.setItem('app_user_nickname', name);
+    if (currentUserId) {
+      saveUserNickname(currentUserId, name);
+      updateNicknameInRooms(currentUserId, name);
+    }
+  };
   const onLogin = () => setShowLoginModal(true);
   const onLogout = () => showConfirm(t('logoutConfirm'), () => handleLogout(setPlayers, setIsDataLoaded), t('logoutTitle'));
   const [langOpen, setLangOpen] = useState(false);
   const [editingNickname, setEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editingSport, setEditingSport] = useState<SportType | null>(null);
 
   const currentLang = LANGUAGES.find(l => l.code === lang);
 
@@ -179,7 +198,7 @@ export const SettingsPage: React.FC = () => {
             {user ? (
               <button
                 onClick={onLogout}
-                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[12px] font-medium text-red-500 transition-all active:scale-[0.98]"
+                className="w-full py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-[12px] font-medium text-red-500 transition-all active:scale-[0.98]"
               >
                 {t('logout')}
               </button>
@@ -194,6 +213,140 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Section: My Skill Profile */}
+      {user && (
+      <>
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
+      <div className="mb-6">
+        <div className="px-1 pb-2">
+          <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('mySkillProfile')}</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          {userProfile?.sports && Object.keys(userProfile.sports).length > 0 ? (
+            <>
+              {(Object.entries(userProfile.sports) as [SportType, UserSportProfile][]).map(([sport, profile]) => (
+                <div key={sport}>
+                  <button
+                    type="button"
+                    className="w-full px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
+                    onClick={() => setEditingSport(editingSport === sport ? null : sport)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[14px]">{SPORT_OPTIONS.find(s => s.type === sport)?.emoji}</span>
+                      <span className="text-[12px] font-medium text-slate-900 dark:text-white">{t(sport.toLowerCase() as any)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[12px] font-bold text-slate-600 dark:text-slate-300">{profile.tier}</span>
+                      <ChevronIcon open={editingSport === sport} />
+                    </div>
+                  </button>
+                  {editingSport === sport && (
+                    <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                      {/* Tier */}
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {['S', 'A', 'B', 'C', 'D'].map(v => (
+                          <button
+                            key={v}
+                            onClick={() => {
+                              const updated = { ...userProfile, sports: { ...userProfile.sports, [sport]: { ...profile, tier: v } } };
+                              updateAndSaveProfile(updated);
+                            }}
+                            className={`py-2 rounded-xl font-medium text-[11px] transition-all ${profile.tier === v ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Position picker (not for General) */}
+                      {sport !== SportType.GENERAL && (
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-2">
+                          <FormationPicker
+                            sport={sport}
+                            primaryP={(profile.primaryPositions || []) as Position[]}
+                            secondaryP={(profile.secondaryPositions || []) as Position[]}
+                            tertiaryP={(profile.tertiaryPositions || []) as Position[]}
+                            forbiddenP={(profile.forbiddenPositions || []) as Position[]}
+                            lang={lang}
+                            onChange={(p, s, tr, f) => {
+                              const updated = { ...userProfile, sports: { ...userProfile.sports, [sport]: { ...profile, primaryPositions: p, secondaryPositions: s, tertiaryPositions: tr, forbiddenPositions: f } } };
+                              updateAndSaveProfile(updated);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {/* Remove sport */}
+                      <button
+                        onClick={() => {
+                          const newSports = { ...userProfile.sports };
+                          delete newSports[sport];
+                          updateAndSaveProfile({ ...userProfile, sports: newSports });
+                          setEditingSport(null);
+                        }}
+                        className="w-full py-2 text-[12px] font-medium text-rose-500 bg-rose-50 dark:bg-rose-950/20 rounded-xl transition-all active:scale-[0.98]"
+                      >
+                        {t('removeSport')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {/* Add sport button */}
+              {Object.keys(userProfile.sports).length < 4 && (
+                <div className="px-5 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {SPORT_OPTIONS.filter(s => !userProfile.sports?.[s.type]).map(({ type, emoji }) => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          const newProfile = {
+                            ...userProfile,
+                            sports: {
+                              ...userProfile.sports,
+                              [type]: { tier: 'B', primaryPositions: [], secondaryPositions: [], tertiaryPositions: [], forbiddenPositions: [] },
+                            },
+                          };
+                          updateAndSaveProfile(newProfile);
+                          setEditingSport(type);
+                        }}
+                        className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-[12px] font-medium text-slate-500 dark:text-slate-400 transition-all active:scale-95 flex items-center gap-1"
+                      >
+                        <span>+</span> {emoji} {t(type.toLowerCase() as any)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="px-5 py-4">
+              <p className="text-[12px] text-slate-400 mb-3">{t('noProfileYet')}</p>
+              <div className="flex flex-wrap gap-2">
+                {SPORT_OPTIONS.map(({ type, emoji }) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      const newProfile = {
+                        sports: { [type]: { tier: 'B', primaryPositions: [], secondaryPositions: [], tertiaryPositions: [], forbiddenPositions: [] } },
+                        onboardingComplete: true,
+                      };
+                      updateAndSaveProfile(newProfile);
+                      setEditingSport(type);
+                    }}
+                    className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-[12px] font-medium text-slate-500 dark:text-slate-400 transition-all active:scale-95 flex items-center gap-1"
+                  >
+                    <span>+</span> {emoji} {t(type.toLowerCase() as any)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      </>
+      )}
+
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
 
       {/* Section: Appearance */}
       <div className="mb-6">
@@ -244,6 +397,8 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
+
       {/* Section: Notifications */}
       <div className="mb-6">
         <div className="px-1 pb-2">
@@ -260,6 +415,8 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
 
       {/* Section: Defaults */}
       <div className="mb-6">
@@ -298,6 +455,8 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
+
       {/* Section: Data Management */}
       <div className="mb-6">
         <div className="px-1 pb-2">
@@ -335,21 +494,14 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
+
       {/* Section 5: About */}
       <div className="mb-6">
         <div className="px-1 pb-2">
           <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('settingsAbout')}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
-          {/* Usage Guide */}
-          <button
-            type="button"
-            className="w-full px-5 py-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800 text-left"
-            onClick={() => setShowGuideModal(true)}
-          >
-            <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('usageGuide')}</span>
-            <span className="text-slate-400"><ExternalLinkIcon /></span>
-          </button>
           {/* Rate App */}
           <button
             type="button"

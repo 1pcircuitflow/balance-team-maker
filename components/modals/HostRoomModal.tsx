@@ -12,10 +12,12 @@ import {
   subscribeToRoom,
   updateRoomFcmToken,
   RecruitmentRoom,
+  Applicant,
   db,
 } from '../../services/firebaseService';
 import { doc, updateDoc } from 'firebase/firestore';
 import { DateTimePicker } from '../DateTimePicker';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 // 방장용 모집 관리 모달
 export const HostRoomModal: React.FC<{
@@ -36,6 +38,7 @@ export const HostRoomModal: React.FC<{
   activePlayerCount: number;
   showAlert: (msg: string, title?: string) => void;
 }> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount, showAlert }) => {
+  const { userProfile } = useAuthContext();
   /* 날짜/시간 초기값 및 상태 관리 */
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -171,6 +174,23 @@ export const HostRoomModal: React.FC<{
     }
     setLoading(true);
     try {
+      // 방장을 첫 번째 참가자로 자동 추가
+      const sportProfile = userProfile?.sports?.[selectedSport];
+      const hostApplicant: Applicant = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
+        name: userNickname,
+        tier: sportProfile?.tier || 'B',
+        position: sportProfile?.primaryPositions?.[0] || 'NONE',
+        primaryPositions: sportProfile?.primaryPositions || [],
+        secondaryPositions: sportProfile?.secondaryPositions || [],
+        tertiaryPositions: sportProfile?.tertiaryPositions || [],
+        forbiddenPositions: sportProfile?.forbiddenPositions || [],
+        userId: currentUserId,
+        isApproved: true,
+        status: 'APPROVED',
+        timestamp: new Date().toISOString(),
+      };
+
       const roomId = await createRecruitmentRoom({
         hostId: currentUserId,
         hostName: userNickname,
@@ -183,6 +203,7 @@ export const HostRoomModal: React.FC<{
         maxApplicants: useLimit ? maxApplicants : 0, // 0이면 무제한
         tierMode: '5TIER',
         visibility,
+        applicants: [hostApplicant],
         ...(localStorage.getItem('fcm_token') ? { fcmToken: localStorage.getItem('fcm_token')! } : {}),
         ...(venue.trim() ? { venue: venue.trim() } : {}),
         ...(description.trim() ? { description: description.trim() } : {}),
@@ -271,7 +292,7 @@ export const HostRoomModal: React.FC<{
               <div className="flex items-center gap-4">
                 <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('sport' as any)}</label>
                 <div className="flex-1 flex overflow-x-auto no-scrollbar gap-2 py-1">
-                  {[SportType.GENERAL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL].map((s) => (
+                  {[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].map((s) => (
                     <button
                       key={s}
                       onClick={() => {
@@ -430,7 +451,7 @@ export const HostRoomModal: React.FC<{
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50"
+            className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50"
           >
             {loading ? (
               <span className="inline-block w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />

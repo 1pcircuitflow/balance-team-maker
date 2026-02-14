@@ -76,7 +76,7 @@ export const HomePage: React.FC = () => {
         style={{ zIndex: Z_INDEX.FAB_BUTTON, bottom: isAdFree ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : 'calc(136px + env(safe-area-inset-bottom, 0px))' }}
       >
         <PlusIcon size={18} />
-        <span className="text-[14px] font-bold">{t('recruitParticipants')}</span>
+        <span className="text-[16px] font-bold">{t('recruitParticipants')}</span>
       </button>}
     </section>
   );
@@ -151,7 +151,7 @@ const RoomCard: React.FC<{
             {room.title}
           </h4>
           {isOwner && (
-            <div className="flex items-center gap-1 shrink-0" ref={menuRef}>
+            <div className="flex items-center gap-2 shrink-0" ref={menuRef}>
               {menuOpen ? (
                 <>
                   <button

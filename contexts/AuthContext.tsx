@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { TRANSLATIONS } from '../translations';
 import { useAppContext } from './AppContext';
-import { loadPlayersFromCloud, removeUserFcmToken } from '../services/firebaseService';
+import { loadPlayersFromCloud, removeUserFcmToken, loadUserProfile, saveUserProfile, loadUserNickname } from '../services/firebaseService';
 import { SAMPLE_PLAYERS_BY_LANG } from '../sampleData';
-import { Player } from '../types';
+import { Player, UserProfile } from '../types';
 import { openKakaoAuth, exchangeKakaoCode } from '../services/kakaoAuthService';
 
 interface AuthContextValue {
@@ -24,6 +24,10 @@ interface AuthContextValue {
   handleLogout: (setPlayers: React.Dispatch<React.SetStateAction<Player[]>>, setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>) => void;
   showLoginModal: boolean;
   setShowLoginModal: React.Dispatch<React.SetStateAction<boolean>>;
+  userProfile: UserProfile | null;
+  setUserProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  needsOnboarding: boolean;
+  updateAndSaveProfile: (profile: UserProfile) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>(null!);
@@ -60,6 +64,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem('app_user_profile');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const needsOnboarding = !!user && (!userProfile || !userProfile.onboardingComplete);
+
+  const updateAndSaveProfile = useCallback(async (profile: UserProfile) => {
+    setUserProfile(profile);
+    localStorage.setItem('app_user_profile', JSON.stringify(profile));
+    if (currentUserId && user) {
+      try {
+        await saveUserProfile(currentUserId, profile);
+      } catch (e) {
+        console.error('Failed to save profile to cloud:', e);
+      }
+    }
+  }, [currentUserId, user]);
 
   const handleGoogleLogin = useCallback(async (
     setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
@@ -72,16 +94,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(googleUser);
       localStorage.setItem('app_user', JSON.stringify(googleUser));
 
-      if (userNickname.startsWith(TRANSLATIONS[lang].guest)) {
-        setUserNickname(googleUser.givenName);
-        localStorage.setItem('app_user_nickname', googleUser.givenName);
-      }
-
       setShowLoginModal(false);
       showAlert(t('welcomeMsg', googleUser.givenName), t('loginSuccessMsg'));
 
       setIsDataLoaded(false);
-      const cloudPlayers = await loadPlayersFromCloud(googleUser.id);
+      const [cloudPlayers, cloudProfile, cloudNickname] = await Promise.all([
+        loadPlayersFromCloud(googleUser.id),
+        loadUserProfile(googleUser.id),
+        loadUserNickname(googleUser.id),
+      ]);
+
+      if (cloudNickname) {
+        setUserNickname(cloudNickname);
+        localStorage.setItem('app_user_nickname', cloudNickname);
+      } else if (userNickname.startsWith(TRANSLATIONS[lang].guest)) {
+        setUserNickname(googleUser.givenName);
+        localStorage.setItem('app_user_nickname', googleUser.givenName);
+      }
+
+      if (cloudProfile) {
+        setUserProfile(cloudProfile);
+        localStorage.setItem('app_user_profile', JSON.stringify(cloudProfile));
+      }
 
       setPlayers(prev => {
         const sampleIdPattern = /^(ko|en|pt|es|ja)_/;
@@ -142,16 +176,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userObj);
       localStorage.setItem('app_user', JSON.stringify(userObj));
 
-      if (userNickname.startsWith(TRANSLATIONS[lang].guest)) {
-        setUserNickname(kakaoUser.givenName);
-        localStorage.setItem('app_user_nickname', kakaoUser.givenName);
-      }
-
       setShowLoginModal(false);
       showAlert(t('welcomeMsg', kakaoUser.givenName), t('loginSuccessMsg'));
 
       setIsDataLoaded(false);
-      const cloudPlayers = await loadPlayersFromCloud(kakaoUser.id);
+      const [cloudPlayers, cloudProfile, cloudNickname] = await Promise.all([
+        loadPlayersFromCloud(kakaoUser.id),
+        loadUserProfile(kakaoUser.id),
+        loadUserNickname(kakaoUser.id),
+      ]);
+
+      if (cloudNickname) {
+        setUserNickname(cloudNickname);
+        localStorage.setItem('app_user_nickname', cloudNickname);
+      } else if (userNickname.startsWith(TRANSLATIONS[lang].guest)) {
+        setUserNickname(kakaoUser.givenName);
+        localStorage.setItem('app_user_nickname', kakaoUser.givenName);
+      }
+
+      if (cloudProfile) {
+        setUserProfile(cloudProfile);
+        localStorage.setItem('app_user_profile', JSON.stringify(cloudProfile));
+      }
 
       setPlayers(prev => {
         const sampleIdPattern = /^(ko|en|pt|es|ja)_/;
@@ -201,6 +247,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setUser(null);
     localStorage.removeItem('app_user');
+    setUserProfile(null);
+    localStorage.removeItem('app_user_profile');
 
     const rand = Math.floor(1000 + Math.random() * 9000);
     const newGuestName = `${TRANSLATIONS[lang].guest}(${rand})`;
@@ -221,7 +269,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, setUser, guestId, currentUserId, userNickname, setUserNickname,
       isAdFree, setIsAdFree, isProcessing, setIsProcessing,
       handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout,
-      showLoginModal, setShowLoginModal
+      showLoginModal, setShowLoginModal,
+      userProfile, setUserProfile, needsOnboarding, updateAndSaveProfile
     }}>
       {children}
     </AuthContext.Provider>
