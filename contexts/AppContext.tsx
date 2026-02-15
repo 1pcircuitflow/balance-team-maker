@@ -80,11 +80,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setConfirmState({ isOpen: true, message, onConfirm, title, confirmText, cancelText });
   }, []);
 
-  // Dark mode class sync
+  // Dark mode class sync + Android navigation bar color
   useEffect(() => {
     localStorage.setItem('app_dark_mode', darkMode.toString());
     if (darkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
+
+    // Android 시스템 네비게이션 바 색상 동기화
+    try {
+      (window as any).NativeNavBar?.setColor(
+        darkMode ? '#020617' : '#FFFFFF',
+        !darkMode
+      );
+    } catch (_) {}
   }, [darkMode]);
 
   // Notification settings sync

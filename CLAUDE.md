@@ -3,7 +3,7 @@
 ## 필수 작업 규칙 (반드시 준수)
 - **언어/말투**: 모든 답변을 한국어 반말로 할 것
 - **질문과 작업 구분**: 사용자가 질문하면 절대 바로 코드 수정하지 말 것. 반드시 대답만 → 제안 → 승인 후 진행할 것
-- **작업방식**: 더 좋은 방안이 있으면 반드시 3가지 이상 선택지를 제안하고, 추천안 1개를 포함할 것, 작업 난이도도 포함할 것.
+- **작업방식**: 더 좋은 방안이 있으면 반드시 3가지 이상 선택지를 제안하고, 추천안 1개를 포함할 것, 작업 난이도, 로직꼬임 위험도도 포함할 것.
 - **빌드/싱크**: 코드 수정 후 바로 `npm run build && npx cap sync`까지 진행할 것 (중간에 확인 받지 말 것)
 - **커밋**: 사용자가 직접 지시할 때만 커밋할 것 (절대 알아서 커밋하지 말 것)
 - **CLAUDE.md 자동 업데이트**: 파일 생성/삭제, 아키텍처 변경 시 CLAUDE.md도 함께 업데이트할 것
@@ -33,7 +33,7 @@ balance-team-maker/
 ├── App.tsx                    # 메인 앱 컴포넌트 (Provider 트리 + AppContent)
 ├── index.tsx                  # 엔트리 포인트
 ├── index.html                 # HTML 템플릿 + Tailwind 설정
-├── types.ts                   # 전역 타입 정의 (Player, Team, BalanceResult 등)
+├── types.ts                   # 전역 타입 정의 (Player, Team, BalanceResult, VenueData 등)
 ├── constants.ts               # 상수 (티어, 색상, 포지션, Z-Index 등)
 ├── translations.ts            # 다국어 번역 (ko/en/es/ja/pt)
 ├── Icons.tsx                  # SVG 아이콘 컴포넌트 모음
@@ -57,6 +57,7 @@ balance-team-maker/
 │   ├── SportFilterButton.tsx  # HOME용 종목 드롭다운 필터
 │   ├── SportSegmentControl.tsx# MEMBERS용 종목 세그먼트 컨트롤
 │   ├── Toast.tsx              # 토스트 알림
+│   ├── VenueSearchInput.tsx   # 장소 검색 (카카오맵) + 사진 업로드 통합 컴포넌트
 │   └── modals/                # 모달 컴포넌트
 │       ├── BaseModal.tsx      # 모달 공통 베이스
 │       ├── AlertModal.tsx     # 알림 모달
@@ -100,7 +101,9 @@ balance-team-maker/
 │   ├── firebaseService.ts     # Firebase CRUD
 │   ├── analyticsService.ts    # 이벤트 추적
 │   ├── paymentService.ts      # 인앱 결제
-│   └── kakaoAuthService.ts    # 카카오 로그인 서비스
+│   ├── kakaoAuthService.ts    # 카카오 로그인 서비스
+│   ├── kakaoMapService.ts     # 카카오맵 키워드 검색 API 래퍼
+│   └── storageService.ts      # Firebase Storage 업로드/다운로드 + 이미지 리사이징
 │
 ├── pages/                     # 페이지 컴포넌트
 │   ├── HomePage.tsx           # 홈 페이지 (경기 목록)

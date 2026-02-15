@@ -179,7 +179,7 @@ export const SettingsPage: React.FC = () => {
                   value={nicknameInput}
                   onChange={e => setNicknameInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleNicknameSave(); }}
-                  className="w-32 px-2 py-1 text-[14px] text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-32 px-2 py-1 text-[14px] text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-lg text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                   autoFocus
                 />
                 <button onClick={handleNicknameSave} className="text-emerald-500 p-1">

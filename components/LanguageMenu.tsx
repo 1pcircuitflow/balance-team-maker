@@ -39,7 +39,7 @@ export const LanguageMenu: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 p-2 animate-in fade-in zoom-in-95 duration-200" style={{ zIndex: Z_INDEX.LANGUAGE_MENU }}>
+        <div className="absolute right-0 mt-2 w-48 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-transparent p-2 animate-in fade-in zoom-in-95 duration-200" style={{ zIndex: Z_INDEX.LANGUAGE_MENU }}>
           <div className="p-2">
             <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">{t('language')}</span>
             <div className="space-y-1">

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AppPageType } from '../types';
 import { Z_INDEX } from '../constants';
 import { TRANSLATIONS } from '../translations';
+import { getApplicantStatus, getApprovedCount, isRoomFull } from '../utils/helpers';
 import { useAppContext } from '../contexts/AppContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
@@ -15,7 +16,7 @@ export const HomePage: React.FC = () => {
   const { currentUserId, isAdFree, showLoginModal } = useAuthContext();
   const { currentPage, setCurrentPage } = useNavigationContext();
   const {
-    filteredRooms, publicRooms,
+    filteredRooms, appliedRooms, likedRooms, publicRooms,
     setCurrentActiveRoom, showHostRoomModal, setShowHostRoomModal,
     handleShareRecruitLink, handleCloseRecruitRoom,
   } = useRecruitmentContext();
@@ -35,14 +36,16 @@ export const HomePage: React.FC = () => {
   };
 
   const hasMyRooms = filteredRooms.length > 0;
+  const hasAppliedRooms = appliedRooms.length > 0;
+  const hasLikedRooms = likedRooms.length > 0;
   const hasPublicRooms = publicRooms.length > 0;
-  const hasNoRooms = !hasMyRooms && !hasPublicRooms;
+  const hasNoRooms = !hasMyRooms && !hasAppliedRooms && !hasLikedRooms && !hasPublicRooms;
 
   return (
     <section className="w-full px-5" data-capture-ignore="true">
       <div className="space-y-3">
         {hasNoRooms ? (
-          <div className="w-full h-[112px] rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2">
+          <div className="w-full h-[112px] rounded-2xl border-2 border-dashed border-slate-200 dark:border-transparent flex flex-col items-center justify-center gap-2">
             <p className="text-[12px] font-black text-slate-400 dark:text-slate-500 px-8 text-center leading-relaxed">{t('noScheduledMatch')}</p>
           </div>
         ) : (
@@ -51,6 +54,22 @@ export const HomePage: React.FC = () => {
               <>
                 {filteredRooms.map((room) => (
                   <RoomCard key={room.id} room={room} isOwner t={t} lang={lang}
+                    onRoomClick={onRoomClick} onShareLink={onShareLink} onDeleteRoom={onDeleteRoom} />
+                ))}
+              </>
+            )}
+            {hasAppliedRooms && (
+              <>
+                {appliedRooms.map((room) => (
+                  <RoomCard key={room.id} room={room} isOwner={false} isApplied currentUserId={currentUserId} t={t} lang={lang}
+                    onRoomClick={onRoomClick} onShareLink={onShareLink} onDeleteRoom={onDeleteRoom} />
+                ))}
+              </>
+            )}
+            {hasLikedRooms && (
+              <>
+                {likedRooms.map((room) => (
+                  <RoomCard key={room.id} room={room} isOwner={false} isLiked t={t} lang={lang}
                     onRoomClick={onRoomClick} onShareLink={onShareLink} onDeleteRoom={onDeleteRoom} />
                 ))}
               </>
@@ -67,23 +86,42 @@ export const HomePage: React.FC = () => {
         )}
       </div>
 
-      {/* FAB 경기생성 버튼 */}
-      {currentPage === AppPageType.HOME && !showHostRoomModal && !showLoginModal && <button
-        onClick={onCreateRoom}
-        className="fixed right-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900
-                   rounded-full px-5 h-[48px] shadow-2xl shadow-slate-900/30 dark:shadow-white/20
-                   flex items-center gap-2 transition-all active:scale-95 hover:shadow-3xl"
-        style={{ zIndex: Z_INDEX.FAB_BUTTON, bottom: isAdFree ? 'calc(80px + env(safe-area-inset-bottom, 0px))' : 'calc(136px + env(safe-area-inset-bottom, 0px))' }}
-      >
-        <PlusIcon size={18} />
-        <span className="text-[16px] font-bold">{t('recruitParticipants')}</span>
-      </button>}
+      {/* 하단 고정 경기생성 버튼 */}
+      {currentPage === AppPageType.HOME && !showHostRoomModal && !showLoginModal && (
+        <div
+          className="fixed left-0 right-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
+          style={{
+            zIndex: Z_INDEX.FAB_BUTTON,
+            bottom: isAdFree ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : 'calc(116px + env(safe-area-inset-bottom, 0px))',
+            paddingBottom: '12px',
+          }}
+        >
+          <button
+            onClick={onCreateRoom}
+            className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900
+                       py-3 rounded-2xl shadow-lg shadow-slate-900/30 dark:shadow-white/20
+                       flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+          >
+            <PlusIcon size={18} />
+            <span className="text-[16px] font-bold">{t('recruitParticipants')}</span>
+          </button>
+        </div>
+      )}
     </section>
   );
 };
 
-// 종목 이미지 경로 헬퍼
+// 종목 이미지 경로 헬퍼 (venueData 사진 우선)
 const getSportImage = (room: any) => {
+  if (room.venueData?.photoUrl) return room.venueData.photoUrl;
+  const seed = room.id ? room.id.charCodeAt(room.id.length - 1) % 2 + 1 : 1;
+  const sport = room.sport.toLowerCase();
+  const name = sport === 'general' ? 'tennis' : sport;
+  return `/images/${name}-${seed}.jpeg`;
+};
+
+// 종목 기본 이미지 (폴백용)
+const getFallbackSportImage = (room: any) => {
   const seed = room.id ? room.id.charCodeAt(room.id.length - 1) % 2 + 1 : 1;
   const sport = room.sport.toLowerCase();
   const name = sport === 'general' ? 'tennis' : sport;
@@ -94,18 +132,23 @@ const getSportImage = (room: any) => {
 const RoomCard: React.FC<{
   room: any;
   isOwner: boolean;
+  isApplied?: boolean;
+  isLiked?: boolean;
+  currentUserId?: string | null;
   t: (key: string, ...args: any[]) => string;
   lang: string;
   onRoomClick: (room: any) => void;
   onShareLink: (room: any) => void;
   onDeleteRoom: (room: any) => void;
-}> = ({ room, isOwner, t, lang, onRoomClick, onShareLink, onDeleteRoom }) => {
+}> = ({ room, isOwner, isApplied, isLiked, currentUserId, t, lang, onRoomClick, onShareLink, onDeleteRoom }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const pendingApplicants = room.applicants.filter((a: any) => !a.isApproved);
-  const approvedCount = room.applicants.filter((a: any) => a.isApproved).length;
-  const isFull = room.maxApplicants > 0 && approvedCount >= room.maxApplicants;
+  const pendingApplicants = room.applicants.filter((a: any) => getApplicantStatus(a) === 'PENDING');
+  const approvedCount = getApprovedCount(room.applicants);
+  const isFull = isRoomFull(room);
+  const isClosed = room.status === 'CLOSED';
+  const myApproved = isApplied && currentUserId && room.applicants.some((a: any) => a.userId === currentUserId && getApplicantStatus(a) === 'APPROVED');
 
   // 카드 외부 클릭 시 메뉴 닫기
   const handleClickOutside = useCallback((e: MouseEvent) => {
@@ -124,7 +167,7 @@ const RoomCard: React.FC<{
   return (
     <div
       onClick={() => onRoomClick(room)}
-      className="w-full bg-white dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800
+      className="w-full bg-white dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-transparent
                  flex flex-row overflow-hidden active:scale-[0.98] transition-all duration-200 cursor-pointer
                  animate-in zoom-in-95"
     >
@@ -134,6 +177,7 @@ const RoomCard: React.FC<{
           src={getSportImage(room)}
           alt={room.sport}
           className="w-full h-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).src = getFallbackSportImage(room); }}
         />
         {/* 종목 뱃지 오버레이 */}
         <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-full">
@@ -196,44 +240,71 @@ const RoomCard: React.FC<{
         </div>
 
         {/* 2행: 장소 */}
-        {room.venue && (
+        {(room.venueData?.placeName || room.venue) && (
           <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 tracking-[-0.025em] truncate flex items-center gap-1">
             <Icons.LocationArrowIcon size={12} className="shrink-0" />
-            {room.venue}
+            {room.venueData?.placeName || room.venue}
           </p>
         )}
 
-        {/* 3행: 날짜 + 시간 */}
-        <div className="flex items-center gap-3 text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-[-0.025em]">
-          <span className="flex items-center gap-1">
-            <Icons.CalendarIcon size={13} />
-            {(() => {
-              const [, m, d] = room.matchDate.split('-');
-              const day = (TRANSLATIONS[lang as keyof typeof TRANSLATIONS] as any).days[new Date(room.matchDate).getDay()];
-              return `${parseInt(m)}.${parseInt(d)}(${day})`;
-            })()}
-          </span>
-          <span className="flex items-center gap-1">
-            <Icons.ClockIcon size={13} />
-            {room.matchTime}{room.matchEndTime ? ` - ${room.matchEndTime}` : ''}
-          </span>
-        </div>
-
-        {/* 4행: 참가자 수 + 상태 뱃지 */}
+        {/* 3행: 날짜 + 시간 + MY/참가완료 뱃지 */}
         <div className="flex items-center justify-between">
-          <span className="text-[20px] font-black text-slate-800 dark:text-slate-200 tabular-nums tracking-[-0.025em] leading-none">
-            {approvedCount}
-            <span className="text-slate-300 dark:text-slate-600 mx-0.5">/</span>
-            <span className="text-[12px] text-slate-400 dark:text-slate-500">{room.maxApplicants > 0 ? room.maxApplicants : t('unlimited')}</span>
-          </span>
+          <div className="flex items-center gap-3 text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-[-0.025em]">
+            <span className="flex items-center gap-1">
+              <Icons.CalendarIcon size={13} />
+              {(() => {
+                const [, m, d] = room.matchDate.split('-');
+                const day = (TRANSLATIONS[lang as keyof typeof TRANSLATIONS] as any).days[new Date(room.matchDate).getDay()];
+                return `${parseInt(m)}.${parseInt(d)}(${day})`;
+              })()}
+            </span>
+            <span className="flex items-center gap-1">
+              <Icons.ClockIcon size={13} />
+              {room.matchTime}{room.matchEndTime ? ` - ${room.matchEndTime}` : ''}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {isOwner && (
               <div className="text-[12px] font-medium px-2 py-0.5 rounded-xl tracking-[-0.025em] text-white bg-blue-500">
                 MY
               </div>
             )}
-            <div className={`text-[12px] font-medium px-2 py-0.5 rounded-xl tracking-[-0.025em] text-white ${isFull ? 'bg-rose-500' : 'bg-emerald-500'}`}>
-              {isFull ? t('recruitFull') : t('recruiting')}
+            {isApplied && (
+              <div className={`text-[12px] font-medium px-2 py-0.5 rounded-xl tracking-[-0.025em] text-white ${myApproved ? 'bg-blue-500' : 'bg-amber-500'}`}>
+                {myApproved ? t('participationConfirmed') : t('applied')}
+              </div>
+            )}
+            {isLiked && (
+              <div className="text-[12px] font-medium px-2 py-0.5 rounded-xl tracking-[-0.025em] text-white bg-rose-500 flex items-center gap-0.5">
+                <Icons.HeartIcon size={10} filled className="text-white" />
+                {t('liked')}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 4행: 참가자 수 + 조회수/찜수 + 모집상태 뱃지 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[20px] font-black text-slate-800 dark:text-slate-200 tabular-nums tracking-[-0.025em] leading-none">
+              {approvedCount}
+              <span className="text-slate-300 dark:text-slate-600 mx-0.5">/</span>
+              <span className="text-[12px] text-slate-400 dark:text-slate-500">{room.maxApplicants > 0 ? room.maxApplicants : t('unlimited')}</span>
+            </span>
+            <div className="flex items-center gap-2 text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-[-0.025em]">
+              <span className="flex items-center gap-1">
+                <Icons.EyeIcon size={13} />
+                <span className="tabular-nums">{room.viewCount || 0}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <Icons.HeartIcon size={13} filled={(room.likedBy?.length || 0) > 0} className={(room.likedBy?.length || 0) > 0 ? 'text-rose-400' : ''} />
+                <span className="tabular-nums">{room.likedBy?.length || 0}</span>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className={`text-[12px] font-medium px-2 py-0.5 rounded-xl tracking-[-0.025em] text-white ${isClosed || isFull ? 'bg-slate-500' : 'bg-emerald-500'}`}>
+              {isClosed || isFull ? t('recruitClosedBadge') : t('recruiting')}
             </div>
           </div>
         </div>

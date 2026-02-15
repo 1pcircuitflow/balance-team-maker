@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { TRANSLATIONS } from '../translations';
 import { useAppContext } from './AppContext';
-import { loadPlayersFromCloud, removeUserFcmToken, loadUserProfile, saveUserProfile, loadUserNickname } from '../services/firebaseService';
+import { loadPlayersFromCloud, removeUserFcmToken, loadUserProfile, saveUserProfile, loadUserNickname, syncApplicantProfile } from '../services/firebaseService';
 import { SAMPLE_PLAYERS_BY_LANG } from '../sampleData';
 import { Player, UserProfile } from '../types';
 import { openKakaoAuth, exchangeKakaoCode } from '../services/kakaoAuthService';
@@ -77,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentUserId && user) {
       try {
         await saveUserProfile(currentUserId, profile);
+        syncApplicantProfile(currentUserId, profile);
       } catch (e) {
         console.error('Failed to save profile to cloud:', e);
       }

@@ -214,7 +214,7 @@ const AppContent: React.FC = () => {
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const getAvailableTabs = useCallback((): SportType[] => {
-    return (Object.values(SportType) as SportType[]).filter(v => v !== SportType.ALL);
+    return [SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL];
   }, []);
 
   const handleSwipeTouchStart = useCallback((e: React.TouchEvent) => {
@@ -245,12 +245,12 @@ const AppContent: React.FC = () => {
   // ========= RENDER =========
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'} font-sans p-0 flex flex-col items-center`}
-      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: isAdFree ? 'calc(70px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' : 'calc(126px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
+      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: isAdFree ? 'calc(120px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' : 'calc(176px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
       onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
 
       <OfflineBanner />
 
-      {isGenerating && <LoadingOverlay lang={lang} activeTab={activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
+      {isGenerating && <LoadingOverlay lang={lang} activeTab={(currentActiveRoom?.sport as SportType) || activeTab} darkMode={darkMode} countdown={countdown} isAdFree={isPro} />}
 
       {/* Sticky Header: Announcement + Sport Tabs */}
       {currentPage === AppPageType.HOME && (

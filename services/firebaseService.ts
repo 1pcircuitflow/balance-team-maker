@@ -14,11 +14,14 @@ import {
     arrayUnion,
     arrayRemove,
     deleteDoc,
-    limit
+    limit,
+    getDocs,
+    writeBatch,
+    increment
 } from "firebase/firestore";
 import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Player, UserProfile } from "../types";
+import { Player, UserProfile, SportType, VenueData } from "../types";
 
 /**
  * Firebase 재시도 래퍼 — unavailable/deadline-exceeded 또는 오프라인 시에만 재시도
@@ -99,8 +102,19 @@ export interface RecruitmentRoom {
     tierMode?: '5TIER' | '3TIER'; // 티어 체계 (5단계 또는 3단계)
     fcmToken?: string; // 방장의 FCM 토큰
     venue?: string; // 장소
+    venueData?: VenueData; // 구조화된 장소 데이터 (카카오맵 검색 결과)
     visibility?: 'PUBLIC' | 'PRIVATE'; // 공개/비공개 (기존 방은 undefined → PRIVATE 취급)
     region?: string; // 지역 (선택)
+    description?: string; // 방 설명
+    viewCount?: number; // 조회수
+    likedBy?: string[]; // 찜한 유저 ID 목록
+    latestResult?: {
+        teams: any[];
+        standardDeviation: number;
+        positionSatisfaction?: number;
+        createdAt: string;
+        isPreview?: boolean;
+    };
 }
 
 
@@ -120,6 +134,41 @@ export const createRecruitmentRoom = async (roomData: Omit<RecruitmentRoom, 'id'
         return newDoc.id;
     } catch (error) {
         console.error("Error creating room:", error);
+        throw error;
+    }
+};
+
+/**
+ * 1-1. 조회수 증가
+ */
+export const incrementViewCount = async (roomId: string) => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        await updateDoc(roomRef, { viewCount: increment(1) });
+    } catch (error) {
+        console.error("Error incrementing view count:", error);
+    }
+};
+
+/**
+ * 1-2. 찜 토글 (추가/제거)
+ */
+export const toggleLikeRoom = async (roomId: string, userId: string): Promise<boolean> => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        const snap = await getDoc(roomRef);
+        if (!snap.exists()) return false;
+        const data = snap.data();
+        const likedBy: string[] = data.likedBy || [];
+        const isLiked = likedBy.includes(userId);
+        if (isLiked) {
+            await updateDoc(roomRef, { likedBy: arrayRemove(userId) });
+        } else {
+            await updateDoc(roomRef, { likedBy: arrayUnion(userId) });
+        }
+        return !isLiked;
+    } catch (error) {
+        console.error("Error toggling like:", error);
         throw error;
     }
 };
@@ -155,14 +204,18 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
         const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
         const currentApplicants = roomData.applicants || [];
 
+        // 마감된 방 체크
+        if (roomData.status === 'CLOSED') throw new Error('ROOM_CLOSED');
+
         // 중복 신청 체크 (같은 fcmToken이 이미 있으면 차단)
         if (applicant.fcmToken) {
             const duplicate = currentApplicants.find(a => a.fcmToken === applicant.fcmToken);
             if (duplicate) throw new Error('DUPLICATE_APPLICATION');
         }
 
-        // 정원 초과 체크
-        if (roomData.maxApplicants > 0 && currentApplicants.length >= roomData.maxApplicants) {
+        // 정원 초과 체크 (승인된 인원 기준)
+        const approvedCount = currentApplicants.filter(a => a.status === 'APPROVED' || (a.isApproved && !a.status)).length;
+        if (roomData.maxApplicants > 0 && approvedCount >= roomData.maxApplicants) {
             throw new Error('ROOM_FULL');
         }
 
@@ -286,7 +339,7 @@ export const subscribeToPublicRooms = (
 ) => {
     const constraints: any[] = [
         where("visibility", "==", "PUBLIC"),
-        where("status", "==", "OPEN"),
+        where("status", "in", ["OPEN", "CLOSED"]),
     ];
     if (sport && sport !== 'ALL') {
         constraints.push(where("sport", "==", sport));
@@ -303,6 +356,38 @@ export const subscribeToPublicRooms = (
         console.error("Public rooms subscription error:", error);
         if (onError) onError(error);
     });
+};
+
+/**
+ * 7-2. 팀 나누기 결과 저장
+ */
+export const saveTeamResultToRoom = async (roomId: string, result: { teams: any[]; standardDeviation: number; positionSatisfaction?: number }, isPreview: boolean = false) => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        const cleanData = JSON.parse(JSON.stringify({
+            teams: result.teams,
+            standardDeviation: result.standardDeviation,
+            positionSatisfaction: result.positionSatisfaction,
+            createdAt: new Date().toISOString(),
+            isPreview,
+        }));
+        await updateDoc(roomRef, { latestResult: cleanData });
+    } catch (error) {
+        console.error("Error saving team result:", error);
+    }
+};
+
+/**
+ * 7-3. 모집방 상태 변경 (OPEN/CLOSED)
+ */
+export const updateRoomStatus = async (roomId: string, status: 'OPEN' | 'CLOSED') => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        await updateDoc(roomRef, { status });
+    } catch (error) {
+        console.error("Error updating room status:", error);
+        throw error;
+    }
 };
 
 /**
@@ -356,6 +441,18 @@ export const saveUserFcmToken = async (userId: string, token: string) => {
         }
     } catch (e) {
         console.error("Save FCM token error:", e);
+    }
+};
+
+/**
+ * 10-1. 사용자 언어 설정을 Firestore에 저장 (Cloud Functions 다국어 알림용)
+ */
+export const saveUserLanguage = async (userId: string, language: string) => {
+    try {
+        const userRef = doc(db, "users", userId);
+        await setDoc(userRef, { language }, { merge: true });
+    } catch (e) {
+        console.error("Save language error:", e);
     }
 };
 
@@ -503,4 +600,75 @@ export const loadUserProfile = async (userId: string): Promise<UserProfile | nul
             throw e;
         }
     });
+};
+
+/**
+ * 15. 프로필 변경 시 참가한 모집방의 applicant 정보 동기화
+ */
+export const syncApplicantProfile = async (userId: string, profile: UserProfile) => {
+    try {
+        const roomsRef = collection(db, "rooms");
+        const q = query(roomsRef, where('status', '==', 'OPEN'));
+        const snapshot = await getDocs(q);
+
+        const batch = writeBatch(db);
+        let hasUpdates = false;
+
+        snapshot.forEach(docSnap => {
+            const room = docSnap.data() as Omit<RecruitmentRoom, 'id'>;
+            const applicants = room.applicants || [];
+            const myApplicant = applicants.find(a => a.userId === userId);
+
+            if (myApplicant) {
+                const sportProfile = profile.sports[room.sport as SportType];
+                if (sportProfile) {
+                    const updatedApplicants = applicants.map(a =>
+                        a.userId === userId ? {
+                            ...a,
+                            tier: sportProfile.tier,
+                            position: sportProfile.primaryPositions?.[0] || a.position,
+                            primaryPositions: sportProfile.primaryPositions,
+                            secondaryPositions: sportProfile.secondaryPositions,
+                            tertiaryPositions: sportProfile.tertiaryPositions,
+                            forbiddenPositions: sportProfile.forbiddenPositions,
+                        } : a
+                    );
+                    batch.update(docSnap.ref, { applicants: updatedApplicants });
+                    hasUpdates = true;
+                }
+            }
+        });
+
+        if (hasUpdates) await batch.commit();
+    } catch (e) {
+        console.error('Failed to sync applicant profile:', e);
+    }
+};
+
+/**
+ * 16. 장소 사진 정보 조회 (venues 컬렉션)
+ */
+export const getVenueInfo = async (placeId: string): Promise<VenueData | null> => {
+    try {
+        const snap = await getDoc(doc(db, "venues", placeId));
+        if (snap.exists()) {
+            return snap.data() as VenueData;
+        }
+        return null;
+    } catch (e) {
+        console.error("Get venue info error:", e);
+        return null;
+    }
+};
+
+/**
+ * 17. 장소 사진 정보 저장 (venues 컬렉션)
+ */
+export const saveVenueInfo = async (placeId: string, venueData: Partial<VenueData>) => {
+    try {
+        await setDoc(doc(db, "venues", placeId), venueData, { merge: true });
+    } catch (e) {
+        console.error("Save venue info error:", e);
+        throw e;
+    }
 };

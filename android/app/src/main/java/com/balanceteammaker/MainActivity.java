@@ -1,8 +1,11 @@
 package com.balanceteammaker;
 
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
@@ -29,6 +32,26 @@ public class MainActivity extends BridgeActivity {
                 new Handler(Looper.getMainLooper()).post(() -> keepSplashScreen = false);
             }
         }, "NativeSplash");
+
+        // 네비게이션 바 색상을 JS에서 동적으로 변경할 수 있도록 인터페이스 등록
+        getBridge().getWebView().addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void setColor(String color, boolean isLight) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    getWindow().setNavigationBarColor(Color.parseColor(color));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        View decorView = getWindow().getDecorView();
+                        int flags = decorView.getSystemUiVisibility();
+                        if (isLight) {
+                            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                        } else {
+                            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                        }
+                        decorView.setSystemUiVisibility(flags);
+                    }
+                });
+            }
+        }, "NativeNavBar");
 
         // 구글 로그인 플러그인 등록
         registerPlugin(GoogleAuth.class);

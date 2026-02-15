@@ -129,7 +129,7 @@ export const FormationPicker: React.FC<{
                   style={{ left: pos.x, top: pos.y }}
                 >
                   {isMenuOpen && (
-                    <div className="absolute bottom-full mb-3 p-1 bg-white dark:bg-slate-900 rounded-full animate-in zoom-in-50 fade-in duration-200 origin-bottom flex items-center gap-1.5 min-w-max pointer-events-auto shadow-xl border border-slate-100 dark:border-slate-800">
+                    <div className="absolute bottom-full mb-3 p-1 bg-white dark:bg-slate-900 rounded-full animate-in zoom-in-50 fade-in duration-200 origin-bottom flex items-center gap-1.5 min-w-max pointer-events-auto shadow-xl border border-slate-100 dark:border-transparent">
                       {[
                         { l: 1, v: '100' },
                         { l: 2, v: '75' },

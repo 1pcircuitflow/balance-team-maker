@@ -18,7 +18,7 @@ const TIER_COLORS: Record<string, { active: string; dark: string }> = {
   A: { active: 'bg-rose-50 text-rose-700 border-rose-100 shadow-lg shadow-rose-500/10', dark: 'dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800' },
   B: { active: 'bg-blue-50 text-blue-700 border-blue-100 shadow-lg shadow-blue-500/10', dark: 'dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' },
   C: { active: 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-lg shadow-emerald-500/10', dark: 'dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800' },
-  D: { active: 'bg-slate-50 text-slate-600 border-slate-200 shadow-lg shadow-slate-500/10', dark: 'dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700' },
+  D: { active: 'bg-amber-50 text-amber-700 border-amber-200 shadow-lg shadow-amber-500/10', dark: 'dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' },
 };
 
 export const OnboardingModal: React.FC = () => {
@@ -242,8 +242,8 @@ export const OnboardingModal: React.FC = () => {
                 <span className="text-base font-black text-emerald-600 dark:text-emerald-400">C</span>
                 <p className="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">{t('tierCDesc')}</p>
               </div>
-              <div className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50">
-                <span className="text-base font-black text-slate-600 dark:text-slate-400">D</span>
+              <div className="flex items-center gap-4 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50">
+                <span className="text-base font-black text-amber-600 dark:text-amber-400">D</span>
                 <p className="text-[13px] font-bold text-slate-700 dark:text-slate-300 leading-tight">{t('tierDDesc')}</p>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { Tier, SportType, AppPageType } from '../types';
 import { TIER_BADGE_COLORS, TEAM_COLORS, Z_INDEX } from '../constants';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
 import { useAppContext } from '../contexts/AppContext';
+import { useAuthContext } from '../contexts/AuthContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
 import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
 import { useRecruitmentContext } from '../contexts/RecruitmentContext';
@@ -12,6 +13,7 @@ const { ArrowLeftIcon, ShareIcon, RotateCcwIcon, CheckIcon, MinusIcon, PlusIcon 
 
 export const BalancePage: React.FC = React.memo(() => {
   const { t, lang, darkMode } = useAppContext();
+  const { isAdFree } = useAuthContext();
   const { setCurrentPage } = useNavigationContext();
   const {
     teamCount, setTeamCount, result, setResult, isSharing,
@@ -27,7 +29,7 @@ export const BalancePage: React.FC = React.memo(() => {
   const TIER_COLORS = TIER_BADGE_COLORS;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300" style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}>
+    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300" style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
       <header className="sticky top-0 z-50 bg-white dark:bg-slate-950 px-4 pt-[40px] pb-[8px] border-b border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center w-full">
           <button
@@ -60,7 +62,7 @@ export const BalancePage: React.FC = React.memo(() => {
                 </button>
 
                 {isQuotaSettingsExpanded && (
-                  <div className="mt-4 px-5 py-4 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300 overflow-y-auto max-h-[60vh]">
+                  <div className="mt-4 px-5 py-4 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-transparent animate-in fade-in slide-in-from-top-2 duration-300 overflow-y-auto max-h-[60vh]">
                     <QuotaFormationPicker
                       sport={currentActiveRoom.sport as SportType}
                       quotas={quotas}
@@ -163,14 +165,14 @@ export const BalancePage: React.FC = React.memo(() => {
               </div>
 
               {showHistory && (
-                <div data-capture-ignore="true" className="mb-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div data-capture-ignore="true" className="mb-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-transparent animate-in fade-in slide-in-from-top-2 duration-300">
                   <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest mb-3 uppercase">{t('resultHistory')}</h3>
                   <div className="space-y-2">
                     {resultHistory.map((hist, i) => (
                       <button
                         key={i}
                         onClick={() => { setResult(hist); setShowHistory(false); }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all active:scale-[0.98] ${result === hist ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all active:scale-[0.98] ${result === hist ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-transparent' : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-transparent hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">#{i + 1}</span>
@@ -180,7 +182,7 @@ export const BalancePage: React.FC = React.memo(() => {
                         </div>
                         <div className="flex items-center gap-2">
                           {hist.teams.map((team, ti) => (
-                            <span key={ti} className="text-[10px] font-mono font-bold text-slate-500">{team.totalSkill}</span>
+                            <span key={ti} className="text-[10px] font-mono font-bold text-slate-500">{(team.totalSkill / team.players.length).toFixed(1)}</span>
                           ))}
                         </div>
                       </button>
@@ -257,12 +259,12 @@ export const BalancePage: React.FC = React.memo(() => {
                           onClick={() => setEditingResultTeamIdx(editingResultTeamIdx === idx ? null : idx)}
                           className="flex items-center gap-1.5 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
                         >
-                          <div className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" style={team.color ? { backgroundColor: team.color } : {}} />
+                          <div className="w-4 h-4 rounded border border-slate-300 dark:border-transparent bg-white dark:bg-slate-800" style={team.color ? { backgroundColor: team.color } : {}} />
                         </div>
                       </div>
                       <div className="text-right">
                         <span className="block text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">{t('squadSum')}</span>
-                        <span className="text-[20px] font-black font-mono leading-none text-slate-900 dark:text-white">{team.totalSkill}</span>
+                        <span className="text-[20px] font-black font-mono leading-none text-slate-900 dark:text-white">{(team.totalSkill / team.players.length).toFixed(1)}</span>
                       </div>
                     </div>
 
@@ -282,7 +284,7 @@ export const BalancePage: React.FC = React.memo(() => {
 
                     <div className="space-y-1">
                       {getSortedTeamPlayers(team.players).map(p => (
-                        <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 transition-all">
+                        <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent transition-all">
                           <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
                             BELO
                           </div>
@@ -338,29 +340,34 @@ export const BalancePage: React.FC = React.memo(() => {
                 ))}
               </div>
 
-              <button
-                data-capture-ignore="true"
-                onClick={() => handleGenerate()}
-                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 mt-6"
-              >
-                {t('reshuffleTeams')}
-              </button>
-              <div className="hidden px-2 pt-2" data-promo-footer="true">
-                <div className={`mt-6 py-3 px-4 rounded-2xl flex items-center justify-center ${darkMode ? 'bg-slate-900/40' : 'bg-slate-100/50'}`}>
-                  <h4 className={`text-[14px] font-semibold tracking-tight pt-0.5 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('promoAppTitle')}</h4>
-                </div>
-              </div>
+              {result.createdAt && (() => {
+                const d = new Date(result.createdAt);
+                const timeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                return (
+                  <p className="text-[14px] font-medium text-slate-400 dark:text-slate-500 text-center mt-4">
+                    {t('resultGeneratedAt', timeStr)}
+                  </p>
+                );
+              })()}
             </div>
           )}
         </div>
       </div>
       </div>
 
-      <div className="sticky bottom-0 bg-white dark:bg-slate-950 p-2 border-t border-slate-100 dark:border-slate-800" data-capture-ignore="true">
-        <div className="w-full h-[50px] bg-slate-50 dark:bg-slate-900/50 rounded-xl flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800">
-          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t('adPlacementSlot')}</span>
+      {/* 하단 고정 버튼 */}
+      {result && (
+        <div className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
+          data-capture-ignore="true"
+          style={{ paddingBottom: isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}>
+          <button
+            onClick={() => handleGenerate()}
+            className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95"
+          >
+            {t('reshuffleTeams')}
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 });

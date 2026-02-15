@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { Player, SportType } from '../types';
+import { Player, SportType, VenueData } from '../types';
 import { RecruitmentRoom, Applicant } from '../services/firebaseService';
 import { useRecruitmentRooms } from '../hooks/useRecruitmentRooms';
 import { useAppContext } from './AppContext';
@@ -11,6 +11,8 @@ interface RecruitmentContextValue {
   activeRooms: RecruitmentRoom[];
   setActiveRooms: React.Dispatch<React.SetStateAction<RecruitmentRoom[]>>;
   filteredRooms: RecruitmentRoom[];
+  appliedRooms: RecruitmentRoom[];
+  likedRooms: RecruitmentRoom[];
   publicRooms: RecruitmentRoom[];
   currentActiveRoom: RecruitmentRoom | null;
   setCurrentActiveRoom: React.Dispatch<React.SetStateAction<RecruitmentRoom | null>>;
@@ -45,6 +47,8 @@ interface RecruitmentContextValue {
   setHostRoomMaxApplicants: (v: number) => void;
   hostRoomVenue: string;
   setHostRoomVenue: (v: string) => void;
+  hostRoomVenueData: VenueData | null;
+  setHostRoomVenueData: (v: VenueData | null) => void;
   hostRoomDescription: string;
   setHostRoomDescription: (v: string) => void;
   hostRoomVisibility: 'PUBLIC' | 'PRIVATE';
@@ -59,6 +63,7 @@ interface RecruitmentContextValue {
   handleRestoreApplicant: (room: RecruitmentRoom, applicant: Applicant) => void;
   handleUpdateApplicant: (room: RecruitmentRoom, applicantId: string, updates: Partial<Applicant>) => void;
   handleApproveAllApplicants: (room: RecruitmentRoom) => void;
+  handleToggleRoomStatus: (room: RecruitmentRoom) => void;
   handleShareRecruitLink: (room: RecruitmentRoom) => void;
   handleCloseRecruitRoom: (room: RecruitmentRoom, onConfirm?: () => void) => {
     title: string;

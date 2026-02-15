@@ -28,7 +28,8 @@
       "Bash(firebase functions:log:*)",
       "Bash(npm run dev:*)",
       "Bash(npx firebase deploy:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(ls:*)"
     ]
   }
 }

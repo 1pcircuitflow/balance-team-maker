@@ -15,7 +15,15 @@ export const SelectionModeBar: React.FC = React.memo(() => {
   if (!selectionMode) return null;
   return (
     <div className="fixed left-0 right-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom duration-300 overflow-hidden"
-      style={{ zIndex: Z_INDEX.SELECTION_BAR, bottom: currentPage === AppPageType.DETAIL ? (isAdFree ? 'env(safe-area-inset-bottom, 0px)' : 'calc(56px + env(safe-area-inset-bottom, 0px))') : (isAdFree ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : 'calc(116px + env(safe-area-inset-bottom, 0px))'), paddingBottom: currentPage === AppPageType.DETAIL ? (isAdFree ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : '1rem') : '1rem' }}>
+      style={{
+        zIndex: Z_INDEX.SELECTION_BAR,
+        bottom: currentPage === AppPageType.DETAIL
+          ? 0
+          : (isAdFree ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : 'calc(116px + env(safe-area-inset-bottom, 0px))'),
+        paddingBottom: currentPage === AppPageType.DETAIL
+          ? (isAdFree ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : 'calc(80px + 1rem)')
+          : '1rem',
+      }}>
       <div className={`h-1 w-full ${selectionMode === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
       <div className="max-w-4xl mx-auto flex flex-col gap-3 p-4">
         <div className="flex items-center justify-between">

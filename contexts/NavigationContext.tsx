@@ -42,7 +42,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [membersTab, setMembersTab] = useState<SportType>(() => {
     const saved = localStorage.getItem('last_active_tab');
-    return (saved as SportType) || SportType.GENERAL;
+    return (saved as SportType) || SportType.SOCCER;
   });
 
   const changeTab = useCallback((tab: SportType) => {

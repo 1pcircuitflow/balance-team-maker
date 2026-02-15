@@ -1,7 +1,30 @@
 
 import { Player, Position, SportType, Tier } from '../types';
-import { Applicant } from '../services/firebaseService';
+import { Applicant, RecruitmentRoom } from '../services/firebaseService';
 import { TRANSLATIONS, Language } from '../translations';
+
+/**
+ * 신청자 상태를 일관되게 판단 (status 우선, 없으면 isApproved로 폴백)
+ */
+export const getApplicantStatus = (a: Applicant): 'PENDING' | 'APPROVED' | 'REJECTED' => {
+  if (a.status) return a.status;
+  return a.isApproved ? 'APPROVED' : 'PENDING';
+};
+
+/**
+ * 승인된 인원 수를 일관되게 계산
+ */
+export const getApprovedCount = (applicants: Applicant[]): number => {
+  return applicants.filter(a => getApplicantStatus(a) === 'APPROVED').length;
+};
+
+/**
+ * 정원 초과 여부 판단
+ */
+export const isRoomFull = (room: RecruitmentRoom): boolean => {
+  if (room.maxApplicants <= 0) return false;
+  return getApprovedCount(room.applicants) >= room.maxApplicants;
+};
 
 export const compareVersions = (v1: string, v2: string) => {
   const parts1 = v1.split('.').map(Number);

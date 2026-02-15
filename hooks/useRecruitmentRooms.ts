@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Player, Tier, SportType, Position, BottomTabType } from '../types';
+import { Player, Tier, SportType, Position, BottomTabType, VenueData } from '../types';
 import {
   subscribeToUserRooms,
   subscribeToPublicRooms,
   updateRoomFcmToken,
   cancelApplication,
+  updateRoomStatus,
   RecruitmentRoom,
   Applicant,
   db,
 } from '../services/firebaseService';
-import { upsertPlayerFromApplicant } from '../utils/helpers';
+import { upsertPlayerFromApplicant, getApplicantStatus, getApprovedCount } from '../utils/helpers';
 import { doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
@@ -50,6 +51,7 @@ export const useRecruitmentRooms = (
   const [hostRoomVisibility, setHostRoomVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
   const [hostRoomActivePicker, setHostRoomActivePicker] = useState<'START' | 'END'>('START');
   const [hostRoomIsPickerSelectionMode, setHostRoomIsPickerSelectionMode] = useState(false);
+  const [hostRoomVenueData, setHostRoomVenueData] = useState<VenueData | null>(null);
 
   const prevApplicantsCount = useRef<Record<string, number>>({});
 
@@ -96,6 +98,32 @@ export const useRecruitmentRooms = (
     }).sort(sortByMatchTime);
   }, [publicRooms, activeTab, currentUserId]);
 
+  // 내가 신청한 방 (공개방 중 내 userId가 applicants에 포함된 방)
+  const appliedRooms = useMemo(() => {
+    if (!currentUserId) return [];
+    return filteredPublicRooms.filter(r =>
+      r.applicants.some(a => a.userId === currentUserId)
+    );
+  }, [filteredPublicRooms, currentUserId]);
+
+  // 찜한 공개방 (내가 신청하지 않은 것 중 찜한 것)
+  const likedRooms = useMemo(() => {
+    if (!currentUserId) return [];
+    return filteredPublicRooms.filter(r =>
+      !r.applicants.some(a => a.userId === currentUserId) &&
+      (r.likedBy || []).includes(currentUserId)
+    );
+  }, [filteredPublicRooms, currentUserId]);
+
+  // 신청하지 않은 공개방 (찜한 방 제외)
+  const generalPublicRooms = useMemo(() => {
+    if (!currentUserId) return filteredPublicRooms;
+    return filteredPublicRooms.filter(r =>
+      !r.applicants.some(a => a.userId === currentUserId) &&
+      !(r.likedBy || []).includes(currentUserId)
+    );
+  }, [filteredPublicRooms, currentUserId]);
+
   // Subscribe to public rooms — HOME 탭일 때만 구독
   useEffect(() => {
     if (currentBottomTab !== BottomTabType.HOME) {
@@ -115,12 +143,12 @@ export const useRecruitmentRooms = (
 
     const unsubscribe = subscribeToUserRooms(currentUserId, (rooms) => {
       rooms.forEach(room => {
-        const pendingCount = room.applicants.filter(a => !a.isApproved).length;
+        const pendingCount = room.applicants.filter(a => getApplicantStatus(a) === 'PENDING').length;
         const prevPending = prevApplicantsCount.current[room.id];
         if (prevPending !== undefined && pendingCount > prevPending) {
           const recruitEnabled = localStorage.getItem('app_recruit_notif_enabled') !== 'false';
           if (recruitEnabled) {
-            const newPlayer = room.applicants.filter(a => !a.isApproved).slice(-1)[0];
+            const newPlayer = room.applicants.filter(a => getApplicantStatus(a) === 'PENDING').slice(-1)[0];
             if (newPlayer) {
               const msg = t('appliedMsg', newPlayer.name, room.applicants.length);
               // 네이티브: FCM이 백그라운드/포그라운드 모두 처리
@@ -196,6 +224,13 @@ export const useRecruitmentRooms = (
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
       setPlayers(prev => upsertPlayerFromApplicant(prev, applicant, room.sport as SportType));
+
+      // 자동 마감: 승인 후 정원 초과 체크
+      const newApprovedCount = getApprovedCount(updatedApplicants);
+      if (room.maxApplicants > 0 && newApprovedCount >= room.maxApplicants && room.status === 'OPEN') {
+        await updateRoomStatus(room.id, 'CLOSED');
+        showAlert(t('autoClosedMsg'));
+      }
     } catch (e) {
       console.error("Approval Error:", e);
       showAlert(t('approveErrorMsg'));
@@ -282,14 +317,32 @@ export const useRecruitmentRooms = (
       // Firebase 성공 후에만 로컬 상태 업데이트
       setPlayers(prev => {
         let result = prev;
-        room.applicants.filter(a => !a.isApproved).forEach(a => {
+        room.applicants.filter(a => getApplicantStatus(a) !== 'APPROVED').forEach(a => {
           result = upsertPlayerFromApplicant(result, a, room.sport as SportType);
         });
         return result;
       });
+
+      // 자동 마감: 전체 승인 후 정원 초과 체크
+      const newApprovedCount = getApprovedCount(updatedApplicants);
+      if (room.maxApplicants > 0 && newApprovedCount >= room.maxApplicants && room.status === 'OPEN') {
+        await updateRoomStatus(room.id, 'CLOSED');
+        showAlert(t('autoClosedMsg'));
+      }
     } catch (e) {
       console.error("Approve All Error:", e);
       showAlert(t('approveErrorMsg'));
+    }
+  };
+
+  const handleToggleRoomStatus = async (room: RecruitmentRoom) => {
+    try {
+      const newStatus = room.status === 'OPEN' ? 'CLOSED' : 'OPEN';
+      await updateRoomStatus(room.id, newStatus);
+      showAlert(newStatus === 'CLOSED' ? t('recruitmentClosedMsg') : t('recruitmentReopenedMsg'));
+    } catch (e) {
+      console.error("Toggle Room Status Error:", e);
+      showAlert(t('saveErrorMsg'));
     }
   };
 
@@ -347,7 +400,7 @@ export const useRecruitmentRooms = (
     setIsProcessing(true);
     try {
       const roomRef = doc(db, 'rooms', currentActiveRoom.id);
-      const updateData = {
+      const updateData: Record<string, any> = {
         title: hostRoomTitle,
         sport: hostRoomSelectedSport,
         matchDate: hostRoomDate,
@@ -360,6 +413,9 @@ export const useRecruitmentRooms = (
         description: hostRoomDescription.trim() || undefined,
         visibility: hostRoomVisibility,
       };
+      if (hostRoomVenueData) {
+        updateData.venueData = hostRoomVenueData;
+      }
       await updateDoc(roomRef, updateData);
       setCurrentActiveRoom(prev => prev ? { ...prev, ...updateData } : null);
       setCurrentPage(AppPageType.DETAIL);
@@ -375,7 +431,9 @@ export const useRecruitmentRooms = (
   return {
     activeRooms, setActiveRooms,
     filteredRooms,
-    publicRooms: filteredPublicRooms,
+    publicRooms: generalPublicRooms,
+    appliedRooms,
+    likedRooms,
     currentActiveRoom, setCurrentActiveRoom,
     showHostRoomModal, setShowHostRoomModal,
     showApplyRoomModal, setShowApplyRoomModal,
@@ -392,6 +450,7 @@ export const useRecruitmentRooms = (
     hostRoomUseLimit, setHostRoomUseLimit,
     hostRoomMaxApplicants, setHostRoomMaxApplicants,
     hostRoomVenue, setHostRoomVenue,
+    hostRoomVenueData, setHostRoomVenueData,
     hostRoomDescription, setHostRoomDescription,
     hostRoomVisibility, setHostRoomVisibility,
     hostRoomActivePicker, setHostRoomActivePicker,
@@ -401,6 +460,7 @@ export const useRecruitmentRooms = (
     handleRestoreApplicant,
     handleUpdateApplicant,
     handleApproveAllApplicants,
+    handleToggleRoomStatus,
     handleShareRecruitLink,
     handleCloseRecruitRoom,
     handleUpdateRoom,

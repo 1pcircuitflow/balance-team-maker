@@ -9,7 +9,7 @@ import { Browser } from '@capacitor/browser';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { AnalyticsService } from '../services/analyticsService';
 import { paymentService, PRODUCT_IDS } from '../services/paymentService';
-import { checkAppVersion, updateRoomFcmToken, saveUserFcmToken } from '../services/firebaseService';
+import { checkAppVersion, updateRoomFcmToken, saveUserFcmToken, saveUserLanguage } from '../services/firebaseService';
 import { compareVersions } from '../utils/helpers';
 import { Language } from '../translations';
 
@@ -157,6 +157,13 @@ export const useInitialization = (
       localStorage.setItem('app_position_usage', JSON.stringify(freshUsage));
     }
   }, []);
+
+  // 언어 변경 시 Firestore에 저장 (Cloud Functions 다국어 알림용)
+  useEffect(() => {
+    if (currentUserId) {
+      saveUserLanguage(currentUserId, lang);
+    }
+  }, [lang, currentUserId]);
 
   // Push notifications & deep links
   useEffect(() => {

@@ -14,7 +14,7 @@ export const TIER_COLORS: Record<Tier, string> = {
   [Tier.A]: 'bg-rose-500',
   [Tier.B]: 'bg-orange-500',
   [Tier.C]: 'bg-emerald-500',
-  [Tier.D]: 'bg-slate-400',
+  [Tier.D]: 'bg-amber-400',
 };
 
 export const STORAGE_KEY = 'futsal_balance_pro_players_v3';
@@ -24,7 +24,7 @@ export const TIER_BADGE_COLORS: Record<Tier, string> = {
   [Tier.A]: 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   [Tier.B]: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   [Tier.C]: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  [Tier.D]: 'bg-slate-50 text-slate-400 dark:bg-slate-950 dark:text-slate-500',
+  [Tier.D]: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
 };
 
 export const SPORT_IMAGES: Record<SportType, string[]> = {
@@ -49,25 +49,29 @@ export const TEAM_COLORS = [
 ];
 
 export const Z_INDEX = {
-  INFO_MODAL: 1100,
-  REVIEW_PROMPT: 1200,
-  LANGUAGE_MENU: 1500,
-  POSITION_LIMIT: 1600,
-  DEFAULT_MODAL: 2000,
+  // Non-modal UI (BOTTOM_TAB 이하)
   STICKY_HEADER: 2000,
   PAGE_OVERLAY: 2000,
   SELECTION_BAR: 2100,
-  LOGIN_RECOMMEND: 2500,
-  MEMBER_PICKER: 2500,
-  REWARD_AD: 2500,
-
-  RESULT_OVERLAY: 3000,
   FILTER_DROPDOWN: 3000,
   FAB_BUTTON: 3500,
   BOTTOM_TAB: 4000,
-  TOAST: 4500,
-  LOADING_OVERLAY: 5000,
-  ALERT_MODAL: 8000,
+
+  // Modals & Overlays (BOTTOM_TAB 위)
+  INFO_MODAL: 5000,
+  REVIEW_PROMPT: 5100,
+  LANGUAGE_MENU: 5500,
+  POSITION_LIMIT: 5600,
+  DEFAULT_MODAL: 6000,
+  LOGIN_RECOMMEND: 6500,
+  MEMBER_PICKER: 6500,
+  REWARD_AD: 6500,
+  RESULT_OVERLAY: 7000,
+
+  // System Overlays
+  TOAST: 8000,
+  LOADING_OVERLAY: 8500,
+  ALERT_MODAL: 9000,
   OFFLINE_BANNER: 9999,
   UPDATE_MODAL: 9999,
 } as const;

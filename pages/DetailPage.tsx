@@ -1,10 +1,10 @@
 import React from 'react';
-import { Player, Tier, SportType, AppPageType, BottomTabType, DetailPageTab, Position } from '../types';
+import { Player, Tier, SportType, AppPageType, BottomTabType, DetailPageTab, Position, BalanceResult } from '../types';
 import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT, Z_INDEX } from '../constants';
-import { cancelApplication, cancelMyApplication, applyForParticipation } from '../services/firebaseService';
+import { cancelApplication, cancelMyApplication, applyForParticipation, incrementViewCount, toggleLikeRoom } from '../services/firebaseService';
 import { FormationPicker } from '../components/FormationPicker';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
-import { parseTier, tierToLabel, applicantToPlayer, upsertPlayerFromApplicant } from '../utils/helpers';
+import { parseTier, tierToLabel, applicantToPlayer, upsertPlayerFromApplicant, getApplicantStatus, getApprovedCount, isRoomFull } from '../utils/helpers';
 import { useAppContext } from '../contexts/AppContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlayerContext } from '../contexts/PlayerContext';
@@ -38,12 +38,12 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   } = useTeamBalanceContext();
   const {
     currentActiveRoom: room,
-    setHostRoomSelectedSport, setHostRoomTitle, setHostRoomVenue, setHostRoomDescription,
+    setHostRoomSelectedSport, setHostRoomTitle, setHostRoomVenue, setHostRoomVenueData, setHostRoomDescription,
     setHostRoomDate, setHostRoomTime, setHostRoomEndDate, setHostRoomEndTime,
     setHostRoomUseLimit, setHostRoomMaxApplicants,
     setHostRoomVisibility,
     setHostRoomActivePicker, setHostRoomIsPickerSelectionMode,
-    handleShareRecruitLink, handleCloseRecruitRoom,
+    handleShareRecruitLink, handleCloseRecruitRoom, handleToggleRoomStatus,
     handleApproveApplicant, handleRejectApplicant, handleRestoreApplicant, handleApproveAllApplicants, handleUpdateApplicant,
     activeActionMenuId, setActiveActionMenuId,
     editingApplicantId, setEditingApplicantId,
@@ -63,22 +63,49 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   const [applyLoading, setApplyLoading] = React.useState(false);
   const [applyError, setApplyError] = React.useState<string | null>(null);
   const [isDescExpanded, setIsDescExpanded] = React.useState(false);
+  const [likeLoading, setLikeLoading] = React.useState(false);
+  const [optimisticLiked, setOptimisticLiked] = React.useState<boolean | null>(null);
+
+  // 조회수 증가 (상세페이지 진입 시 1회)
+  React.useEffect(() => {
+    if (room?.id) {
+      incrementViewCount(room.id);
+    }
+  }, [room?.id]);
+
+  // Firestore 데이터가 실제로 갱신되면 optimistic 상태 리셋
+  React.useEffect(() => {
+    setOptimisticLiked(null);
+  }, [room?.likedBy]);
+
+  const isLiked = optimisticLiked !== null
+    ? optimisticLiked
+    : (currentUserId ? (room?.likedBy || []).includes(currentUserId) : false);
+  const handleToggleLike = async () => {
+    if (!currentUserId || !room?.id || likeLoading) return;
+    setLikeLoading(true);
+    setOptimisticLiked(!isLiked);
+    try {
+      await toggleLikeRoom(room.id, currentUserId);
+    } catch {
+      setOptimisticLiked(null);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   if (!room) return null;
   const isHost = room.hostId === currentUserId;
   const TIER_COLORS = TIER_BADGE_COLORS;
-  // status 기반 필터링 (하위 호환: status 없으면 isApproved로 판별)
-  const getApplicantStatus = (a: typeof room.applicants[0]) => {
-    if (a.status) return a.status;
-    return a.isApproved ? 'APPROVED' : 'PENDING';
-  };
+  const isFull = isRoomFull(room);
   const pendingApplicants = room.applicants.filter(a => getApplicantStatus(a) === 'PENDING');
   const rejectedApplicants = room.applicants.filter(a => getApplicantStatus(a) === 'REJECTED');
   const approvedApplicants = room.applicants.filter(a => getApplicantStatus(a) === 'APPROVED');
   const myApplication = !isHost ? room.applicants.find(a => a.userId === currentUserId) : null;
   const myStatus = myApplication ? getApplicantStatus(myApplication) : null;
   const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
-  const bgImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
+  const fallbackImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
+  const bgImg = room.venueData?.photoUrl || fallbackImg;
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden" style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}>
@@ -96,15 +123,25 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           <h3 className="text-[20px] font-semibold text-slate-900 dark:text-white tracking-[-0.025em]">
             {isHost ? t('manageMatchDetail') : t('matchDetail')}
           </h3>
-          <div className="w-8" />
+          {currentUserId ? (
+            <button
+              onClick={handleToggleLike}
+              disabled={likeLoading}
+              className="p-1 -mr-1 transition-all active:scale-90 disabled:opacity-50"
+            >
+              <Icons.HeartIcon size={22} filled={isLiked} className={isLiked ? 'text-rose-500' : 'text-slate-300 dark:text-slate-600'} />
+            </button>
+          ) : (
+            <div className="w-8" />
+          )}
         </div>
       </header>
 
-      <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-48' : 'pb-36'}`}>
+      <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-52' : 'pb-40'}`}>
         <div className="w-full">
           {/* Room banner */}
-          <div className="w-full h-[120px] rounded-3xl overflow-hidden relative shadow-xl border border-slate-100 dark:border-slate-800 shrink-0">
-            <img src={bgImg} alt={room.sport} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="w-full h-[120px] rounded-3xl overflow-hidden relative shadow-xl border border-slate-100 dark:border-transparent shrink-0">
+            <img src={bgImg} alt={room.sport} className="absolute inset-0 w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = fallbackImg; }} />
             <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
             <div className="absolute inset-0 p-3 flex flex-col justify-between text-white">
               <div className="flex justify-between items-center">
@@ -134,7 +171,8 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       e.stopPropagation();
                       setHostRoomSelectedSport(room.sport as SportType);
                       setHostRoomTitle(room.title);
-                      setHostRoomVenue(room.venue || '');
+                      setHostRoomVenue(room.venueData?.placeName || room.venue || '');
+                      setHostRoomVenueData(room.venueData || null);
                       setHostRoomDescription(room.description || '');
                       setHostRoomDate(room.matchDate);
                       setHostRoomTime(room.matchTime);
@@ -177,8 +215,8 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 
               <div className="flex items-center justify-between my-auto">
                 <div className="flex-1 min-w-0">
-                  {room.venue && (
-                    <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venue}</p>
+                  {(room.venueData?.placeName || room.venue) && (
+                    <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venueData?.placeName || room.venue}</p>
                   )}
                 </div>
                 {isHost && (
@@ -198,7 +236,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 </div>
                 <div className="text-right leading-none">
                   <span className="text-[20px] font-medium tracking-tighter tabular-nums leading-none">
-                    {room.applicants.filter(a => a.isApproved).length}
+                    {getApprovedCount(room.applicants)}
                     <span className="text-white mx-1">/</span>
                     <span className="text-[12px]">{room.maxApplicants > 0 ? room.maxApplicants : '\u221E'}</span>
                   </span>
@@ -212,7 +250,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             const hostApp = room.applicants.find(a => a.userId === room.hostId);
             return (
             <div className="mt-3">
-              <div className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
+              <div className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent">
                 <div className="flex items-center gap-4">
                   <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
                     BELO
@@ -283,10 +321,10 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 
           {/* Tabs */}
           {isHost ? (
-          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 gap-6 mt-4">
+          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 gap-6 mt-4 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setDetailTab(DetailPageTab.PENDING)}
-              className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.PENDING
+              className={`relative shrink-0 whitespace-nowrap px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.PENDING
                 ? 'text-slate-900 dark:text-white font-bold'
                 : 'text-slate-400 dark:text-slate-500 font-medium'
                 }`}
@@ -299,7 +337,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             </button>
             <button
               onClick={() => setDetailTab(DetailPageTab.APPROVED)}
-              className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.APPROVED
+              className={`relative shrink-0 whitespace-nowrap px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.APPROVED
                 ? 'text-slate-900 dark:text-white font-bold'
                 : 'text-slate-400 dark:text-slate-500 font-medium'
                 }`}
@@ -311,8 +349,20 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               )}
             </button>
             <button
+              onClick={() => setDetailTab(DetailPageTab.TEAM_RESULT)}
+              className={`relative shrink-0 whitespace-nowrap px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.TEAM_RESULT
+                ? 'text-slate-900 dark:text-white font-bold'
+                : 'text-slate-400 dark:text-slate-500 font-medium'
+                }`}
+            >
+              <span>{t('teamResultTab')}</span>
+              {detailTab === DetailPageTab.TEAM_RESULT && (
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
+              )}
+            </button>
+            <button
               onClick={() => setDetailTab(DetailPageTab.REJECTED)}
-              className={`relative px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.REJECTED
+              className={`relative shrink-0 whitespace-nowrap px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.REJECTED
                 ? 'text-slate-900 dark:text-white font-bold'
                 : 'text-slate-400 dark:text-slate-500 font-medium'
                 }`}
@@ -325,16 +375,37 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             </button>
           </div>
           ) : (
-          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 mt-4">
-            <div className="px-0 py-3 text-[14px] text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+          <div className="flex shrink-0 border-b border-slate-100 dark:border-slate-800 gap-6 mt-4 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => setDetailTab(DetailPageTab.APPROVED)}
+              className={`relative shrink-0 whitespace-nowrap px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.APPROVED
+                ? 'text-slate-900 dark:text-white font-bold'
+                : 'text-slate-400 dark:text-slate-500 font-medium'
+                }`}
+            >
               <span>{t('approvedParticipantsList')}</span>
               <span className="text-[11px] opacity-60">({approvedApplicants.length})</span>
-            </div>
+              {detailTab === DetailPageTab.APPROVED && (
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
+              )}
+            </button>
+            <button
+              onClick={() => setDetailTab(DetailPageTab.TEAM_RESULT)}
+              className={`relative shrink-0 whitespace-nowrap px-0 py-3 text-[14px] transition-all duration-300 flex items-center gap-1.5 ${detailTab === DetailPageTab.TEAM_RESULT
+                ? 'text-slate-900 dark:text-white font-bold'
+                : 'text-slate-400 dark:text-slate-500 font-medium'
+                }`}
+            >
+              <span>{t('teamResultTab')}</span>
+              {detailTab === DetailPageTab.TEAM_RESULT && (
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 dark:bg-white animate-in fade-in duration-300" />
+              )}
+            </button>
           </div>
           )}
 
           {/* 게스트: 내 신청 상태 배지 */}
-          {!isHost && myApplication && myStatus && (
+          {!isHost && myApplication && myStatus && myStatus !== 'APPROVED' && (
             <div className={`mt-3 px-4 py-2.5 rounded-2xl flex items-center justify-between ${
               myStatus === 'PENDING' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
               myStatus === 'APPROVED' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
@@ -359,14 +430,16 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* Swipeable content */}
           <div
             className="flex flex-col gap-6 relative mt-3 flex-1 min-h-[400px]"
-            onTouchStart={isHost ? (e) => setTouchStartX(e.touches[0].clientX) : undefined}
-            onTouchEnd={isHost ? (e) => {
+            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+            onTouchEnd={(e) => {
               if (touchStartX === null) return;
               const touchEndX = e.changedTouches[0].clientX;
               const diff = touchStartX - touchEndX;
               const threshold = 60;
               if (Math.abs(diff) > threshold) {
-                const tabOrder = [DetailPageTab.PENDING, DetailPageTab.APPROVED, DetailPageTab.REJECTED];
+                const tabOrder = isHost
+                  ? [DetailPageTab.PENDING, DetailPageTab.APPROVED, DetailPageTab.TEAM_RESULT, DetailPageTab.REJECTED]
+                  : [DetailPageTab.APPROVED, DetailPageTab.TEAM_RESULT];
                 const currentIdx = tabOrder.indexOf(detailTab);
                 if (diff > 0 && currentIdx < tabOrder.length - 1) {
                   setDetailTab(tabOrder[currentIdx + 1]);
@@ -375,8 +448,131 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 }
               }
               setTouchStartX(null);
-            } : undefined}
+            }}
           >
+            {detailTab === DetailPageTab.TEAM_RESULT ? (
+              /* 팀 결과 콘텐츠 */
+              <div className="animate-in fade-in duration-300">
+                {room.latestResult ? (() => {
+                  const lr = room.latestResult;
+                  const createdDate = new Date(lr.createdAt);
+                  const timeStr = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}-${String(createdDate.getDate()).padStart(2, '0')} ${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`;
+                  return (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                          lr.isPreview
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        }`}>
+                          {lr.isPreview ? t('previewResult') : t('finalResult')}
+                        </span>
+                        <span className="text-[11px] text-slate-400">{timeStr}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col items-center text-center">
+                          <span className="text-[12px] font-bold uppercase text-slate-900 dark:text-slate-100 mb-1">{t('standardDeviation')}</span>
+                          <span className="text-[30px] font-black font-mono leading-none">{lr.standardDeviation.toFixed(2)}</span>
+                          <span className="text-[10px] text-slate-900 dark:text-slate-100 mt-1">({t('lowerFairer')})</span>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <span className="text-[12px] font-bold uppercase text-slate-900 dark:text-slate-100 mb-1">{t('penaltyScore')}</span>
+                          <span className="text-[30px] font-black font-mono leading-none text-blue-500">{lr.positionSatisfaction?.toFixed(1) || '0.0'}</span>
+                          <span className="text-[10px] text-slate-900 dark:text-slate-100 mt-1">({t('penaltyScoreDesc')})</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-6">
+                        {lr.teams.map((team: any, idx: number) => (
+                          <div key={team.id || idx} className="overflow-hidden">
+                            <div className="flex items-center justify-between mb-4 px-1">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[14px]"
+                                  style={team.color ? { backgroundColor: team.color, color: (team.color === '#ffffff' || team.color === '#eab308') ? '#0f172a' : 'white', border: team.color === '#ffffff' ? '1px solid #e2e8f0' : 'none' } : { backgroundColor: '#0f172a', color: 'white' }}
+                                >
+                                  {idx + 1}
+                                </div>
+                                <h4 className="text-[18px] font-bold text-slate-900 dark:text-white tracking-tight uppercase">
+                                  {team.colorName ? t('teamNameWithColor', t(team.colorName || '')) : `TEAM ${String.fromCharCode(65 + idx)}`} ({team.players.length})
+                                </h4>
+                              </div>
+                              <div className="text-right">
+                                <span className="block text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">{t('squadSum')}</span>
+                                <span className="text-[20px] font-black font-mono leading-none text-slate-900 dark:text-white">{(team.totalSkill / team.players.length).toFixed(1)}</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              {team.players.map((p: any) => {
+                                const tierVal = typeof p.tier === 'number' ? p.tier : parseInt(p.tier) || 3;
+                                return (
+                                  <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent">
+                                    <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
+                                      BELO
+                                    </div>
+                                    {room.sport !== SportType.GENERAL && (
+                                      <div className="w-10 text-[14px] font-bold text-slate-400 shrink-0 text-center">
+                                        {p.assignedPosition || '--'}
+                                      </div>
+                                    )}
+                                    <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        {showTier && (
+                                          <span className={`px-1.5 py-0.5 rounded-md text-[12px] font-medium tracking-tight ${TIER_COLORS[tierVal as Tier] || TIER_COLORS[Tier.B]}`}>
+                                            {Tier[tierVal as Tier] || 'B'}
+                                          </span>
+                                        )}
+                                        <span className="text-[16px] font-medium text-slate-900 dark:text-white truncate tracking-tight">
+                                          {p.name}
+                                        </span>
+                                      </div>
+                                      {room.sport !== SportType.GENERAL && (
+                                        <div className="flex items-center gap-1.5 overflow-hidden">
+                                          {p.primaryPositions?.map((pos: string, pIdx: number) => (
+                                            <div key={`p-${pIdx}`} className="flex items-center gap-0.5 shrink-0">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                              <span className="text-[11px] font-medium text-emerald-500 uppercase tracking-tight">{pos}</span>
+                                            </div>
+                                          ))}
+                                          {p.secondaryPositions?.map((pos: string, sIdx: number) => (
+                                            <div key={`s-${sIdx}`} className="flex items-center gap-0.5 shrink-0">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                              <span className="text-[11px] font-medium text-yellow-400 uppercase tracking-tight">{pos}</span>
+                                            </div>
+                                          ))}
+                                          {p.tertiaryPositions?.map((pos: string, tIdx: number) => (
+                                            <div key={`t-${tIdx}`} className="flex items-center gap-0.5 shrink-0">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                                              <span className="text-[11px] font-medium text-orange-400 uppercase tracking-tight">{pos}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <p className="text-[12px] font-medium text-slate-400 dark:text-slate-500 text-center mt-2">
+                        {t('resultGeneratedAt', timeStr)}
+                      </p>
+                    </div>
+                  );
+                })() : (
+                  <div className="py-16 text-center space-y-4 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                      <Icons.UsersIcon size={24} className="text-slate-300 dark:text-slate-600" />
+                    </div>
+                    <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight whitespace-pre-line">{t('noTeamResultYet')}</p>
+                  </div>
+                )}
+              </div>
+            ) : (<>
             {/* Action buttons row */}
             <div className="flex items-center w-full gap-2 overflow-x-auto no-scrollbar">
               <button
@@ -434,7 +630,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 
             {/* Constraints display */}
             {isHost && (() => {
-              const approvedIds = new Set(room.applicants.filter(a => a.isApproved).map(a => {
+              const approvedIds = new Set(room.applicants.filter(a => getApplicantStatus(a) === 'APPROVED').map(a => {
                 const member = players.find(p => p.name === a.name);
                 return member ? member.id : a.id;
               }));
@@ -700,6 +896,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 </div>
               )}
             </div>
+          </>)}
           </div>
 
           {/* Host: Balance settings overlay backdrop */}
@@ -716,14 +913,13 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* Host: Balance settings bottom sheet */}
           {isHost && (
           <div
-            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bottom-0 bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : ''}`}
+            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
             style={{
-              bottom: isBalanceSettingsOpen
-                ? 0
-                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))'),
+              bottom: 0,
               paddingBottom: isBalanceSettingsOpen
-                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))')
-                : 0,
+                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px')
+                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px'),
+              paddingTop: isBalanceSettingsOpen ? undefined : '12px',
               maxHeight: isBalanceSettingsOpen ? '85vh' : 'auto',
             }}
           >
@@ -811,58 +1007,79 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 </div>
               )}
 
-              <button
-                onClick={() => {
-                  if (!isBalanceSettingsOpen) {
-                    setIsBalanceSettingsOpen(true);
-                    return;
-                  }
-
-                  const approvedApps = room.applicants.filter(a => a.isApproved);
-                  if (approvedApps.length < 2) {
-                    showAlert(t('minPlayersAlert', 2, approvedApps.length));
-                    return;
-                  }
-
-                  const manualPlayers: Player[] = approvedApps.map(app => {
-                    const member = players.find(p => p.name === app.name);
-                    return applicantToPlayer(app, room.sport as SportType, { existingId: member?.id || app.id });
-                  });
-
-                  const perTeamCount = Math.floor(manualPlayers.length / teamCount);
-                  const targetSportSub = room.sport as SportType;
-                  const validPosForSport = POSITIONS_BY_SPORT[targetSportSub] || ['NONE'];
-
-                  const totalQuotaSum = Object.entries(quotas).reduce((sum, [pos, v]) => {
-                    if (validPosForSport.includes(pos as Position)) {
-                      return sum + (Number(v) || 0);
+              <div className="flex items-center gap-2 w-full">
+                {isFull ? (
+                  <button
+                    disabled
+                    className="px-4 py-3 rounded-2xl text-[14px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed shrink-0"
+                  >
+                    {room.status === 'CLOSED' ? t('reopenRecruitment') : t('closeRecruitment')}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleToggleRoomStatus(room)}
+                    className={`px-4 py-3 rounded-2xl text-[14px] font-bold transition-all active:scale-95 shrink-0 ${
+                      room.status === 'CLOSED'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-rose-500 text-white'
+                    }`}
+                  >
+                    {room.status === 'CLOSED' ? t('reopenRecruitment') : t('closeRecruitment')}
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (!isBalanceSettingsOpen) {
+                      setIsBalanceSettingsOpen(true);
+                      return;
                     }
-                    return sum;
-                  }, 0 as number);
 
-                  if ((totalQuotaSum as number) > (perTeamCount as number)) {
-                    showAlert(t('quotaOverMaxAlert', perTeamCount, totalQuotaSum));
-                    return;
-                  }
+                    const approvedApps = room.applicants.filter(a => getApplicantStatus(a) === 'APPROVED');
+                    if (approvedApps.length < 2) {
+                      showAlert(t('minPlayersAlert', 2, approvedApps.length));
+                      return;
+                    }
 
-                  setPlayers(prev => {
-                    let newList = [...prev];
-                    approvedApps.forEach(app => {
-                      newList = upsertPlayerFromApplicant(newList, app, room.sport as SportType, true);
+                    const manualPlayers: Player[] = approvedApps.map(app => {
+                      const member = players.find(p => p.name === app.name);
+                      return applicantToPlayer(app, room.sport as SportType, { existingId: member?.id || app.id });
                     });
-                    return newList;
-                  });
 
-                  setResult(null);
-                  setSelectedPlayerIds([]);
-                  setSelectionMode(null);
-                  handleGenerate(manualPlayers, room.sport as SportType);
-                  setIsBalanceSettingsOpen(false);
-                }}
-                className={`w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-slate-900 dark:bg-white text-white dark:text-slate-900 ${isBalanceSettingsOpen ? 'shadow-xl' : 'shadow-lg shadow-slate-900/30 dark:shadow-white/20'}`}
-              >
-                {t('generateTeams')}
-              </button>
+                    const perTeamCount = Math.floor(manualPlayers.length / teamCount);
+                    const targetSportSub = room.sport as SportType;
+                    const validPosForSport = POSITIONS_BY_SPORT[targetSportSub] || ['NONE'];
+
+                    const totalQuotaSum = Object.entries(quotas).reduce((sum, [pos, v]) => {
+                      if (validPosForSport.includes(pos as Position)) {
+                        return sum + (Number(v) || 0);
+                      }
+                      return sum;
+                    }, 0 as number);
+
+                    if ((totalQuotaSum as number) > (perTeamCount as number)) {
+                      showAlert(t('quotaOverMaxAlert', perTeamCount, totalQuotaSum));
+                      return;
+                    }
+
+                    setPlayers(prev => {
+                      let newList = [...prev];
+                      approvedApps.forEach(app => {
+                        newList = upsertPlayerFromApplicant(newList, app, room.sport as SportType, true);
+                      });
+                      return newList;
+                    });
+
+                    setResult(null);
+                    setSelectedPlayerIds([]);
+                    setSelectionMode(null);
+                    handleGenerate(manualPlayers, room.sport as SportType, room.id, room.status);
+                    setIsBalanceSettingsOpen(false);
+                  }}
+                  className={`flex-1 py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-slate-900 dark:bg-white text-white dark:text-slate-900 ${isBalanceSettingsOpen ? 'shadow-xl' : 'shadow-lg shadow-slate-900/30 dark:shadow-white/20'}`}
+                >
+                  {t('generateTeams')}
+                </button>
+              </div>
             </div>
           </div>
           )}
@@ -878,14 +1095,13 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* Guest: Apply bottom sheet */}
           {!isHost && (
           <div
-            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isApplyFormOpen ? 'bottom-0 bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : ''}`}
+            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isApplyFormOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
             style={{
-              bottom: isApplyFormOpen
-                ? 0
-                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))'),
+              bottom: 0,
               paddingBottom: isApplyFormOpen
-                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : 'calc(56px + 20px + env(safe-area-inset-bottom, 0px))')
-                : 0,
+                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px')
+                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px'),
+              paddingTop: isApplyFormOpen ? undefined : '12px',
               maxHeight: isApplyFormOpen ? '85vh' : 'auto',
             }}
           >
@@ -970,6 +1186,13 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 >
                   {t('cancelMyApplication')}
                 </button>
+              ) : room.status === 'CLOSED' || isFull ? (
+                <button
+                  disabled
+                  className="w-full py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 bg-slate-300 dark:bg-slate-700 text-white cursor-not-allowed"
+                >
+                  {room.status === 'CLOSED' ? t('recruitClosedStatus') : t('recruitFull')}
+                </button>
               ) : (
                 <button
                   onClick={async () => {
@@ -1005,6 +1228,8 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         setApplyError(t('roomFullMsg'));
                       } else if (err?.message === 'ROOM_NOT_FOUND') {
                         setApplyError(t('roomNotFoundMsg'));
+                      } else if (err?.message === 'ROOM_CLOSED') {
+                        setApplyError(t('roomClosedMsg'));
                       } else {
                         setApplyError(t('networkErrorMsg'));
                       }

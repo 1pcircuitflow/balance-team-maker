@@ -3,6 +3,7 @@ import { Player, SportType, Position, TeamConstraint, BalanceResult } from '../t
 import { TEAM_COLORS, POSITIONS_BY_SPORT } from '../constants';
 import { generateBalancedTeams } from '../services/balanceService';
 import { AnalyticsService } from '../services/analyticsService';
+import { saveTeamResultToRoom } from '../services/firebaseService';
 
 interface GenerationSettings {
   teamCount: number;
@@ -71,7 +72,7 @@ export const useBalanceGeneration = (
     setPastResults(new Set());
   }, [players]);
 
-  const handleGenerate = useCallback(async (manualPlayers?: Player[] | any, manualSport?: SportType) => {
+  const handleGenerate = useCallback(async (manualPlayers?: Player[] | any, manualSport?: SportType, roomId?: string, roomStatus?: string) => {
     let participating: Player[] = [];
     let targetSport: SportType | undefined;
 
@@ -171,7 +172,13 @@ export const useBalanceGeneration = (
           });
         }
 
+        res.createdAt = new Date().toISOString();
         setResult(res);
+
+        if (roomId) {
+          saveTeamResultToRoom(roomId, res, roomStatus !== 'CLOSED');
+        }
+
         setResultHistory(prev => {
           const next = [res, ...prev].slice(0, 5);
           localStorage.setItem('app_result_history', JSON.stringify(next));

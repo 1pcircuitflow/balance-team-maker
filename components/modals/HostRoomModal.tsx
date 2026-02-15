@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Player, SportType } from '../../types';
+import { Player, SportType, VenueData } from '../../types';
 import { Z_INDEX } from '../../constants';
+import { ArrowLeftIcon } from '../../Icons';
 import { TRANSLATIONS, Language } from '../../translations';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
@@ -17,6 +18,7 @@ import {
 } from '../../services/firebaseService';
 import { doc, updateDoc } from 'firebase/firestore';
 import { DateTimePicker } from '../DateTimePicker';
+import { VenueSearchInput } from '../VenueSearchInput';
 import { useAuthContext } from '../../contexts/AuthContext';
 
 // 방장용 모집 관리 모달
@@ -71,7 +73,7 @@ export const HostRoomModal: React.FC<{
     return String(translation || key);
   };
 
-  const [selectedSport, setSelectedSport] = useState<SportType>(activeTab === SportType.ALL ? SportType.GENERAL : activeTab);
+  const [selectedSport, setSelectedSport] = useState<SportType | null>(null);
   const [title, setTitle] = useState("");
   const [venue, setVenue] = useState("");
   const [description, setDescription] = useState("");
@@ -79,7 +81,36 @@ export const HostRoomModal: React.FC<{
   const [useLimit, setUseLimit] = useState(false);
   const [maxApplicants, setMaxApplicants] = useState(12);
   const [isPickerSelectionMode, setIsPickerSelectionMode] = useState(false);
-  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
+  const [venueData, setVenueData] = useState<VenueData | null>(null);
+
+  // 종목별 마지막 설정 저장/불러오기
+  const loadLastSettings = (sport: SportType) => {
+    try {
+      const saved = localStorage.getItem(`lastRoom_${sport}`);
+      if (saved) {
+        const s = JSON.parse(saved);
+        setTitle(s.title || '');
+        setVenue(s.venue || '');
+        setDescription(s.description || '');
+        setUseLimit(s.useLimit ?? false);
+        setMaxApplicants(s.maxApplicants ?? 12);
+        setVisibility(s.visibility || 'PUBLIC');
+        setVenueData(s.venueData || null);
+        return true;
+      }
+    } catch { /* ignore */ }
+    return false;
+  };
+
+  const saveLastSettings = (sport: SportType) => {
+    try {
+      localStorage.setItem(`lastRoom_${sport}`, JSON.stringify({
+        title: title.trim(), venue: venue.trim(), description: description.trim(),
+        useLimit, maxApplicants, visibility, venueData,
+      }));
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     if (isOpen && !activeRoom) {
@@ -98,12 +129,14 @@ export const HostRoomModal: React.FC<{
       setEndDate(`${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`);
       setEndTime(`${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}`);
 
-      const initialSport = activeTab === SportType.ALL ? SportType.GENERAL : activeTab;
-      setSelectedSport(initialSport);
-      // 제목 자동 초기화 제거하여 플레이스홀더 노출 유도
+      setSelectedSport(null);
       setTitle("");
+      setVenue("");
       setDescription("");
-      setVisibility('PRIVATE');
+      setUseLimit(false);
+      setMaxApplicants(12);
+      setVisibility('PUBLIC');
+      setVenueData(null);
     }
 
     if (activeRoom?.id && isOpen) {
@@ -122,25 +155,18 @@ export const HostRoomModal: React.FC<{
     }
 
     // 모달이 열릴 때(또는 활성 룸이 변경될 때) 만료된 방 자동 삭제 체크
-    if (isOpen && activeRooms.length > 0) {
+    if (isOpen && currentUserId && activeRooms.length > 0) {
       const now = new Date();
-      activeRooms.forEach(async (room) => {
-        if (room.matchDate && room.matchTime) {
-          const matchStart = new Date(`${room.matchDate}T${room.matchTime}`);
-          // 30분 여유 시간
-          const expireTime = new Date(matchStart.getTime() + 30 * 60000);
-
-          if (now > expireTime) {
-            console.log(`Auto deleting expired room: ${room.id} (${room.title})`);
-            try {
-              await updateDoc(doc(db, "rooms", room.id), { status: 'DELETED' });
-              // 모달이 열려있는 동안에만 UI 갱신을 위해 상위 컴포넌트 알림 등은 생략하고
-              // 다음 렌더링 때 activeRooms에서 빠지기를 기대하거나 강제로 닫을 수 있음.
-              // 여기서는 조용히 백그라운드 삭제만 진행.
-            } catch (e) {
-              console.error("Auto delete failed:", e);
-            }
-          }
+      const expiredRooms = activeRooms.filter((room) => {
+        if (!room.matchDate || !room.matchTime) return false;
+        const matchStart = new Date(`${room.matchDate}T${room.matchTime}`);
+        return now > new Date(matchStart.getTime() + 30 * 60000);
+      });
+      expiredRooms.forEach(async (room) => {
+        try {
+          await updateDoc(doc(db, "rooms", room.id), { status: 'DELETED' });
+        } catch (e) {
+          // 권한 없으면 조용히 무시 (서버에서 정리)
         }
       });
     }
@@ -168,6 +194,7 @@ export const HostRoomModal: React.FC<{
 
 
   const handleCreate = async () => {
+    if (!selectedSport) return;
     if (!title.trim() || !venue.trim() || !description.trim()) {
       showAlert(t('requiredFieldsAlert' as any));
       return;
@@ -207,7 +234,11 @@ export const HostRoomModal: React.FC<{
         ...(localStorage.getItem('fcm_token') ? { fcmToken: localStorage.getItem('fcm_token')! } : {}),
         ...(venue.trim() ? { venue: venue.trim() } : {}),
         ...(description.trim() ? { description: description.trim() } : {}),
+        ...(venueData ? { venueData } : {}),
       });
+
+      // 종목별 마지막 설정 저장
+      saveLastSettings(selectedSport);
 
       // 링크생성 및 자동 복사
       const DEPLOYED_HOSTING_URL = "https://belo-apply.web.app";
@@ -276,28 +307,37 @@ export const HostRoomModal: React.FC<{
     <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden"
       style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isPro ? '0px' : '80px' }}>
       {/* 상단 바 */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
-        <button onClick={onClose} className="p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-        </button>
-        <h2 className="text-[16px] font-black text-slate-900 dark:text-white">{activeRoom ? t('manageMatchDetail' as any) : t('recruitParticipants')}</h2>
-        <div className="w-10" />
-      </div>
+      <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
+        <div className="flex justify-between items-center px-4 w-full">
+          <button onClick={onClose} className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90">
+            <ArrowLeftIcon size={24} />
+          </button>
+          <h3 className="text-[20px] font-semibold text-slate-900 dark:text-white tracking-[-0.025em]">{activeRoom ? t('manageMatchDetail' as any) : t('recruitParticipants')}</h3>
+          <div className="w-8" />
+        </div>
+      </header>
 
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {!activeRoom ? (
           <div className="space-y-4">
             <div className="space-y-4">
               {/* 종목 선택 */}
-              <div className="flex items-center gap-4">
-                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('sport' as any)}</label>
-                <div className="flex-1 flex overflow-x-auto no-scrollbar gap-2 py-1">
+              <div>
+                {!selectedSport && (
+                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 mb-3">{t('selectSportFirst' as any)}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
                   {[SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL].map((s) => (
                     <button
                       key={s}
                       onClick={() => {
                         setSelectedSport(s);
-                        // 종목 변경 시 제목 자동 입력 제거 (플레이스홀더 노출용)
+                        // 종목 변경 시 해당 종목의 마지막 설정 불러오기
+                        if (!loadLastSettings(s)) {
+                          setTitle(''); setVenue(''); setDescription('');
+                          setUseLimit(false); setMaxApplicants(12); setVisibility('PUBLIC');
+                          setVenueData(null);
+                        }
                       }}
                       className={`px-4 py-1.5 rounded-full text-[14px] font-medium transition-all border shrink-0 ${selectedSport === s
                         ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
@@ -310,141 +350,151 @@ export const HostRoomModal: React.FC<{
                 </div>
               </div>
 
-              {/* 장소 입력 */}
-              <div className="flex items-center gap-4">
-                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('venue' as any)}</label>
-                <input
-                  type="text"
-                  value={venue}
-                  onChange={e => setVenue(e.target.value)}
-                  placeholder={t('venuePlaceholder' as any)}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
-                />
-              </div>
+              {selectedSport && (
+                <>
+                  {/* 제목 입력 */}
+                  <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
+                      placeholder={t('inputRoomTitle')}
+                      className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
+                    />
+                  </div>
 
-              {/* 제목 입력 */}
-              <div className="flex items-center gap-4">
-                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder={t('inputRoomTitle')}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
-                />
-              </div>
+                  {/* 내용 입력 */}
+                  <div className="flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('roomDescription' as any)}</label>
+                    <textarea
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      placeholder={t('inputRoomDescription' as any)}
+                      rows={3}
+                      className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px] resize-none"
+                    />
+                  </div>
 
-              {/* 내용 입력 */}
-              <div className="flex items-start gap-4">
-                <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('roomDescription' as any)}</label>
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder={t('inputRoomDescription' as any)}
-                  rows={3}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px] resize-none"
-                />
-              </div>
+                  {/* 장소 입력 */}
+                  <div className="flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('venue' as any)}</label>
+                    <VenueSearchInput
+                      venue={venue}
+                      setVenue={setVenue}
+                      venueData={venueData}
+                      setVenueData={setVenueData}
+                      placeholder={t('venuePlaceholder' as any)}
+                      t={t}
+                      darkMode={darkMode}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="h-px bg-slate-200 dark:bg-slate-700" />
+            {selectedSport && (
+              <>
+                <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
-            {/* 옵션 섹션 */}
-            <div className="space-y-4">
-              {/* 모집인원 제한 */}
-              <div className="flex items-center justify-between">
-                <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('limitApplicants')}</label>
-                <div className="flex items-center gap-3">
-                  {useLimit && (
-                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
-                      <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" /></svg>
-                      </button>
-                      <span className="text-center font-bold text-slate-900 dark:text-white text-[13px] min-w-[36px]">{t('peopleCount', maxApplicants)}</span>
-                      <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                {/* 옵션 섹션 */}
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  {/* 모집인원 제한 */}
+                  <div className="flex items-center justify-between">
+                    <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('limitApplicants')}</label>
+                    <div className="flex items-center gap-3">
+                      {useLimit && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                          <button onClick={() => setMaxApplicants(Math.max(2, maxApplicants - 1))} className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" /></svg>
+                          </button>
+                          <span className="text-center font-bold text-slate-900 dark:text-white text-[13px] min-w-[36px]">{t('peopleCount', maxApplicants)}</span>
+                          <button onClick={() => setMaxApplicants(maxApplicants + 1)} className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 active:scale-90 transition-transform">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                          </button>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setUseLimit(!useLimit)}
+                        className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${useLimit ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                      >
+                        <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${useLimit ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
                       </button>
                     </div>
-                  )}
-                  <button
-                    onClick={() => setUseLimit(!useLimit)}
-                    className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${useLimit ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-                  >
-                    <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${useLimit ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
-                  </button>
-                </div>
-              </div>
+                  </div>
 
-              {/* 공개경기 */}
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-0.5">
-                  <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('publicMatch' as any)}</label>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('publicMatchDesc' as any)}</p>
+                  {/* 공개경기 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('privateMatch' as any)}</label>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('privateMatchDesc' as any)}</p>
+                    </div>
+                    <button
+                      onClick={() => setVisibility(visibility === 'PRIVATE' ? 'PUBLIC' : 'PRIVATE')}
+                      className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${visibility === 'PRIVATE' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${visibility === 'PRIVATE' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
-                  className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${visibility === 'PUBLIC' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-                >
-                  <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${visibility === 'PUBLIC' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
-                </button>
-              </div>
-            </div>
 
-            <div className="h-px bg-slate-200 dark:bg-slate-700" />
+                <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
-            {/* 일정 섹션 */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-6">
-                <div
-                  onClick={() => setActivePicker('START')}
-                  className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-40'}`}
-                >
-                  <span className="text-[16px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
-                  <span className={`text-[16px] font-black ${activePicker === 'START' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500'}`}>
-                    {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
-                  </span>
-                </div>
-                <div className="text-slate-200 dark:text-slate-800">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                </div>
-                <div
-                  onClick={() => setActivePicker('END')}
-                  className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-40'}`}
-                >
-                  <span className="text-[16px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
-                  <span className={`text-[16px] font-black ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
-                    {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
-                  </span>
-                </div>
-              </div>
+                {/* 일정 섹션 */}
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex items-center justify-center gap-6">
+                    <div
+                      onClick={() => setActivePicker('START')}
+                      className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'START' ? 'opacity-100 scale-105' : 'opacity-40'}`}
+                    >
+                      <span className="text-[16px] font-black uppercase text-blue-500 mb-1">{t('startTime')}</span>
+                      <span className={`text-[16px] font-black ${activePicker === 'START' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500'}`}>
+                        {startDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(startDate).getDay()]}) {startTime}
+                      </span>
+                    </div>
+                    <div className="text-slate-200 dark:text-slate-800">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                    <div
+                      onClick={() => setActivePicker('END')}
+                      className={`flex flex-col items-center cursor-pointer transition-all ${activePicker === 'END' ? 'opacity-100 scale-105' : 'opacity-40'}`}
+                    >
+                      <span className="text-[16px] font-black uppercase text-rose-500 mb-1">{t('endTime')}</span>
+                      <span className={`text-[16px] font-black ${activePicker === 'END' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
+                        {endDate.split('-').slice(1).join('.')} ({(TRANSLATIONS[lang] as any).days[new Date(endDate).getDay()]}) {endTime}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="flex justify-center transition-all duration-300">
-                {activePicker === 'START' ? (
-                  <DateTimePicker
-                    date={startDate}
-                    time={startTime}
-                    onChange={handleStartTimeChange}
-                    lang={lang}
-                    onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
-                  />
-                ) : (
-                  <DateTimePicker
-                    date={endDate}
-                    time={endTime}
-                    onChange={(d, t) => { setEndDate(d); setEndTime(t); }}
-                    lang={lang}
-                    onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
-                  />
-                )}
-              </div>
-            </div>
+                  <div className="flex justify-center transition-all duration-300">
+                    {activePicker === 'START' ? (
+                      <DateTimePicker
+                        date={startDate}
+                        time={startTime}
+                        onChange={handleStartTimeChange}
+                        lang={lang}
+                        onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                      />
+                    ) : (
+                      <DateTimePicker
+                        date={endDate}
+                        time={endTime}
+                        onChange={(d, t) => { setEndDate(d); setEndTime(t); }}
+                        lang={lang}
+                        onViewModeChange={(mode) => setIsPickerSelectionMode(mode === 'YEAR_MONTH_SELECT')}
+                      />
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
           </div>
         ) : null}
       </div>
 
       {/* 하단 고정 생성 버튼 */}
-      {!activeRoom && (
+      {!activeRoom && selectedSport && (
         <div
           className="shrink-0 px-5 pt-3 pb-5 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
         >

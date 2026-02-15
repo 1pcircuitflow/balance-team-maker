@@ -80,7 +80,7 @@ export const ResultOverlay: React.FC = React.memo(() => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
         {result.teams.map((team, idx) => (
-          <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800">
+          <div key={team.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-transparent">
             <div className="bg-white dark:bg-slate-950 p-5 flex items-center justify-between" style={{ borderTop: team.color ? `6px solid ${team.color}` : 'none' }}>
               <div className="flex items-center gap-3">
                 <button
@@ -96,7 +96,7 @@ export const ResultOverlay: React.FC = React.memo(() => {
               </div>
               <div className="text-right">
                 <span className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">{t('squadSum')}</span>
-                <span className="text-[24px] font-black font-mono">{team.totalSkill}</span>
+                <span className="text-[24px] font-black font-mono">{(team.totalSkill / team.players.length).toFixed(1)}</span>
               </div>
             </div>
             {editingResultTeamIdx === idx && (
@@ -114,7 +114,7 @@ export const ResultOverlay: React.FC = React.memo(() => {
             )}
             <div className="p-4 space-y-2">
               {getSortedTeamPlayers(team.players).map(p => (
-                <div key={p.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-950 rounded-2xl border border-slate-100/50 dark:border-slate-800/50">
+                <div key={p.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-950 rounded-2xl border border-slate-100/50 dark:border-transparent">
                   <div className="flex items-center gap-3">
                     <span className="font-black text-slate-900 dark:text-slate-100 text-[14px]">{p.name}</span>
                     {showTier && <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${TIER_COLORS[p.tier as Tier]}`}>{Tier[p.tier as Tier]}</span>}
@@ -126,6 +126,15 @@ export const ResultOverlay: React.FC = React.memo(() => {
           </div>
         ))}
       </div>
+      {result.createdAt && (() => {
+        const d = new Date(result.createdAt);
+        const timeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        return (
+          <p className="text-[12px] font-medium text-slate-400 dark:text-slate-500 text-center mt-2">
+            {t('resultGeneratedAt', timeStr)}
+          </p>
+        );
+      })()}
       <div className="hidden px-2 pt-2" data-promo-footer="true">
         <div className={`mt-6 py-3 px-4 rounded-2xl flex items-center justify-center ${darkMode ? 'bg-slate-900/40' : 'bg-slate-100/50'}`}>
           <h4 className={`text-[14px] font-semibold tracking-tight pt-0.5 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{t('promoAppTitle')}</h4>

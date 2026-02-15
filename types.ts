@@ -66,6 +66,7 @@ export interface BalanceResult {
   isQuotaViolated?: boolean;
   positionWarning?: boolean;
   noneAssignedCount?: number;
+  createdAt?: string;
 }
 
 export enum BottomTabType {
@@ -84,7 +85,17 @@ export enum AppPageType {
 export enum DetailPageTab {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED'
+  REJECTED = 'REJECTED',
+  TEAM_RESULT = 'TEAM_RESULT'
+}
+
+export interface VenueData {
+  placeId: string;       // 카카오 장소 ID
+  placeName: string;     // 장소 이름
+  address: string;       // 주소
+  lat: number;           // 위도
+  lng: number;           // 경도
+  photoUrl?: string;     // Firebase Storage URL
 }
 
 export interface UserSportProfile {

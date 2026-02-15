@@ -3,6 +3,7 @@ import { SportType, AppPageType } from '../types';
 import { Z_INDEX } from '../constants';
 import { TRANSLATIONS } from '../translations';
 import { DateTimePicker } from '../components/DateTimePicker';
+import { VenueSearchInput } from '../components/VenueSearchInput';
 import { useAppContext } from '../contexts/AppContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
@@ -19,6 +20,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
     hostRoomSelectedSport, setHostRoomSelectedSport,
     hostRoomTitle, setHostRoomTitle,
     hostRoomVenue, setHostRoomVenue,
+    hostRoomVenueData, setHostRoomVenueData,
     hostRoomDescription, setHostRoomDescription,
     hostRoomDate, setHostRoomDate, hostRoomTime, setHostRoomTime,
     hostRoomEndDate, setHostRoomEndDate, hostRoomEndTime, setHostRoomEndTime,
@@ -32,16 +34,18 @@ export const EditRoomPage: React.FC = React.memo(() => {
   return (
     <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden"
       style={{ zIndex: Z_INDEX.RESULT_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
-      <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
-        <button
-          onClick={() => setCurrentPage(AppPageType.DETAIL)}
-          className="p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-full transition-colors"
-        >
-          <ArrowLeftIcon size={24} />
-        </button>
-        <h2 className="text-[16px] font-black text-slate-900 dark:text-white">{t('editMatch')}</h2>
-        <div className="w-10" />
-      </div>
+      <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
+        <div className="flex justify-between items-center px-4 w-full">
+          <button
+            onClick={() => setCurrentPage(AppPageType.DETAIL)}
+            className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"
+          >
+            <ArrowLeftIcon size={24} />
+          </button>
+          <h3 className="text-[20px] font-semibold text-slate-900 dark:text-white tracking-[-0.025em]">{t('editMatch')}</h3>
+          <div className="w-8" />
+        </div>
+      </header>
 
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         <div className="space-y-4">
@@ -65,18 +69,6 @@ export const EditRoomPage: React.FC = React.memo(() => {
               </div>
             </div>
 
-            {/* 장소 입력 */}
-            <div className="flex items-center gap-4">
-              <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('venue')}</label>
-              <input
-                type="text"
-                value={hostRoomVenue}
-                onChange={(e) => setHostRoomVenue(e.target.value)}
-                placeholder={t('venuePlaceholder')}
-                className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px]"
-              />
-            </div>
-
             {/* 제목 입력 */}
             <div className="flex items-center gap-4">
               <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0">{t('roomTitle')}</label>
@@ -98,6 +90,19 @@ export const EditRoomPage: React.FC = React.memo(() => {
                 placeholder={t('inputRoomDescription')}
                 rows={3}
                 className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 focus:outline-none dark:text-white font-semibold text-[13px] placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold placeholder:text-[13px] resize-none"
+              />
+            </div>
+
+            {/* 장소 입력 */}
+            <div className="flex items-start gap-4">
+              <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('venue')}</label>
+              <VenueSearchInput
+                venue={hostRoomVenue}
+                setVenue={setHostRoomVenue}
+                venueData={hostRoomVenueData}
+                setVenueData={setHostRoomVenueData}
+                placeholder={t('venuePlaceholder')}
+                t={t}
               />
             </div>
           </div>
@@ -133,14 +138,14 @@ export const EditRoomPage: React.FC = React.memo(() => {
             {/* 공개경기 */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
-                <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('publicMatch')}</label>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('publicMatchDesc')}</p>
+                <label className="text-[14px] font-medium text-slate-900 dark:text-white">{t('privateMatch')}</label>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">{t('privateMatchDesc')}</p>
               </div>
               <button
-                onClick={() => setHostRoomVisibility(hostRoomVisibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
-                className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${hostRoomVisibility === 'PUBLIC' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                onClick={() => setHostRoomVisibility(hostRoomVisibility === 'PRIVATE' ? 'PUBLIC' : 'PRIVATE')}
+                className={`relative w-[42px] h-[26px] rounded-full transition-colors duration-200 flex-shrink-0 ${hostRoomVisibility === 'PRIVATE' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
               >
-                <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${hostRoomVisibility === 'PUBLIC' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                <div className={`absolute top-[2px] w-[22px] h-[22px] bg-white rounded-full shadow-md transition-transform duration-200 ${hostRoomVisibility === 'PRIVATE' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
               </button>
             </div>
           </div>
@@ -207,7 +212,8 @@ export const EditRoomPage: React.FC = React.memo(() => {
       </div>
 
       {/* 하단 고정 수정 버튼 */}
-      <div className="shrink-0 px-5 pt-3 pb-5 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800">
+      <div className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
+        style={{ paddingBottom: isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}>
         <button
           onClick={() => handleUpdateRoom(isProcessing, setIsProcessing, setCurrentPage, AppPageType)}
           disabled={isProcessing}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BottomTabType, SportType } from '../types';
+import { BottomTabType } from '../types';
 import { Z_INDEX } from '../constants';
 import { useNavigationContext } from '../contexts/NavigationContext';
 import { useAppContext } from '../contexts/AppContext';
@@ -9,7 +9,7 @@ import * as Icons from '../Icons';
 const { HomeIcon, HomeFilledIcon, UserPlusIcon, UserPlusFilledIcon, MoreIcon, MoreFilledIcon } = Icons;
 
 export const BottomTabBar: React.FC = React.memo(() => {
-  const { currentBottomTab, setCurrentBottomTab, activeTab, setMembersTab } = useNavigationContext();
+  const { currentBottomTab, setCurrentBottomTab } = useNavigationContext();
   const { t } = useAppContext();
   const { isAdFree } = useAuthContext();
 
@@ -21,7 +21,7 @@ export const BottomTabBar: React.FC = React.memo(() => {
           <div className={currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>{currentBottomTab === BottomTabType.HOME ? <HomeFilledIcon /> : <HomeIcon />}</div>
           <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>{t('homeTab')}</span>
         </button>
-        <button onClick={() => { setCurrentBottomTab(BottomTabType.MEMBERS); setMembersTab(activeTab === SportType.ALL ? SportType.GENERAL : activeTab); }} className="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
+        <button onClick={() => setCurrentBottomTab(BottomTabType.MEMBERS)} className="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
           <div className={currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>{currentBottomTab === BottomTabType.MEMBERS ? <UserPlusFilledIcon /> : <UserPlusIcon />}</div>
           <span className={`text-[10px] font-bold ${currentBottomTab === BottomTabType.MEMBERS ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>{t('membersTab')}</span>
         </button>
