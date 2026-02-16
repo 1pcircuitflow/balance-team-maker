@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { AppPageType } from '../types';
-import { Z_INDEX } from '../constants';
+import { AppPageType, SportType } from '../types';
+import { Z_INDEX, SPORT_IMAGES } from '../constants';
 import { TRANSLATIONS } from '../translations';
 import { getApplicantStatus, getApprovedCount, isRoomFull } from '../utils/helpers';
 import { useAppContext } from '../contexts/AppContext';
@@ -14,7 +14,7 @@ const { PlusIcon } = Icons;
 export const HomePage: React.FC = () => {
   const { t, lang, showConfirm, setConfirmState } = useAppContext();
   const { currentUserId, isAdFree, showLoginModal } = useAuthContext();
-  const { currentPage, setCurrentPage } = useNavigationContext();
+  const { currentPage, navigateTo } = useNavigationContext();
   const {
     filteredRooms, appliedRooms, likedRooms, publicRooms,
     setCurrentActiveRoom, showHostRoomModal, setShowHostRoomModal,
@@ -23,7 +23,7 @@ export const HomePage: React.FC = () => {
 
   const onRoomClick = (room: any) => {
     setCurrentActiveRoom(room);
-    setCurrentPage(AppPageType.DETAIL);
+    navigateTo(AppPageType.DETAIL);
   };
   const onCreateRoom = () => {
     setCurrentActiveRoom(null);
@@ -113,19 +113,15 @@ export const HomePage: React.FC = () => {
 
 // 종목 이미지 경로 헬퍼 (venueData 사진 우선)
 const getSportImage = (room: any) => {
-  if (room.venueData?.photoUrl) return room.venueData.photoUrl;
-  const seed = room.id ? room.id.charCodeAt(room.id.length - 1) % 2 + 1 : 1;
-  const sport = room.sport.toLowerCase();
-  const name = sport === 'general' ? 'tennis' : sport;
-  return `/images/${name}-${seed}.jpeg`;
+  const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
+  const fallbackImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
+  return room.venueData?.photoUrl || fallbackImg;
 };
 
 // 종목 기본 이미지 (폴백용)
 const getFallbackSportImage = (room: any) => {
-  const seed = room.id ? room.id.charCodeAt(room.id.length - 1) % 2 + 1 : 1;
-  const sport = room.sport.toLowerCase();
-  const name = sport === 'general' ? 'tennis' : sport;
-  return `/images/${name}-${seed}.jpeg`;
+  const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
+  return sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
 };
 
 // 당근마켓 스타일 방 카드 컴포넌트

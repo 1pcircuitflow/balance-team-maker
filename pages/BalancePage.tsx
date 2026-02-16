@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tier, SportType, AppPageType } from '../types';
+import { Tier, SportType } from '../types';
 import { TIER_BADGE_COLORS, TEAM_COLORS, Z_INDEX } from '../constants';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
 import { useAppContext } from '../contexts/AppContext';
@@ -14,7 +14,7 @@ const { ArrowLeftIcon, ShareIcon, RotateCcwIcon, CheckIcon, MinusIcon, PlusIcon 
 export const BalancePage: React.FC = React.memo(() => {
   const { t, lang, darkMode } = useAppContext();
   const { isAdFree } = useAuthContext();
-  const { setCurrentPage } = useNavigationContext();
+  const { goBack } = useNavigationContext();
   const {
     teamCount, setTeamCount, result, setResult, isSharing,
     quotas, setQuotas, isQuotaSettingsExpanded, setIsQuotaSettingsExpanded,
@@ -34,7 +34,7 @@ export const BalancePage: React.FC = React.memo(() => {
         <div className="flex justify-between items-center w-full">
           <button
             onClick={() => {
-              setCurrentPage(AppPageType.DETAIL);
+              goBack();
               setResult(null);
             }}
             className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"

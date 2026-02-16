@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { Player, SportType, VenueData } from '../types';
+import { Player, SportType, VenueData, PendingNotification } from '../types';
 import { RecruitmentRoom, Applicant } from '../services/firebaseService';
 import { useRecruitmentRooms } from '../hooks/useRecruitmentRooms';
 import { useAppContext } from './AppContext';
@@ -28,6 +28,8 @@ interface RecruitmentContextValue {
   setActiveActionMenuId: (v: string | null) => void;
   editingApplicantId: string | null;
   setEditingApplicantId: (v: string | null) => void;
+  pendingNotification: PendingNotification | null;
+  setPendingNotification: (v: PendingNotification | null) => void;
   // Host room form state
   hostRoomSelectedSport: SportType;
   setHostRoomSelectedSport: (v: SportType) => void;
@@ -71,7 +73,7 @@ interface RecruitmentContextValue {
     confirmText: string;
     onConfirm: () => Promise<void>;
   };
-  handleUpdateRoom: (isProcessing: boolean, setIsProcessing: (v: boolean) => void, setCurrentPage: (page: any) => void, AppPageType: any) => void;
+  handleUpdateRoom: (isProcessing: boolean, setIsProcessing: (v: boolean) => void, goBack: () => void) => void;
 }
 
 const RecruitmentContext = createContext<RecruitmentContextValue>(null!);

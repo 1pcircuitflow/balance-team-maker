@@ -19,11 +19,12 @@ interface PlayerItemProps {
   isSelectionMode?: boolean;
   showTier?: boolean; // 항목 2: 티어 숨기기
   readOnly?: boolean; // 참가 토글만 허용 (수정/삭제 숨김)
+  profilePhotoUrl?: string; // 프로필 사진 URL
 }
 
 
 export const PlayerItem = React.memo<any>(({
-  player, isEditing, lang, onToggle, onEditToggle, onUpdate, onRemove, isSelected, onSelect, isSelectionMode, showTier, readOnly
+  player, isEditing, lang, onToggle, onEditToggle, onUpdate, onRemove, isSelected, onSelect, isSelectionMode, showTier, readOnly, profilePhotoUrl
 }: any) => {
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
@@ -66,8 +67,10 @@ export const PlayerItem = React.memo<any>(({
             </div>
           )}
           {/* Avatar circle */}
-          <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
-            BELO
+          <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0 overflow-hidden">
+            {profilePhotoUrl ? (
+              <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+            ) : 'BELO'}
           </div>
           {/* Name + Position vertical stack */}
           <div className="flex flex-col min-w-0 gap-0.5">

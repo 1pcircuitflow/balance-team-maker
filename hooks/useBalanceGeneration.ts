@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Player, SportType, Position, TeamConstraint, BalanceResult } from '../types';
+import { Player, SportType, Position, TeamConstraint, BalanceResult, AppPageType } from '../types';
 import { TEAM_COLORS, POSITIONS_BY_SPORT } from '../constants';
 import { generateBalancedTeams } from '../services/balanceService';
 import { AnalyticsService } from '../services/analyticsService';
@@ -21,8 +21,7 @@ interface GenerationDeps {
   showAlert: (msg: string, title?: string) => void;
   t: (key: string, ...args: any[]) => string;
   isAdFree: boolean;
-  setCurrentPage: (page: any) => void;
-  AppPageType: any;
+  navigateTo: (page: any, bottomTab?: any) => void;
 }
 
 export const useBalanceGeneration = (
@@ -30,7 +29,7 @@ export const useBalanceGeneration = (
   deps: GenerationDeps,
 ) => {
   const { teamCount, quotas, useRandomMix, useTeamColors, selectedTeamColors, teamConstraints, setShowQuotaSettings } = settings;
-  const { players, activeTab, showAlert, t, isAdFree, setCurrentPage, AppPageType } = deps;
+  const { players, activeTab, showAlert, t, isAdFree, navigateTo } = deps;
 
   const [result, setResult] = useState<BalanceResult | null>(null);
   const [pastResults, setPastResults] = useState<Set<string>>(new Set());
@@ -185,7 +184,7 @@ export const useBalanceGeneration = (
           return next;
         });
         setShowQuotaSettings(false);
-        setCurrentPage(AppPageType.BALANCE);
+        navigateTo(AppPageType.BALANCE);
 
         if (!res.isValid) {
           if (res.isConstraintViolated && res.isQuotaViolated) {
@@ -233,7 +232,7 @@ export const useBalanceGeneration = (
         timeoutRef.current = null;
       }
     }, waitTime + 200);
-  }, [players, activeTab, teamCount, quotas, useRandomMix, useTeamColors, selectedTeamColors, teamConstraints, pastResults, lastGenContext, isAdFree, totalGenCount, showAlert, t, setCurrentPage, AppPageType, setShowQuotaSettings]);
+  }, [players, activeTab, teamCount, quotas, useRandomMix, useTeamColors, selectedTeamColors, teamConstraints, pastResults, lastGenContext, isAdFree, totalGenCount, showAlert, t, navigateTo, setShowQuotaSettings]);
 
   const handleReviewLater = () => {
     const nextPromptDate = new Date();

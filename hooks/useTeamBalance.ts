@@ -10,8 +10,7 @@ export const useTeamBalance = (
   showAlert: (msg: string, title?: string) => void,
   t: (key: string, ...args: any[]) => string,
   isAdFree: boolean,
-  setCurrentPage: (page: any) => void,
-  AppPageType: any,
+  navigateTo: (page: any, bottomTab?: any) => void,
   membersTab?: SportType,
 ) => {
   const settings = useBalanceSettings(players, activeTab);
@@ -25,7 +24,7 @@ export const useTeamBalance = (
       teamConstraints: settings.teamConstraints,
       setShowQuotaSettings: settings.setShowQuotaSettings,
     },
-    { players, activeTab, showAlert, t, isAdFree, setCurrentPage, AppPageType },
+    { players, activeTab, showAlert, t, isAdFree, navigateTo },
   );
 
   // Remaining UI state

@@ -266,6 +266,24 @@ export const PlayIcon = ({ size = 20, ...props }: any) => (
     </svg>
 );
 
+export const ChatBubbleIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+);
+
+export const ChatBubbleFilledIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+);
+
+export const SendIcon = ({ size = 16, ...props }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+    </svg>
+);
+
 export const CameraIcon = ({ size = 16, ...props }: any) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />

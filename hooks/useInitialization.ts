@@ -6,12 +6,14 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
+import { Keyboard, KeyboardResize } from '@capacitor/keyboard';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { AnalyticsService } from '../services/analyticsService';
 import { paymentService, PRODUCT_IDS } from '../services/paymentService';
 import { checkAppVersion, updateRoomFcmToken, saveUserFcmToken, saveUserLanguage } from '../services/firebaseService';
 import { compareVersions } from '../utils/helpers';
 import { Language } from '../translations';
+import { PendingNotification, PushNotificationType } from '../types';
 
 export const useInitialization = (
   lang: Language,
@@ -23,6 +25,7 @@ export const useInitialization = (
   currentActiveRoomId: string | undefined,
   setAlertState: (state: any) => void,
   setPendingJoinRoomId: (id: string | null) => void,
+  setPendingNotification: (v: PendingNotification | null) => void,
   setShowUpdateModal: (v: boolean) => void,
   setUpdateInfo: (info: any) => void,
   handleRewardAdComplete: () => void,
@@ -80,8 +83,19 @@ export const useInitialization = (
       }
     };
 
+    const initKeyboard = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Keyboard.setResizeMode({ mode: KeyboardResize.Native });
+        } catch (e) {
+          console.error('Keyboard init failed', e);
+        }
+      }
+    };
+
     initAdMob();
     initIAP();
+    initKeyboard();
   }, []);
 
   // System language, Analytics, Login prompt, Auth init, LocalNotifications, Daily reset
@@ -204,7 +218,11 @@ export const useInitialization = (
       PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
         const data = action.notification.data;
         if (data?.roomId) {
-          setPendingJoinRoomId(data.roomId);
+          if (data.type) {
+            setPendingNotification({ type: data.type as PushNotificationType, roomId: data.roomId });
+          } else {
+            setPendingJoinRoomId(data.roomId);
+          }
         }
       });
     };

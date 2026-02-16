@@ -216,6 +216,7 @@ export const HostRoomModal: React.FC<{
         isApproved: true,
         status: 'APPROVED',
         timestamp: new Date().toISOString(),
+        ...(userProfile?.photoUrl ? { photoUrl: userProfile.photoUrl } : {}),
       };
 
       const roomId = await createRecruitmentRoom({
@@ -496,7 +497,8 @@ export const HostRoomModal: React.FC<{
       {/* 하단 고정 생성 버튼 */}
       {!activeRoom && selectedSport && (
         <div
-          className="shrink-0 px-5 pt-3 pb-5 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
+          className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
+          style={{ paddingBottom: isPro ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}
         >
           <button
             onClick={handleCreate}

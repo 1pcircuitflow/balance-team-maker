@@ -19,6 +19,13 @@ interface NavigationContextValue {
   navigateToBalance: () => void;
   navigateToEditRoom: () => void;
   navigateToMembersFromDetail: () => void;
+  navigateToProfile: () => void;
+  viewingProfileUserId: string | null;
+  setViewingProfileUserId: (id: string | null) => void;
+  navigateToUserProfile: (userId: string) => void;
+  navigateTo: (page: AppPageType, bottomTab?: BottomTabType) => void;
+  goBack: () => void;
+  isHistoryEmpty: () => boolean;
   // activeTab state
   activeTab: SportType;
   setActiveTab: (tab: SportType) => void;
@@ -37,7 +44,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [activeTab, setActiveTab] = useState<SportType>(() => {
     const saved = localStorage.getItem('last_active_tab');
-    return (saved as SportType) || SportType.GENERAL;
+    return (saved as SportType) || SportType.ALL;
   });
 
   const [membersTab, setMembersTab] = useState<SportType>(() => {

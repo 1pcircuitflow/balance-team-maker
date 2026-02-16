@@ -1,4 +1,4 @@
-import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
@@ -27,38 +27,54 @@ interface RoomData {
   title: string;
   applicants: Applicant[];
   fcmToken?: string;
+  lastExcluded?: { userId: string; name: string; at: string };
 }
 
 type Lang = "ko" | "en" | "es" | "ja" | "pt";
 
 const PUSH_MESSAGES: Record<
   Lang,
-  { approved: string; rejected: string; cancelled: (name: string) => string }
+  { approved: string; rejected: string; excluded: string; cancelled: (name: string, count: number) => string; newChat: (name: string, text: string) => string; newApplicant: (name: string, count: number) => string }
 > = {
   ko: {
     approved: "참가가 승인되었습니다",
     rejected: "참가가 거절되었습니다",
-    cancelled: (name) => `${name}님이 참가를 취소했습니다`,
+    excluded: "경기에서 제외되었습니다",
+    cancelled: (name, count) => `${name}님이 참가를 취소했습니다. (현재 참가 인원 ${count}명)`,
+    newChat: (name, text) => `${name}: ${text}`,
+    newApplicant: (name, count) => `${name}님이 참가 신청하였습니다. (현재 참가 인원 ${count}명)`,
   },
   en: {
     approved: "Your application has been approved",
     rejected: "Your application has been rejected",
-    cancelled: (name) => `${name} cancelled the application`,
+    excluded: "You have been removed from the match",
+    cancelled: (name, count) => `${name} cancelled. (${count} participants)`,
+    newChat: (name, text) => `${name}: ${text}`,
+    newApplicant: (name, count) => `${name} has applied. (${count} participants)`,
   },
   es: {
     approved: "Tu solicitud ha sido aprobada",
     rejected: "Tu solicitud ha sido rechazada",
-    cancelled: (name) => `${name} ha cancelado la solicitud`,
+    excluded: "Has sido eliminado del partido",
+    cancelled: (name, count) => `${name} ha cancelado. (${count} participantes)`,
+    newChat: (name, text) => `${name}: ${text}`,
+    newApplicant: (name, count) => `${name} ha solicitado unirse. (${count} participantes)`,
   },
   ja: {
     approved: "参加が承認されました",
     rejected: "参加が拒否されました",
-    cancelled: (name) => `${name}さんが参加をキャンセルしました`,
+    excluded: "試合から除外されました",
+    cancelled: (name, count) => `${name}さんが参加をキャンセルしました。(現在 ${count}名)`,
+    newChat: (name, text) => `${name}: ${text}`,
+    newApplicant: (name, count) => `${name}さんが参加申請しました。(現在 ${count}名)`,
   },
   pt: {
     approved: "Sua inscrição foi aprovada",
     rejected: "Sua inscrição foi rejeitada",
-    cancelled: (name) => `${name} cancelou a inscrição`,
+    excluded: "Você foi removido da partida",
+    cancelled: (name, count) => `${name} cancelou. (${count} participantes)`,
+    newChat: (name, text) => `${name}: ${text}`,
+    newApplicant: (name, count) => `${name} se inscreveu. (${count} participantes)`,
   },
 };
 
@@ -193,44 +209,77 @@ export const onRoomUpdated = onDocumentUpdated("rooms/{roomId}", async (event) =
   const prevMap = new Map(prevApplicants.map((a) => [a.id, a]));
   const newMap = new Map(newApplicants.map((a) => [a.id, a]));
 
+  // 참가 인원 수 계산 (APPROVED 상태만)
+  const getApprovedCount = (applicants: Applicant[]) =>
+    applicants.filter((a) => a.status === "APPROVED" || (a.isApproved && !a.status)).length;
+
   // 1. 신규 참가신청 감지 → 방장에게 알림
   const addedApplicants = newApplicants.filter(
     (a) => !prevMap.has(a.id) && a.status !== "APPROVED"
   );
   if (addedApplicants.length > 0) {
-    const { tokens } = await getHostTokens(hostId, afterData.fcmToken);
+    console.log(`[PUSH] NEW_APPLICANT: ${JSON.stringify(addedApplicants.map(a => ({ name: a.name, status: a.status, isApproved: a.isApproved })))}`);
+    const approvedCount = getApprovedCount(newApplicants);
+    const { tokens, lang } = await getHostTokens(hostId, afterData.fcmToken);
     for (const applicant of addedApplicants) {
       await sendPush(
         tokens,
         `[${roomTitle}]`,
-        `${applicant.name} (${newApplicants.length})`,
+        PUSH_MESSAGES[lang].newApplicant(applicant.name, approvedCount),
         {
           type: "NEW_APPLICANT",
           roomId,
           applicantName: applicant.name,
-          totalCount: String(newApplicants.length),
+          totalCount: String(approvedCount),
         },
         hostId
       );
     }
   }
 
-  // 2. 참가 취소 감지 → 방장에게 알림
-  const removedApplicants = prevApplicants.filter((a) => !newMap.has(a.id));
+  // 2. 참가 취소/제외 감지
+  const allRemoved = prevApplicants.filter((a) => !newMap.has(a.id));
+  if (allRemoved.length > 0) {
+    console.log(`[DEBUG] allRemoved: ${JSON.stringify(allRemoved.map(a => ({ name: a.name, status: a.status, isApproved: a.isApproved })))}`);
+  }
+  const removedApplicants = allRemoved.filter((a) => {
+    const prevStatus = a.status || (a.isApproved ? "APPROVED" : "PENDING");
+    return prevStatus === "PENDING" || prevStatus === "APPROVED";
+  });
   if (removedApplicants.length > 0) {
-    const { tokens, lang } = await getHostTokens(hostId, afterData.fcmToken);
+    const approvedCount = getApprovedCount(newApplicants);
+    const lastExcluded = afterData.lastExcluded;
+
     for (const applicant of removedApplicants) {
-      await sendPush(
-        tokens,
-        `[${roomTitle}]`,
-        PUSH_MESSAGES[lang].cancelled(applicant.name),
-        {
-          type: "APPLICANT_CANCELLED",
-          roomId,
-          applicantName: applicant.name,
-        },
-        hostId
-      );
+      const prevStatus = applicant.status || (applicant.isApproved ? "APPROVED" : "PENDING");
+      const isExcludedByHost = prevStatus === "APPROVED" && lastExcluded &&
+        lastExcluded.userId === (applicant.userId || '') && lastExcluded.name === applicant.name;
+
+      if (isExcludedByHost && applicant.userId) {
+        // 방장 제외 → 제외당한 유저에게 알림
+        const { tokens, lang } = await getApplicantTokens(applicant);
+        await sendPush(
+          tokens,
+          `[${roomTitle}]`,
+          PUSH_MESSAGES[lang].excluded,
+          { type: "APPLICATION_EXCLUDED", roomId },
+          applicant.userId
+        );
+      } else {
+        // 참가자 본인 취소 → 방장에게 알림
+        const { tokens, lang } = await getHostTokens(hostId, afterData.fcmToken);
+        await sendPush(
+          tokens,
+          `[${roomTitle}]`,
+          PUSH_MESSAGES[lang].cancelled(applicant.name, approvedCount),
+          {
+            type: "APPLICANT_CANCELLED",
+            roomId,
+            applicantName: applicant.name,
+          },
+          hostId
+        );
+      }
     }
   }
 
@@ -246,8 +295,11 @@ export const onRoomUpdated = onDocumentUpdated("rooms/{roomId}", async (event) =
 
     if (prevStatus === newStatus) continue;
 
+    console.log(`[PUSH] STATUS_CHANGE: name=${newApp.name}, prev=${prevStatus}, new=${newStatus}, prevIsApproved=${prevApp.isApproved}, newIsApproved=${newApp.isApproved}, prevStatusRaw=${prevApp.status}, newStatusRaw=${newApp.status}`);
+
     if (newStatus === "APPROVED") {
       const { tokens, lang } = await getApplicantTokens(newApp);
+      console.log(`[PUSH] APPROVED → tokens=${tokens.length}, userId=${newApp.userId}`);
       await sendPush(
         tokens,
         `[${roomTitle}]`,
@@ -259,6 +311,7 @@ export const onRoomUpdated = onDocumentUpdated("rooms/{roomId}", async (event) =
 
     if (newStatus === "REJECTED") {
       const { tokens, lang } = await getApplicantTokens(newApp);
+      console.log(`[PUSH] REJECTED → tokens=${tokens.length}, userId=${newApp.userId}`);
       await sendPush(
         tokens,
         `[${roomTitle}]`,
@@ -380,6 +433,96 @@ export const kakaoAuth = onRequest(
     } catch (e) {
       console.error("kakaoAuth error:", e);
       res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * 기존 방에 memberUserIds 필드를 채워넣는 일회성 마이그레이션
+ * 호출 후 삭제해도 됨
+ */
+export const migrateMemberUserIds = onRequest({ cors: true }, async (req, res) => {
+  try {
+    const roomsSnap = await db.collection("rooms").get();
+    let updated = 0;
+    let skipped = 0;
+    const batch = db.batch();
+
+    for (const doc of roomsSnap.docs) {
+      const data = doc.data();
+      // 이미 memberUserIds가 있으면 스킵
+      if (data.memberUserIds && Array.isArray(data.memberUserIds) && data.memberUserIds.length > 0) {
+        skipped++;
+        continue;
+      }
+
+      const memberIds = new Set<string>();
+      // 방장 추가
+      if (data.hostId) {
+        memberIds.add(data.hostId);
+      }
+      // APPROVED 참가자 추가
+      for (const app of data.applicants || []) {
+        const status = app.status || (app.isApproved ? "APPROVED" : "PENDING");
+        if (status === "APPROVED" && app.userId) {
+          memberIds.add(app.userId);
+        }
+      }
+
+      if (memberIds.size > 0) {
+        batch.update(doc.ref, { memberUserIds: Array.from(memberIds) });
+        updated++;
+      }
+    }
+
+    await batch.commit();
+    res.json({ success: true, updated, skipped, total: roomsSnap.size });
+  } catch (e) {
+    console.error("migrateMemberUserIds error:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * 채팅 메시지 생성 시 → 방 참가자들에게 FCM 알림
+ */
+export const onChatMessageCreated = onDocumentCreated(
+  "rooms/{roomId}/messages/{messageId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const { senderId, senderName, text } = data;
+    const roomId = event.params.roomId;
+
+    // 방 정보 조회
+    const roomDoc = await db.collection("rooms").doc(roomId).get();
+    if (!roomDoc.exists) return;
+    const roomData = roomDoc.data() as RoomData;
+
+    // 수신 대상: 방장 + APPROVED 참가자 (발신자 제외)
+    const recipientIds = new Set<string>();
+    if (roomData.hostId !== senderId) {
+      recipientIds.add(roomData.hostId);
+    }
+    for (const app of roomData.applicants || []) {
+      const status = app.status || (app.isApproved ? "APPROVED" : "PENDING");
+      if (status === "APPROVED" && app.userId && app.userId !== senderId) {
+        recipientIds.add(app.userId);
+      }
+    }
+
+    // 각 수신자에게 알림 발송
+    for (const userId of recipientIds) {
+      const { tokens, lang } = await getUserTokensAndLang(userId);
+      if (tokens.length === 0) continue;
+      await sendPush(
+        tokens,
+        `[${roomData.title}]`,
+        PUSH_MESSAGES[lang].newChat(senderName, text || ""),
+        { type: "NEW_CHAT_MESSAGE", roomId, senderName },
+        userId
+      );
     }
   }
 );

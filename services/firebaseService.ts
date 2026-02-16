@@ -21,7 +21,7 @@ import {
 } from "firebase/firestore";
 import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Player, UserProfile, SportType, VenueData } from "../types";
+import { Player, UserProfile, SportType, VenueData, ChatMessage } from "../types";
 
 /**
  * Firebase 재시도 래퍼 — unavailable/deadline-exceeded 또는 오프라인 시에만 재시도
@@ -83,6 +83,8 @@ export interface Applicant {
     isApproved?: boolean; // 개별 승인 여부
     userId?: string; // 게스트 식별용
     status?: 'PENDING' | 'APPROVED' | 'REJECTED'; // 신청 상태
+    source?: 'web' | 'app' | 'host'; // 신청 출처 (host: 방장 직접 추가)
+    photoUrl?: string; // 프로필 사진 URL
 }
 
 export interface RecruitmentRoom {
@@ -125,10 +127,12 @@ export const createRecruitmentRoom = async (roomData: Omit<RecruitmentRoom, 'id'
     try {
         const { applicants, ...rest } = roomData;
         const roomRef = collection(db, "rooms");
+        const memberUserIds = [rest.hostId];
         const newDoc = await addDoc(roomRef, {
             ...rest,
             status: 'OPEN',
             applicants: applicants || [],
+            memberUserIds,
             createdAt: new Date().toISOString()
         });
         return newDoc.id;
@@ -224,6 +228,7 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
             id: Math.random().toString(36).substring(2, 9),
             timestamp: new Date().toISOString(),
             isApproved: false, // 명시적으로 false 설정 (동기화 안정성)
+            source: 'app',
             status: 'PENDING',
         };
         await updateDoc(roomRef, {
@@ -243,7 +248,8 @@ export const cancelApplication = async (roomId: string, applicant: Applicant) =>
     try {
         const roomRef = doc(db, "rooms", roomId);
         await updateDoc(roomRef, {
-            applicants: arrayRemove(applicant)
+            applicants: arrayRemove(applicant),
+            lastExcluded: { userId: applicant.userId || '', name: applicant.name, at: new Date().toISOString() }
         });
     } catch (error) {
         console.error("Error cancelling application:", error);
@@ -631,6 +637,7 @@ export const syncApplicantProfile = async (userId: string, profile: UserProfile)
                             secondaryPositions: sportProfile.secondaryPositions,
                             tertiaryPositions: sportProfile.tertiaryPositions,
                             forbiddenPositions: sportProfile.forbiddenPositions,
+                            photoUrl: profile.photoUrl || '',
                         } : a
                     );
                     batch.update(docSnap.ref, { applicants: updatedApplicants });
@@ -670,5 +677,133 @@ export const saveVenueInfo = async (placeId: string, venueData: Partial<VenueDat
     } catch (e) {
         console.error("Save venue info error:", e);
         throw e;
+    }
+};
+
+/**
+ * 18. 채팅 메시지 전송
+ */
+export const sendChatMessage = async (roomId: string, senderId: string, senderName: string, text: string, senderPhotoUrl?: string) => {
+    try {
+        const trimmedText = text.slice(0, 500);
+        const createdAt = new Date().toISOString();
+        const messagesRef = collection(db, "rooms", roomId, "messages");
+        const msgData: any = {
+            senderId,
+            senderName,
+            text: trimmedText,
+            createdAt,
+        };
+        if (senderPhotoUrl) msgData.senderPhotoUrl = senderPhotoUrl;
+        await addDoc(messagesRef, msgData);
+        // 방 문서에 lastChatMessage 업데이트 (목록 미리보기용)
+        const roomRef = doc(db, "rooms", roomId);
+        await updateDoc(roomRef, {
+            lastChatMessage: { text: trimmedText, senderName, createdAt },
+        });
+    } catch (e) {
+        console.error("Send chat message error:", e);
+        throw e;
+    }
+};
+
+/**
+ * 18-1. 시스템 메시지 전송 (참가 승인 등)
+ */
+export const sendSystemMessage = async (roomId: string, text: string) => {
+    try {
+        const createdAt = new Date().toISOString();
+        const messagesRef = collection(db, "rooms", roomId, "messages");
+        await addDoc(messagesRef, {
+            senderId: 'SYSTEM',
+            senderName: 'System',
+            text,
+            createdAt,
+            type: 'SYSTEM',
+        });
+        const roomRef = doc(db, "rooms", roomId);
+        await updateDoc(roomRef, {
+            lastChatMessage: { text, senderName: 'System', createdAt },
+        });
+    } catch (e) {
+        console.error("Send system message error:", e);
+    }
+};
+
+/**
+ * 19. 채팅 메시지 실시간 구독 (최근 100개)
+ */
+export const subscribeToChatMessages = (
+    roomId: string,
+    limitCount: number,
+    callback: (messages: ChatMessage[]) => void,
+    onError?: (error: Error) => void
+) => {
+    const q = query(
+        collection(db, "rooms", roomId, "messages"),
+        orderBy("createdAt", "asc"),
+        limit(limitCount)
+    );
+
+    return onSnapshot(q, (snap) => {
+        const messages = snap.docs.map(d => ({
+            id: d.id,
+            ...d.data(),
+        } as ChatMessage));
+        callback(messages);
+    }, (error) => {
+        console.error("Chat subscription error:", error);
+        if (onError) onError(error);
+    });
+};
+
+/**
+ * 20. 채팅방 목록 실시간 구독 (내가 참여 중인 방들)
+ */
+export const subscribeToChatRooms = (
+    userId: string,
+    callback: (rooms: RecruitmentRoom[]) => void,
+    onError?: (error: Error) => void
+) => {
+    const q = query(
+        collection(db, "rooms"),
+        where("memberUserIds", "array-contains", userId)
+    );
+
+    return onSnapshot(q, (snap) => {
+        const rooms = snap.docs.map(d => ({ id: d.id, ...d.data() } as RecruitmentRoom));
+        rooms.sort((a, b) => {
+            const aTime = (a as any).lastChatMessage?.createdAt || a.createdAt;
+            const bTime = (b as any).lastChatMessage?.createdAt || b.createdAt;
+            return new Date(bTime).getTime() - new Date(aTime).getTime();
+        });
+        callback(rooms);
+    }, (error) => {
+        console.error("Chat rooms subscription error:", error);
+        if (onError) onError(error);
+    });
+};
+
+/**
+ * 21. 채팅 멤버 추가 (승인 시)
+ */
+export const addChatMember = async (roomId: string, userId: string) => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        await updateDoc(roomRef, { memberUserIds: arrayUnion(userId) });
+    } catch (e) {
+        console.error("Add chat member error:", e);
+    }
+};
+
+/**
+ * 22. 채팅 멤버 제거 (거절/취소 시)
+ */
+export const removeChatMember = async (roomId: string, userId: string) => {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        await updateDoc(roomRef, { memberUserIds: arrayRemove(userId) });
+    } catch (e) {
+        console.error("Remove chat member error:", e);
     }
 };

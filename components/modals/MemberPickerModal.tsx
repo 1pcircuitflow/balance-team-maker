@@ -59,10 +59,10 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
         currentApps.push({
           id: 'app_' + Math.random().toString(36).substr(2, 9), name: player.name,
           tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === player.tier) || 'B',
-          isApproved: true, position: joinedPos,
+          isApproved: true, status: 'APPROVED' as const, position: joinedPos,
           primaryPositions: player.primaryPositions || [], secondaryPositions: player.secondaryPositions || [],
           tertiaryPositions: player.tertiaryPositions || [], forbiddenPositions: player.forbiddenPositions || [],
-          appliedAt: new Date().toISOString()
+          appliedAt: new Date().toISOString(), source: 'host'
         });
       } else {
         const idx = currentApps.findIndex(a => a.name === player.name);
@@ -106,13 +106,13 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
         id: 'app_' + Math.random().toString(36).substr(2, 9),
         name: newPlayer.name,
         tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === newPlayer.tier) || 'B',
-        isApproved: true,
+        isApproved: true, status: 'APPROVED' as const,
         position: joinedPos,
         primaryPositions: newPlayer.primaryPositions || [],
         secondaryPositions: newPlayer.secondaryPositions || [],
         tertiaryPositions: newPlayer.tertiaryPositions || [],
         forbiddenPositions: newPlayer.forbiddenPositions || [],
-        appliedAt: new Date().toISOString()
+        appliedAt: new Date().toISOString(), source: 'host'
       });
       await updateDoc(roomRef, { applicants: currentApps });
     } catch (e) { console.error("Register and add player error:", e); }
@@ -139,10 +139,10 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
             if (!exists) {
               currentApps.push({ id: 'app_' + Math.random().toString(36).substr(2, 9), name: p.name,
                 tier: (Object.keys(Tier) as (keyof typeof Tier)[]).find(key => Tier[key] === p.tier) || 'B',
-                isApproved: true, position: joinedPos,
+                isApproved: true, status: 'APPROVED' as const, position: joinedPos,
                 primaryPositions: p.primaryPositions || [], secondaryPositions: p.secondaryPositions || [],
                 tertiaryPositions: p.tertiaryPositions || [], forbiddenPositions: p.forbiddenPositions || [],
-                appliedAt: new Date().toISOString()
+                appliedAt: new Date().toISOString(), source: 'host'
               });
             } else {
               const idx = currentApps.findIndex(a => a.name === p.name);

@@ -151,7 +151,7 @@ export const VenueSearchInput: React.FC<VenueSearchInputProps> = ({
       {isDropdownOpen && results.length > 0 && (
         <div
           className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden"
-          style={{ zIndex: Z_INDEX.FILTER_DROPDOWN }}
+          style={{ zIndex: Z_INDEX.VENUE_AUTOCOMPLETE }}
         >
           {results.map((place) => (
             <button

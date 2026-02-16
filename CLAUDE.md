@@ -57,6 +57,7 @@ balance-team-maker/
 │   ├── SportFilterButton.tsx  # HOME용 종목 드롭다운 필터
 │   ├── SportSegmentControl.tsx# MEMBERS용 종목 세그먼트 컨트롤
 │   ├── Toast.tsx              # 토스트 알림
+│   ├── ChatTab.tsx            # 모집방 채팅 탭 (메시지 목록 + 입력창)
 │   ├── VenueSearchInput.tsx   # 장소 검색 (카카오맵) + 사진 업로드 통합 컴포넌트
 │   └── modals/                # 모달 컴포넌트
 │       ├── BaseModal.tsx      # 모달 공통 베이스
@@ -89,6 +90,7 @@ balance-team-maker/
 │   ├── useBalanceGeneration.ts # 밸런싱 생성 로직
 │   ├── useBalanceSettings.ts  # 밸런싱 설정 (색상, 쿼터)
 │   ├── useRecruitmentRooms.ts # 모집방 관리
+│   ├── useChat.ts             # 모집방 채팅 (메시지 구독/전송)
 │   ├── useInitialization.ts   # 앱 초기화
 │   ├── useAnnouncements.ts    # 공지사항 관리
 │   ├── usePlayerActions.ts    # 플레이어 CRUD 액션
@@ -109,7 +111,10 @@ balance-team-maker/
 │   ├── HomePage.tsx           # 홈 페이지 (경기 목록)
 │   ├── DetailPage.tsx         # 경기 상세 페이지
 │   ├── EditRoomPage.tsx       # 모집방 편집 페이지
-│   └── BalancePage.tsx        # 밸런싱 결과 페이지
+│   ├── BalancePage.tsx        # 밸런싱 결과 페이지
+│   ├── ProfileDetailPage.tsx  # 프로필 상세 페이지 (사진 + 실력정보)
+│   ├── ChatListPage.tsx       # 채팅방 목록 페이지
+│   └── ChatRoomPage.tsx       # 개별 채팅방 페이지
 │
 ├── utils/
 │   └── helpers.ts             # 유틸리티 함수
@@ -242,6 +247,21 @@ AppProvider → AuthProvider → PlayerProvider → NavigationProvider
 z-index는 `constants.ts`의 `Z_INDEX` 상수를 사용. 하드코딩(`z-[XXXX]`) 금지.
 `style={{ zIndex: Z_INDEX.XXX }}` 패턴으로 적용.
 
+### 광고 배너 하단 레이아웃 규칙
+네이티브 광고 배너(AdMob)가 화면 최하단에 고정 표시됨 (약 56~80px). 전체화면 오버레이 페이지를 만들 때 반드시 아래 패턴을 따를 것:
+
+```tsx
+// 컨테이너: inset-0 사용 금지 → top-0 + bottom으로 광고 영역 회피
+<div className="fixed left-0 right-0 top-0 ..."
+  style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
+```
+
+- `fixed inset-0` 사용 금지 → `fixed left-0 right-0 top-0` + `bottom` 동적 설정
+- 광고 있을 때(`!isAdFree`): `bottom: '80px'` — 컨테이너가 광고 위에서 끝남
+- 광고 없을 때(`isAdFree`): `bottom: '0px'` — 전체 화면 사용
+- 하단 콘텐츠의 safe-area: `paddingBottom: isAdFree ? 'env(safe-area-inset-bottom, 0px)' : '0px'`
+- 참고 페이지: `BalancePage`, `EditRoomPage`, `HostRoomModal`, `ChatRoomPage`
+
 ### TypeScript
 - 타겟: ES2022
 - strict mode 아님 (noEmit만 설정)
@@ -265,8 +285,8 @@ export const TRANSLATIONS = {
 - `TranslationKey` 타입은 `en` 블록 키에서 자동 유추
 
 ## Navigation Structure
-- **BottomTab:** HOME | MEMBERS | SETTINGS
-- **Pages:** HOME → DETAIL → BALANCE / EDIT_ROOM
+- **BottomTab:** HOME | MEMBERS | CHAT | SETTINGS
+- **Pages:** HOME → DETAIL → BALANCE / EDIT_ROOM, CHAT → CHAT_ROOM, SETTINGS → PROFILE
 - **종목 탭 UX:**
   - HOME: `SportFilterButton` (드롭다운 필터, `activeTab` 상태)
   - MEMBERS: `SportSegmentControl` (세그먼트 컨트롤 + 스와이프, `membersTab` 상태)

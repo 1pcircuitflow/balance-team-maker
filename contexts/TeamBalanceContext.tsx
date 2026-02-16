@@ -6,7 +6,6 @@ import { useAppContext } from './AppContext';
 import { useAuthContext } from './AuthContext';
 import { usePlayerContext } from './PlayerContext';
 import { useNavigationContext } from './NavigationContext';
-import { AppPageType } from '../types';
 
 interface TeamBalanceContextValue {
   teamCount: number;
@@ -82,9 +81,9 @@ export const TeamBalanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { t, showAlert, darkMode, lang } = useAppContext();
   const { isAdFree } = useAuthContext();
   const { players } = usePlayerContext();
-  const { activeTab, setCurrentPage, membersTab } = useNavigationContext();
+  const { activeTab, navigateTo, membersTab } = useNavigationContext();
 
-  const balance = useTeamBalance(players, activeTab, showAlert, t, isAdFree, setCurrentPage, AppPageType, membersTab);
+  const balance = useTeamBalance(players, activeTab, showAlert, t, isAdFree, navigateTo, membersTab);
 
   const { handleShare } = useShareCapture({
     darkMode,

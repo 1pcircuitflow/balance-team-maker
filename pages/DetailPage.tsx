@@ -1,7 +1,7 @@
 import React from 'react';
-import { Player, Tier, SportType, AppPageType, BottomTabType, DetailPageTab, Position, BalanceResult } from '../types';
+import { Player, Tier, SportType, AppPageType, DetailPageTab, Position, BalanceResult } from '../types';
 import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT, Z_INDEX } from '../constants';
-import { cancelApplication, cancelMyApplication, applyForParticipation, incrementViewCount, toggleLikeRoom } from '../services/firebaseService';
+import { cancelApplication, cancelMyApplication, applyForParticipation, incrementViewCount, toggleLikeRoom, removeChatMember, sendSystemMessage } from '../services/firebaseService';
 import { FormationPicker } from '../components/FormationPicker';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
 import { parseTier, tierToLabel, applicantToPlayer, upsertPlayerFromApplicant, getApplicantStatus, getApprovedCount, isRoomFull } from '../utils/helpers';
@@ -11,6 +11,9 @@ import { usePlayerContext } from '../contexts/PlayerContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
 import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
 import { useRecruitmentContext } from '../contexts/RecruitmentContext';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { Clipboard } from '@capacitor/clipboard';
 import * as Icons from '../Icons';
 
 const { ArrowLeftIcon, CheckIcon, CrownIcon } = Icons;
@@ -26,7 +29,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   const { t, lang, darkMode, showAlert, setConfirmState } = useAppContext();
   const { isAdFree, currentUserId, userNickname, userProfile } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
-  const { setCurrentPage, setCurrentBottomTab, detailTab, setDetailTab, touchStartX, setTouchStartX } = useNavigationContext();
+  const { navigateToHome, detailTab, setDetailTab, touchStartX, setTouchStartX, navigateToUserProfile, navigateTo, goBack } = useNavigationContext();
   const {
     showTier, setShowTier, selectionMode, setSelectionMode,
     selectedPlayerIds, setSelectedPlayerIds, teamConstraints, setTeamConstraints,
@@ -37,7 +40,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
     handleGenerate, setResult,
   } = useTeamBalanceContext();
   const {
-    currentActiveRoom: room,
+    currentActiveRoom: room, setCurrentActiveRoom,
     setHostRoomSelectedSport, setHostRoomTitle, setHostRoomVenue, setHostRoomVenueData, setHostRoomDescription,
     setHostRoomDate, setHostRoomTime, setHostRoomEndDate, setHostRoomEndTime,
     setHostRoomUseLimit, setHostRoomMaxApplicants,
@@ -65,6 +68,21 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   const [isDescExpanded, setIsDescExpanded] = React.useState(false);
   const [likeLoading, setLikeLoading] = React.useState(false);
   const [optimisticLiked, setOptimisticLiked] = React.useState<boolean | null>(null);
+
+  // 하단 바 높이 측정 (채팅 FAB + 스크롤 패딩 동적 계산용)
+  const bottomBarRef = React.useRef<HTMLDivElement>(null);
+  const [bottomBarH, setBottomBarH] = React.useState(160);
+
+  React.useEffect(() => {
+    if (isBalanceSettingsOpen || isApplyFormOpen) return;
+    const el = bottomBarRef.current;
+    if (!el) return;
+    const measure = () => setBottomBarH(el.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isBalanceSettingsOpen, isApplyFormOpen, room?.hostId, currentUserId]);
 
   // 조회수 증가 (상세페이지 진입 시 1회)
   React.useEffect(() => {
@@ -112,10 +130,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
-            onClick={() => {
-              setCurrentPage(AppPageType.HOME);
-              setCurrentBottomTab(BottomTabType.HOME);
-            }}
+            onClick={() => goBack()}
             className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"
           >
             <ArrowLeftIcon size={24} />
@@ -137,7 +152,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
         </div>
       </header>
 
-      <div className={`flex-1 overflow-y-auto px-5 pt-0 space-y-6 ${selectionMode ? 'pb-52' : 'pb-40'}`}>
+      <div className="flex-1 overflow-y-auto px-5 pt-0 space-y-6" style={{ paddingBottom: `${bottomBarH + (selectionMode ? 160 : 84)}px` }}>
         <div className="w-full">
           {/* Room banner */}
           <div className="w-full h-[120px] rounded-3xl overflow-hidden relative shadow-xl border border-slate-100 dark:border-transparent shrink-0">
@@ -183,7 +198,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       setHostRoomVisibility(room.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE');
                       setHostRoomActivePicker('START');
                       setHostRoomIsPickerSelectionMode(false);
-                      setCurrentPage(AppPageType.EDIT_ROOM);
+                      navigateTo(AppPageType.EDIT_ROOM);
                     }}
                     className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/90"
                   >
@@ -201,7 +216,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         onConfirm: async () => {
                           await confirmData.onConfirm();
                           setConfirmState((prev: any) => ({ ...prev, isOpen: false }));
-                          setCurrentPage(AppPageType.HOME);
+                          navigateToHome();
                         }
                       });
                     }}
@@ -219,7 +234,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                     <p className="text-[13px] font-medium text-white tracking-[-0.025em] truncate">{room.venueData?.placeName || room.venue}</p>
                   )}
                 </div>
-                {isHost && (
+                {(isHost || room.visibility !== 'PRIVATE') && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleShareRecruitLink(room); }}
                   className="text-[12px] font-medium text-white px-2 py-0.5 rounded-xl bg-rose-500 tracking-[-0.025em] active:scale-95 transition-transform shrink-0 flex items-center gap-1"
@@ -245,15 +260,48 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             </div>
           </div>
 
+          {/* 위치 정보 바 */}
+          {room.venueData?.address && (
+            <div className="mt-3 flex items-center gap-2 bg-white dark:bg-slate-950 px-4 py-0 rounded-2xl border border-slate-100/50 dark:border-transparent">
+              <span className="text-[16px] font-semibold text-slate-900 dark:text-white shrink-0">{t('address' as any)}</span>
+              <p className="flex-1 text-[13px] font-medium text-slate-500 dark:text-slate-400 truncate">{room.venueData.address}</p>
+              <button
+                onClick={async () => {
+                  const addressText = `${room.venueData!.placeName}\n${room.venueData!.address}`;
+                  try {
+                    if (Capacitor.isNativePlatform()) {
+                      await Share.share({ text: addressText });
+                    } else {
+                      await Clipboard.write({ string: addressText });
+                      showAlert(t('addressCopied' as any));
+                    }
+                  } catch {
+                    try {
+                      await Clipboard.write({ string: addressText });
+                      showAlert(t('addressCopied' as any));
+                    } catch { /* silent */ }
+                  }
+                }}
+                className="shrink-0 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 active:scale-90 transition-transform"
+              >
+                <Icons.ShareIcon size={18} />
+              </button>
+            </div>
+          )}
+
           {/* 방장 프로필 카드 */}
           {room.hostName && (() => {
             const hostApp = room.applicants.find(a => a.userId === room.hostId);
             return (
             <div className="mt-3">
-              <div className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent">
+              <div
+                onClick={() => room.hostId && navigateToUserProfile(room.hostId)}
+                className="flex items-center justify-between bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent cursor-pointer active:scale-[0.98] transition-transform">
                 <div className="flex items-center gap-4">
-                  <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
-                    BELO
+                  <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0 overflow-hidden">
+                    {hostApp?.photoUrl ? (
+                      <img src={hostApp.photoUrl} alt="" className="w-full h-full object-cover" />
+                    ) : 'BELO'}
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5">
@@ -507,9 +555,21 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                               {team.players.map((p: any) => {
                                 const tierVal = typeof p.tier === 'number' ? p.tier : parseInt(p.tier) || 3;
                                 return (
-                                  <div key={p.id} className="flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent">
-                                    <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
-                                      BELO
+                                  <div
+                                    key={p.id}
+                                    onClick={() => {
+                                      const matchedApp = room.applicants.find(a => a.name === p.name);
+                                      if (matchedApp?.userId) navigateToUserProfile(matchedApp.userId);
+                                    }}
+                                    className={`flex items-center gap-4 bg-white dark:bg-slate-950 px-2 py-1 rounded-2xl border border-slate-100/50 dark:border-transparent ${room.applicants.find(a => a.name === p.name)?.userId ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}
+                                  >
+                                    <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0 overflow-hidden">
+                                      {(() => {
+                                        const matchedApp = room.applicants.find(a => a.name === p.name);
+                                        return matchedApp?.photoUrl ? (
+                                          <img src={matchedApp.photoUrl} alt="" className="w-full h-full object-cover" />
+                                        ) : 'BELO';
+                                      })()}
                                     </div>
                                     {room.sport !== SportType.GENERAL && (
                                       <div className="w-10 text-[14px] font-bold text-slate-400 shrink-0 text-center">
@@ -684,6 +744,8 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                           setSelectedPlayerIds(prev =>
                             prev.includes(effectiveId) ? prev.filter(x => x !== effectiveId) : [...prev, effectiveId]
                           );
+                        } else if (app.userId) {
+                          navigateToUserProfile(app.userId);
                         }
                       }}
                       onKeyDown={(e) => {
@@ -694,7 +756,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                           );
                         }
                       }}
-                      className={`bg-white dark:bg-slate-950 flex items-center justify-between px-2 py-1 rounded-2xl transition-all ${selectionMode && detailTab === DetailPageTab.APPROVED ? 'cursor-pointer active:scale-[0.98]' : ''} ${selectionMode && isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                      className={`bg-white dark:bg-slate-950 flex items-center justify-between px-2 py-1 rounded-2xl transition-all ${selectionMode && detailTab === DetailPageTab.APPROVED ? 'cursor-pointer active:scale-[0.98]' : app.userId ? 'cursor-pointer active:scale-[0.98]' : ''} ${selectionMode && isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
                     >
                       <div className="flex items-center gap-4">
                         {selectionMode && detailTab === DetailPageTab.APPROVED && (
@@ -702,8 +764,10 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             {isSelected && <CheckIcon />}
                           </div>
                         )}
-                        <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0">
-                          BELO
+                        <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0 overflow-hidden">
+                          {app.photoUrl ? (
+                            <img src={app.photoUrl} alt="" className="w-full h-full object-cover" />
+                          ) : 'BELO'}
                         </div>
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
@@ -715,6 +779,12 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             <span className="text-[16px] font-medium text-slate-900 dark:text-white">
                               {app.name}
                             </span>
+                            {app.source === 'web' && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-[12px] font-medium text-blue-500 dark:text-blue-400">{t('webApplicant')}</span>
+                            )}
+                            {!app.userId && app.source !== 'web' && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/30 text-[12px] font-medium text-amber-600 dark:text-amber-400">{t('hostAdded')}</span>
+                            )}
                             {app.userId === room.hostId && (
                               <CrownIcon size={14} className="text-amber-400" />
                             )}
@@ -802,7 +872,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             ) : t('restoreApplicant')}
                           </button>
                         ) : (
-                          <div className="flex items-center gap-2 relative">
+                          <div className="flex items-center gap-2 relative" onClick={(e) => e.stopPropagation()}>
                             {activeActionMenuId === app.id ? (
                               <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
                                 <button
@@ -821,6 +891,10 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                   onClick={() => {
                                     const isMember = players.some(p => p.name === app.name);
                                     cancelApplication(room.id, app);
+                                    if (getApplicantStatus(app) === 'APPROVED' && app.userId) {
+                                      removeChatMember(room.id, app.userId);
+                                      sendSystemMessage(room.id, t('chatSystemExcluded', app.name));
+                                    }
                                     if (!isMember) {
                                       setMemberSuggestion({ isOpen: true, applicant: app });
                                     }
@@ -897,6 +971,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               )}
             </div>
           </>)}
+            {/* 스크롤 여백은 상위 div의 동적 paddingBottom으로 처리 */}
           </div>
 
           {/* Host: Balance settings overlay backdrop */}
@@ -913,6 +988,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* Host: Balance settings bottom sheet */}
           {isHost && (
           <div
+            ref={bottomBarRef}
             className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
             style={{
               bottom: 0,
@@ -1095,6 +1171,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* Guest: Apply bottom sheet */}
           {!isHost && (
           <div
+            ref={bottomBarRef}
             className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isApplyFormOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
             style={{
               bottom: 0,
@@ -1168,7 +1245,15 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       message: t('cancelApplicationConfirm'),
                       onConfirm: async () => {
                         try {
+                          if (myStatus === 'APPROVED') {
+                            await removeChatMember(room.id, currentUserId);
+                            await sendSystemMessage(room.id, t('chatSystemLeft', userNickname));
+                          }
                           await cancelMyApplication(room.id, currentUserId);
+                          setCurrentActiveRoom(prev => prev ? {
+                            ...prev,
+                            applicants: prev.applicants.filter(a => a.userId !== currentUserId),
+                          } : null);
                           showAlert(t('applicationCancelled'));
                           setConfirmState(prev => ({ ...prev, isOpen: false }));
                         } catch (err: any) {
@@ -1216,11 +1301,34 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         forbiddenPositions: applyForbiddenPos,
                         ...(fcmToken ? { fcmToken } : {}),
                         ...(currentUserId ? { userId: currentUserId } : {}),
+                        ...(userProfile?.photoUrl ? { photoUrl: userProfile.photoUrl } : {}),
                       });
+                      const newApplicant = {
+                        id: '', // Firestore에서 생성된 ID는 다음 구독 시 동기화됨
+                        name: applyName.trim(),
+                        tier: applyTier,
+                        position: applyPrimaryPos[0] || 'NONE',
+                        primaryPositions: applyPrimaryPos,
+                        secondaryPositions: applySecondaryPos,
+                        tertiaryPositions: applyTertiaryPos,
+                        forbiddenPositions: applyForbiddenPos,
+                        timestamp: new Date().toISOString(),
+                        isApproved: false,
+                        source: 'app' as const,
+                        status: 'PENDING' as const,
+                        ...(currentUserId ? { userId: currentUserId } : {}),
+                        ...(userProfile?.photoUrl ? { photoUrl: userProfile.photoUrl } : {}),
+                      };
+                      setCurrentActiveRoom(prev => prev ? {
+                        ...prev,
+                        applicants: [...prev.applicants, newApplicant],
+                      } : null);
                       setIsApplyFormOpen(false);
-                      showAlert(t('applicationComplete'));
-                      setCurrentPage(AppPageType.HOME);
-                      setCurrentBottomTab(BottomTabType.HOME);
+                      showAlert(
+                        room.visibility !== 'PRIVATE'
+                          ? `${t('applicationComplete')}\n\n${t('shareRecruitTip' as any)}`
+                          : t('applicationComplete')
+                      );
                     } catch (err: any) {
                       if (err?.message === 'DUPLICATE_APPLICATION') {
                         setApplyError(t('duplicateApplicationMsg'));
@@ -1247,6 +1355,20 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               )}
             </div>
           </div>
+          )}
+
+          {/* 플로팅 채팅 버튼 */}
+          {!isBalanceSettingsOpen && !isApplyFormOpen && !selectionMode && (
+            <button
+              onClick={() => navigateTo(AppPageType.CHAT_ROOM)}
+              className="fixed right-5 w-[52px] h-[52px] rounded-full bg-blue-500 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center active:scale-90 transition-all hover:bg-blue-600"
+              style={{
+                bottom: `${bottomBarH + 16}px`,
+                zIndex: Z_INDEX.FAB_BUTTON,
+              }}
+            >
+              <Icons.ChatBubbleFilledIcon size={22} />
+            </button>
           )}
         </div>
       </div>

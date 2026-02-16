@@ -1,5 +1,5 @@
 import React from 'react';
-import { SportType, AppPageType } from '../types';
+import { SportType } from '../types';
 import { Z_INDEX } from '../constants';
 import { TRANSLATIONS } from '../translations';
 import { DateTimePicker } from '../components/DateTimePicker';
@@ -15,7 +15,7 @@ const { ArrowLeftIcon } = Icons;
 export const EditRoomPage: React.FC = React.memo(() => {
   const { t, lang } = useAppContext();
   const { isProcessing, setIsProcessing, isAdFree } = useAuthContext();
-  const { setCurrentPage } = useNavigationContext();
+  const { goBack } = useNavigationContext();
   const {
     hostRoomSelectedSport, setHostRoomSelectedSport,
     hostRoomTitle, setHostRoomTitle,
@@ -37,7 +37,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
-            onClick={() => setCurrentPage(AppPageType.DETAIL)}
+            onClick={() => goBack()}
             className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"
           >
             <ArrowLeftIcon size={24} />
@@ -215,7 +215,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
       <div className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
         style={{ paddingBottom: isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}>
         <button
-          onClick={() => handleUpdateRoom(isProcessing, setIsProcessing, setCurrentPage, AppPageType)}
+          onClick={() => handleUpdateRoom(isProcessing, setIsProcessing, goBack)}
           disabled={isProcessing}
           className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 disabled:opacity-50"
         >

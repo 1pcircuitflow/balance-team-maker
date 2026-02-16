@@ -53,6 +53,7 @@ export const Z_INDEX = {
   STICKY_HEADER: 2000,
   PAGE_OVERLAY: 2000,
   SELECTION_BAR: 2100,
+  CHAT_INPUT: 2100,
   FILTER_DROPDOWN: 3000,
   FAB_BUTTON: 3500,
   BOTTOM_TAB: 4000,
@@ -67,6 +68,9 @@ export const Z_INDEX = {
   MEMBER_PICKER: 6500,
   REWARD_AD: 6500,
   RESULT_OVERLAY: 7000,
+
+  // Autocomplete / Inline Dropdowns (모달 내부에서 최상위)
+  VENUE_AUTOCOMPLETE: 7500,
 
   // System Overlays
   TOAST: 8000,

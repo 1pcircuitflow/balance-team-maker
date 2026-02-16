@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Player, Tier, SportType, Position, BottomTabType, VenueData } from '../types';
+import { Player, Tier, SportType, Position, BottomTabType, VenueData, PendingNotification } from '../types';
 import {
   subscribeToUserRooms,
   subscribeToPublicRooms,
   updateRoomFcmToken,
   cancelApplication,
   updateRoomStatus,
+  addChatMember,
+  removeChatMember,
+  sendSystemMessage,
   RecruitmentRoom,
   Applicant,
   db,
@@ -36,6 +39,7 @@ export const useRecruitmentRooms = (
   const [memberSuggestion, setMemberSuggestion] = useState<{ isOpen: boolean; applicant: Applicant | null }>({ isOpen: false, applicant: null });
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
   const [editingApplicantId, setEditingApplicantId] = useState<string | null>(null);
+  const [pendingNotification, setPendingNotification] = useState<PendingNotification | null>(null);
 
   // Host room form state
   const [hostRoomSelectedSport, setHostRoomSelectedSport] = useState<SportType>(SportType.GENERAL);
@@ -223,6 +227,9 @@ export const useRecruitmentRooms = (
         a.id === applicant.id ? { ...a, isApproved: true, status: 'APPROVED' as const } : a
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      if (applicant.userId) addChatMember(room.id, applicant.userId);
+      // 시스템 메시지: "OOO님이 참가했습니다"
+      sendSystemMessage(room.id, t('chatSystemJoined', applicant.name));
       setPlayers(prev => upsertPlayerFromApplicant(prev, applicant, room.sport as SportType));
 
       // 자동 마감: 승인 후 정원 초과 체크
@@ -289,6 +296,7 @@ export const useRecruitmentRooms = (
         a.id === applicant.id ? { ...a, isApproved: false, status: 'REJECTED' as const } : a
       );
       await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      if (applicant.userId) removeChatMember(room.id, applicant.userId);
     } catch (e) {
       console.error("Reject Error:", e);
       showAlert(t('saveErrorMsg'));
@@ -313,6 +321,14 @@ export const useRecruitmentRooms = (
       const batch = writeBatch(db);
       batch.update(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
       await batch.commit();
+
+      // memberUserIds에 모든 참가자 추가 + 시스템 메시지
+      for (const a of room.applicants) {
+        if (a.userId && getApplicantStatus(a) !== 'APPROVED') {
+          addChatMember(room.id, a.userId);
+          sendSystemMessage(room.id, t('chatSystemJoined', a.name));
+        }
+      }
 
       // Firebase 성공 후에만 로컬 상태 업데이트
       setPlayers(prev => {
@@ -393,8 +409,7 @@ export const useRecruitmentRooms = (
   const handleUpdateRoom = async (
     isProcessing: boolean,
     setIsProcessing: (v: boolean) => void,
-    setCurrentPage: (page: any) => void,
-    AppPageType: any,
+    goBack: () => void,
   ) => {
     if (!currentActiveRoom) return;
     setIsProcessing(true);
@@ -418,7 +433,7 @@ export const useRecruitmentRooms = (
       }
       await updateDoc(roomRef, updateData);
       setCurrentActiveRoom(prev => prev ? { ...prev, ...updateData } : null);
-      setCurrentPage(AppPageType.DETAIL);
+      goBack();
       showAlert(t('editComplete'));
     } catch (error) {
       console.error('Error updating room:', error);
@@ -441,6 +456,7 @@ export const useRecruitmentRooms = (
     memberSuggestion, setMemberSuggestion,
     activeActionMenuId, setActiveActionMenuId,
     editingApplicantId, setEditingApplicantId,
+    pendingNotification, setPendingNotification,
     hostRoomSelectedSport, setHostRoomSelectedSport,
     hostRoomTitle, setHostRoomTitle,
     hostRoomDate, setHostRoomDate,

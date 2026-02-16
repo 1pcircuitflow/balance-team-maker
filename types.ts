@@ -72,6 +72,7 @@ export interface BalanceResult {
 export enum BottomTabType {
   HOME = 'HOME',
   MEMBERS = 'MEMBERS',
+  CHAT = 'CHAT',
   SETTINGS = 'SETTINGS'
 }
 
@@ -79,7 +80,9 @@ export enum AppPageType {
   HOME = 'HOME',
   DETAIL = 'DETAIL',
   EDIT_ROOM = 'EDIT_ROOM',
-  BALANCE = 'BALANCE'
+  BALANCE = 'BALANCE',
+  CHAT_ROOM = 'CHAT_ROOM',
+  PROFILE = 'PROFILE'
 }
 
 export enum DetailPageTab {
@@ -87,6 +90,16 @@ export enum DetailPageTab {
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   TEAM_RESULT = 'TEAM_RESULT'
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderPhotoUrl?: string;
+  text: string;
+  createdAt: string;
+  type?: 'USER' | 'SYSTEM';
 }
 
 export interface VenueData {
@@ -109,4 +122,18 @@ export interface UserSportProfile {
 export interface UserProfile {
   sports: Partial<Record<SportType, UserSportProfile>>;
   onboardingComplete: boolean;
+  photoUrl?: string;
+}
+
+export type PushNotificationType =
+  | 'NEW_APPLICANT'
+  | 'APPLICANT_CANCELLED'
+  | 'APPLICATION_APPROVED'
+  | 'APPLICATION_REJECTED'
+  | 'APPLICATION_EXCLUDED'
+  | 'NEW_CHAT_MESSAGE';
+
+export interface PendingNotification {
+  type: PushNotificationType;
+  roomId: string;
 }

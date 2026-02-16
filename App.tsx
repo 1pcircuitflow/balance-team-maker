@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Player, Tier, SportType, BottomTabType, AppPageType } from './types';
+import { Player, Tier, SportType, BottomTabType, AppPageType, DetailPageTab } from './types';
 import { Z_INDEX } from './constants';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdOptions } from '@capacitor-community/admob';
 import { AnalyticsService } from './services/analyticsService';
 import { App as CapApp } from '@capacitor/app';
 import { parseTier, applicantToPlayer } from './utils/helpers';
+import { getRoomInfo } from './services/firebaseService';
 
 // Contexts
 import { AppProvider, useAppContext } from './contexts/AppContext';
@@ -53,6 +54,9 @@ import { HomePage } from './pages/HomePage';
 import { EditRoomPage } from './pages/EditRoomPage';
 import { BalancePage } from './pages/BalancePage';
 import { DetailPage } from './pages/DetailPage';
+import { ChatListPage } from './pages/ChatListPage';
+import { ChatRoomPage } from './pages/ChatRoomPage';
+import { ProfileDetailPage } from './pages/ProfileDetailPage';
 import { SettingsPage } from './components/SettingsPage';
 
 const App: React.FC = () => {
@@ -79,7 +83,7 @@ const AppContent: React.FC = () => {
   const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState } = useAppContext();
   const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal, needsOnboarding } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
-  const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab, membersTab, setMembersTab } = useNavigationContext();
+  const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab, membersTab, setMembersTab, viewingProfileUserId, setViewingProfileUserId, detailTab, setDetailTab, navigateTo, goBack, isHistoryEmpty } = useNavigationContext();
   const {
     result, setResult, isSharing, isGenerating, countdown,
     showColorPicker, setShowColorPicker, showQuotaSettings, setShowQuotaSettings,
@@ -91,7 +95,8 @@ const AppContent: React.FC = () => {
   const {
     activeRooms, setActiveRooms, currentActiveRoom, setCurrentActiveRoom,
     showHostRoomModal, setShowHostRoomModal, showApplyRoomModal, setShowApplyRoomModal,
-    pendingJoinRoomId, setPendingJoinRoomId, memberSuggestion, setMemberSuggestion,
+    pendingJoinRoomId, setPendingJoinRoomId, pendingNotification, setPendingNotification,
+    memberSuggestion, setMemberSuggestion,
   } = useRecruitmentContext();
   const { toastState, setToastState } = usePlayerActionsContext();
 
@@ -125,7 +130,7 @@ const AppContent: React.FC = () => {
   // Initialization hook
   useInitialization(
     lang, setLang, user, currentUserId, setShowLoginModal, setIsAdFree,
-    currentActiveRoom?.id, setAlertState, setPendingJoinRoomId,
+    currentActiveRoom?.id, setAlertState, setPendingJoinRoomId, setPendingNotification,
     setShowUpdateModal, setUpdateInfo, handleRewardAdComplete, t,
     handleKakaoCode,
   );
@@ -151,19 +156,67 @@ const AppContent: React.FC = () => {
     if (pendingJoinRoomId) setShowApplyRoomModal(true);
   }, [pendingJoinRoomId]);
 
+  // Push notification → 타입별 페이지 이동
+  useEffect(() => {
+    if (!pendingNotification || !user) return;
+
+    const { type, roomId } = pendingNotification;
+
+    const navigate = async () => {
+      // activeRooms에서 찾거나, 없으면 Firestore에서 fetch
+      let room = activeRooms.find(r => r.id === roomId) || null;
+      if (!room) {
+        try {
+          room = await getRoomInfo(roomId);
+        } catch (e) {
+          console.error('Failed to fetch room for notification:', e);
+        }
+      }
+      if (!room) {
+        setPendingNotification(null);
+        return;
+      }
+
+      setCurrentActiveRoom(room);
+
+      if (type === 'NEW_CHAT_MESSAGE') {
+        navigateTo(AppPageType.CHAT_ROOM);
+      } else {
+        // 타입별 DetailPage 탭 결정
+        if (type === 'NEW_APPLICANT' || type === 'APPLICANT_CANCELLED') {
+          setDetailTab(DetailPageTab.PENDING);
+        } else if (type === 'APPLICATION_APPROVED' || type === 'APPLICATION_EXCLUDED') {
+          setDetailTab(DetailPageTab.APPROVED);
+        } else if (type === 'APPLICATION_REJECTED') {
+          setDetailTab(DetailPageTab.REJECTED);
+        }
+        navigateTo(AppPageType.DETAIL);
+      }
+
+      setPendingNotification(null);
+    };
+
+    navigate();
+  }, [pendingNotification, user]);
+
   // Back button handler
+  const goBackRef = useRef(goBack);
+  const isHistoryEmptyRef = useRef(isHistoryEmpty);
+  useEffect(() => { goBackRef.current = goBack; }, [goBack]);
+  useEffect(() => { isHistoryEmptyRef.current = isHistoryEmpty; }, [isHistoryEmpty]);
+
   const modalStateRef = useRef({
     alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal,
     showUpgradeModal, showLimitModal, showReviewPrompt, showInfoModal, showApplyRoomModal,
     showHostRoomModal, showColorPicker, showQuotaSettings, selectionMode, currentPage,
-    currentBottomTab, showMemberPickerModal,
+    currentBottomTab, showMemberPickerModal, viewingProfileUserId,
   });
   useEffect(() => {
     modalStateRef.current = {
       alertIsOpen: alertState.isOpen, showRewardAd, showLoginModal,
       showUpgradeModal, showLimitModal, showReviewPrompt, showInfoModal, showApplyRoomModal,
       showHostRoomModal, showColorPicker, showQuotaSettings, selectionMode, currentPage,
-      currentBottomTab, showMemberPickerModal,
+      currentBottomTab, showMemberPickerModal, viewingProfileUserId,
     };
   });
 
@@ -185,9 +238,16 @@ const AppContent: React.FC = () => {
         if (s.showMemberPickerModal) { setShowMemberPickerModal(false); return; }
         if (s.showQuotaSettings) { setShowQuotaSettings(false); return; }
         if (s.selectionMode !== null) { setSelectionMode(null); setSelectedPlayerIds([]); return; }
-        if (s.currentPage === AppPageType.EDIT_ROOM) { setCurrentPage(AppPageType.DETAIL); return; }
-        if (s.currentPage === AppPageType.BALANCE) { setCurrentPage(AppPageType.DETAIL); setResult(null); return; }
-        if (s.currentPage === AppPageType.DETAIL) { setCurrentPage(AppPageType.HOME); setCurrentBottomTab(BottomTabType.HOME); return; }
+        if (s.currentPage === AppPageType.PROFILE) {
+          if (s.viewingProfileUserId) setViewingProfileUserId(null);
+          goBackRef.current();
+          return;
+        }
+        if (s.currentPage === AppPageType.BALANCE) { goBackRef.current(); setResult(null); return; }
+        if (s.currentPage !== AppPageType.HOME) {
+          goBackRef.current();
+          return;
+        }
         CapApp.exitApp();
       });
     };
@@ -312,8 +372,17 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
+      {/* CHAT Tab */}
+      {currentBottomTab === BottomTabType.CHAT && currentPage === AppPageType.HOME && <ChatListPage />}
+
+      {/* CHAT_ROOM Page */}
+      {currentPage === AppPageType.CHAT_ROOM && <ChatRoomPage />}
+
       {/* SETTINGS Tab */}
       {currentBottomTab === BottomTabType.SETTINGS && <SettingsPage />}
+
+      {/* PROFILE Page */}
+      {currentPage === AppPageType.PROFILE && <ProfileDetailPage />}
 
       {/* Selection mode bottom bar */}
       <SelectionModeBar />
