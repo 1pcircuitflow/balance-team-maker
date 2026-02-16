@@ -31,6 +31,8 @@ export const OnboardingModal: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [showTierGuide, setShowTierGuide] = useState(false);
   const [showPosGuide, setShowPosGuide] = useState(false);
+  const [autoGuidePhase, setAutoGuidePhase] = useState<'tier' | 'position' | null>(null);
+  const [hasSeenGuide, setHasSeenGuide] = useState(false);
 
   const toggleSport = (sport: SportType) => {
     setSelectedSports(prev =>
@@ -59,6 +61,9 @@ export const OnboardingModal: React.FC = () => {
     if (step === 0) {
       if (selectedSports.length === 0) return;
       setStep(1);
+      if (!hasSeenGuide) {
+        setAutoGuidePhase('tier');
+      }
     } else if (step < selectedSports.length) {
       setStep(step + 1);
     } else {
@@ -217,9 +222,9 @@ export const OnboardingModal: React.FC = () => {
       </div>
 
       {/* Tier Guide Modal */}
-      {showTierGuide && (
+      {(showTierGuide || autoGuidePhase === 'tier') && (
         <div className="fixed inset-0 flex items-center justify-center p-6 animate-in fade-in duration-200" style={{ zIndex: Z_INDEX.ALERT_MODAL }}>
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowTierGuide(false)} />
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={autoGuidePhase === 'tier' ? undefined : () => setShowTierGuide(false)} />
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
             <div className="text-center space-y-1">
               <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">{t('tierGuideTitle')}</h3>
@@ -248,17 +253,28 @@ export const OnboardingModal: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => setShowTierGuide(false)}
+              onClick={() => {
+                if (autoGuidePhase === 'tier') {
+                  if (currentSport && currentSport !== SportType.GENERAL) {
+                    setAutoGuidePhase('position');
+                  } else {
+                    setAutoGuidePhase(null);
+                    setHasSeenGuide(true);
+                  }
+                } else {
+                  setShowTierGuide(false);
+                }
+              }}
               className="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95"
-            >{t('confirm')}</button>
+            >{autoGuidePhase === 'tier' && currentSport !== SportType.GENERAL ? t('next') : t('confirm')}</button>
           </div>
         </div>
       )}
 
       {/* Position Guide Modal */}
-      {showPosGuide && (
+      {(showPosGuide || autoGuidePhase === 'position') && (
         <div className="fixed inset-0 flex items-center justify-center p-6 animate-in fade-in duration-200" style={{ zIndex: Z_INDEX.ALERT_MODAL }}>
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowPosGuide(false)} />
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={autoGuidePhase === 'position' ? undefined : () => setShowPosGuide(false)} />
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
             <div className="text-center space-y-1">
               <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">{t('posGuideTitle')}</h3>
@@ -279,7 +295,14 @@ export const OnboardingModal: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => setShowPosGuide(false)}
+              onClick={() => {
+                if (autoGuidePhase === 'position') {
+                  setAutoGuidePhase(null);
+                  setHasSeenGuide(true);
+                } else {
+                  setShowPosGuide(false);
+                }
+              }}
               className="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm transition-all active:scale-95"
             >{t('confirm')}</button>
           </div>
