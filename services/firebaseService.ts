@@ -432,6 +432,7 @@ export const saveTeamResultToRoom = async (roomId: string, result: { teams: any[
         await updateDoc(roomRef, { latestResult: cleanData });
     } catch (error) {
         console.error("Error saving team result:", error);
+        throw error;
     }
 };
 

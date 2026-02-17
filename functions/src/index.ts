@@ -354,8 +354,8 @@ export const updateNickname = onRequest({ cors: ALLOWED_ORIGINS }, async (req, r
     return;
   }
 
-  if (typeof newName !== "string" || newName.trim().length < 1 || newName.trim().length > 20) {
-    res.status(400).json({ error: "Nickname must be 1-20 characters" });
+  if (typeof newName !== "string" || newName.trim().length < 1 || newName.trim().length > 8) {
+    res.status(400).json({ error: "Nickname must be 1-8 characters" });
     return;
   }
 
@@ -372,8 +372,8 @@ export const updateNickname = onRequest({ cors: ALLOWED_ORIGINS }, async (req, r
       batch.update(doc.ref, { hostName: newName, applicants: updatedApplicants });
     });
 
-    // 2. 참가자인 OPEN 방: applicants의 name 업데이트
-    const openSnap = await db.collection("rooms").where("status", "==", "OPEN").get();
+    // 2. 참가자인 OPEN/CLOSED 방: applicants의 name 업데이트
+    const openSnap = await db.collection("rooms").where("status", "in", ["OPEN", "CLOSED"]).get();
     openSnap.docs.forEach((doc) => {
       if (hostSnap.docs.some((h) => h.id === doc.id)) return;
       const applicants = doc.data().applicants || [];

@@ -314,7 +314,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 <div className="flex items-center gap-4">
                   <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0 overflow-hidden">
                     {hostApp?.photoUrl ? (
-                      <img src={hostApp.photoUrl} alt="" className="w-full h-full object-cover" />
+                      <img src={hostApp.photoUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     ) : 'BELO'}
                   </div>
                   <div className="flex flex-col gap-0.5">
@@ -578,7 +578,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                       {(() => {
                                         const matchedApp = room.applicants.find(a => a.name === p.name);
                                         return matchedApp?.photoUrl ? (
-                                          <img src={matchedApp.photoUrl} alt="" className="w-full h-full object-cover" />
+                                          <img src={matchedApp.photoUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                         ) : 'BELO';
                                       })()}
                                     </div>
@@ -791,7 +791,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         )}
                         <div className="w-[52px] h-[52px] rounded-full bg-[#eaeef4] dark:bg-slate-800 flex items-center justify-center text-[12px] font-medium text-slate-400 dark:text-slate-400 shrink-0 overflow-hidden">
                           {app.photoUrl ? (
-                            <img src={app.photoUrl} alt="" className="w-full h-full object-cover" />
+                            <img src={app.photoUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           ) : 'BELO'}
                         </div>
                         <div className="flex flex-col gap-0.5">

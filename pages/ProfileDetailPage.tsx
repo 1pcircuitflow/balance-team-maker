@@ -76,7 +76,7 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
 
   const handleNicknameSave = () => {
     const trimmed = nicknameInput.trim();
-    if (trimmed) {
+    if (trimmed && trimmed.length <= 8) {
       onUpdateNickname(trimmed);
     }
     setEditingNickname(false);
@@ -478,8 +478,9 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
                   <input
                     type="text"
                     value={nicknameInput}
-                    onChange={e => setNicknameInput(e.target.value)}
+                    onChange={e => setNicknameInput(e.target.value.slice(0, 8))}
                     onKeyDown={e => { if (e.key === 'Enter') handleNicknameSave(); }}
+                    maxLength={8}
                     className="w-32 px-2 py-1 text-[14px] text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-lg text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     autoFocus
                   />

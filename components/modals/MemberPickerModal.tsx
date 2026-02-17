@@ -22,7 +22,7 @@ interface MemberPickerModalProps {
 export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
   isOpen, onClose,
 }) => {
-  const { t, lang } = useAppContext();
+  const { t, lang, showAlert } = useAppContext();
   const { adBannerHeight } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
   const { showTier } = useTeamBalanceContext();
@@ -74,7 +74,10 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
         currentApps[idx].forbiddenPositions = player.forbiddenPositions?.map(String) || [];
       }
       await updateDoc(roomRef, { applicants: currentApps });
-    } catch (e) { console.error("Add player to room error:", e); }
+    } catch (e) {
+      console.error("Add player to room error:", e);
+      showAlert(t('saveErrorMsg'));
+    }
   };
 
   const handleRegisterAndAdd = async (e: React.FormEvent) => {

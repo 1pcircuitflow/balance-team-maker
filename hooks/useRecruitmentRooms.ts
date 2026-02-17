@@ -61,6 +61,7 @@ export const useRecruitmentRooms = (
   const [hostRoomVenueData, setHostRoomVenueData] = useState<VenueData | null>(null);
 
   const prevApplicantsCount = useRef<Record<string, number>>({});
+  const initialTabSynced = useRef(false);
 
   // 경기 종료 후 3시간 뒤 만료 (종료시간 없으면 시작시간 + 2시간을 종료로 간주)
   const isRoomExpired = useCallback((r: any) => {
@@ -184,9 +185,10 @@ export const useRecruitmentRooms = (
           return rooms[0];
         });
 
-        if (targetRoom) {
+        if (targetRoom && !initialTabSynced.current) {
           const room = targetRoom as RecruitmentRoom;
           setActiveTab(room.sport as SportType);
+          initialTabSynced.current = true;
         }
       } else {
         setCurrentActiveRoom(null);
@@ -414,11 +416,12 @@ export const useRecruitmentRooms = (
     goBack: () => void,
   ) => {
     if (!currentActiveRoom) return;
+    if (!hostRoomTitle.trim()) { showAlert(t('inputTitle')); return; }
     setIsProcessing(true);
     try {
       const roomRef = doc(db, 'rooms', currentActiveRoom.id);
       const updateData: Record<string, any> = {
-        title: hostRoomTitle,
+        title: hostRoomTitle.trim(),
         sport: hostRoomSelectedSport,
         matchDate: hostRoomDate,
         matchTime: hostRoomTime,

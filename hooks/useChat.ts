@@ -36,8 +36,9 @@ export const useChat = (
 
   // 새 메시지 도착 시 자동 스크롤
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
     if (messages.length > prevMessageCount.current) {
-      setTimeout(() => {
+      timer = setTimeout(() => {
         scrollRef.current?.scrollTo({
           top: scrollRef.current.scrollHeight,
           behavior: messages.length - prevMessageCount.current > 5 ? 'auto' : 'smooth',
@@ -45,6 +46,7 @@ export const useChat = (
       }, 50);
     }
     prevMessageCount.current = messages.length;
+    return () => clearTimeout(timer);
   }, [messages.length]);
 
   const handleSend = useCallback(async () => {

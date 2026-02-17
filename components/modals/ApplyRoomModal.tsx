@@ -41,7 +41,7 @@ export const ApplyRoomModal: React.FC<{
     }
   }, [roomId, isOpen]);
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!roomId || !name) return;
+    e.preventDefault(); if (!roomId || !name.trim()) return;
     setLoading(true);
     setErrorMsg(null);
     try {

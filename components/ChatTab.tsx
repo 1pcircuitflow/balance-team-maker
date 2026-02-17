@@ -184,7 +184,7 @@ export const ChatTab: React.FC<ChatTabProps> = React.memo(({
                           className="w-9 h-9 rounded-full shrink-0 overflow-hidden active:scale-90 transition-all"
                         >
                           {msg.senderPhotoUrl ? (
-                            <img src={msg.senderPhotoUrl} alt="" className="w-full h-full object-cover" />
+                            <img src={msg.senderPhotoUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           ) : (
                             <div className={`w-full h-full ${getAvatarColor(msg.senderId)} flex items-center justify-center text-[13px] font-bold text-white`}>
                               {getInitial(msg.senderName)}
