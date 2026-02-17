@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { BottomTabType, AppPageType, DetailPageTab, SportType } from '../types';
 
 export interface ViewingApplicantData {
@@ -27,12 +27,18 @@ export const useNavigation = () => {
   // 히스토리 스택
   const [navigationHistory, setNavigationHistory] = useState<NavigationHistoryEntry[]>([]);
 
+  // ref로 최신 값 추적 (stale closure 방지)
+  const currentPageRef = useRef(currentPage);
+  const currentBottomTabRef = useRef(currentBottomTab);
+  currentPageRef.current = currentPage;
+  currentBottomTabRef.current = currentBottomTab;
+
   // 페이지 이동 시 현재 상태를 히스토리에 push하는 래퍼
   const navigateTo = useCallback((page: AppPageType, bottomTab?: BottomTabType) => {
-    setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
+    setNavigationHistory(prev => [...prev, { page: currentPageRef.current, bottomTab: currentBottomTabRef.current }]);
     setCurrentPage(page);
     if (bottomTab !== undefined) setCurrentBottomTab(bottomTab);
-  }, [currentPage, currentBottomTab]);
+  }, []);
 
   // 뒤로가기: 히스토리에서 pop
   const goBack = useCallback(() => {
@@ -69,35 +75,35 @@ export const useNavigation = () => {
   }, []);
 
   const navigateToMembersFromDetail = useCallback(() => {
-    setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
+    setNavigationHistory(prev => [...prev, { page: currentPageRef.current, bottomTab: currentBottomTabRef.current }]);
     setCurrentPage(AppPageType.HOME);
     setCurrentBottomTab(BottomTabType.MEMBERS);
     setIsNavigatingFromDetail(true);
-  }, [currentPage, currentBottomTab]);
+  }, []);
 
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null);
   const [viewingApplicantData, setViewingApplicantData] = useState<ViewingApplicantData | null>(null);
 
   const navigateToProfile = useCallback(() => {
-    setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
+    setNavigationHistory(prev => [...prev, { page: currentPageRef.current, bottomTab: currentBottomTabRef.current }]);
     setViewingProfileUserId(null);
     setViewingApplicantData(null);
     setCurrentPage(AppPageType.PROFILE);
-  }, [currentPage, currentBottomTab]);
+  }, []);
 
   const navigateToUserProfile = useCallback((userId: string, applicantData?: ViewingApplicantData) => {
-    setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
+    setNavigationHistory(prev => [...prev, { page: currentPageRef.current, bottomTab: currentBottomTabRef.current }]);
     setViewingProfileUserId(userId);
     setViewingApplicantData(applicantData || null);
     setCurrentPage(AppPageType.PROFILE);
-  }, [currentPage, currentBottomTab]);
+  }, []);
 
   const navigateToApplicantProfile = useCallback((data: ViewingApplicantData) => {
-    setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
+    setNavigationHistory(prev => [...prev, { page: currentPageRef.current, bottomTab: currentBottomTabRef.current }]);
     setViewingProfileUserId(null);
     setViewingApplicantData(data);
     setCurrentPage(AppPageType.PROFILE);
-  }, [currentPage, currentBottomTab]);
+  }, []);
 
   return {
     currentBottomTab, setCurrentBottomTab,

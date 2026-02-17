@@ -848,7 +848,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                         </div>
                       </div>
 
-                      {isHost && (
+                      {isHost && app.userId !== room.hostId && (
                       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         {detailTab === DetailPageTab.PENDING ? (
                           <>
@@ -909,7 +909,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                 <button
                                   onClick={() => {
                                     const isMember = players.some(p => p.name === app.name);
-                                    cancelApplication(room.id, app);
+                                    cancelApplication(room.id, app.id, { userId: app.userId, name: app.name });
                                     if (getApplicantStatus(app) === 'APPROVED' && app.userId) {
                                       removeChatMember(room.id, app.userId);
                                       sendSystemMessage(room.id, t('chatSystemExcluded', app.name));

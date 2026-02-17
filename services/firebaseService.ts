@@ -211,6 +211,13 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
 
             if (roomData.status === 'CLOSED') throw new Error('ROOM_CLOSED');
 
+            // userId 기반 중복 체크
+            if (applicant.userId) {
+                const duplicateByUserId = currentApplicants.find(a => a.userId === applicant.userId);
+                if (duplicateByUserId) throw new Error('DUPLICATE_APPLICATION');
+            }
+
+            // fcmToken 기반 중복 체크 (비로그인 사용자 대비)
             if (applicant.fcmToken) {
                 const duplicate = currentApplicants.find(a => a.fcmToken === applicant.fcmToken);
                 if (duplicate) throw new Error('DUPLICATE_APPLICATION');
@@ -243,14 +250,20 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
 };
 
 /**
- * 4. 참가 신청 취소하기
+ * 4. 참가 신청 취소/제외하기 (transaction 기반 — id로 정확히 매칭)
  */
-export const cancelApplication = async (roomId: string, applicant: Applicant) => {
+export const cancelApplication = async (roomId: string, applicantId: string, applicantInfo?: { userId?: string; name: string }) => {
     try {
         const roomRef = doc(db, "rooms", roomId);
-        await updateDoc(roomRef, {
-            applicants: arrayRemove(applicant),
-            lastExcluded: { userId: applicant.userId || '', name: applicant.name, at: new Date().toISOString() }
+        await runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(roomRef);
+            if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
+            const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+            const updatedApplicants = (roomData.applicants || []).filter(a => a.id !== applicantId);
+            transaction.update(roomRef, {
+                applicants: updatedApplicants,
+                ...(applicantInfo ? { lastExcluded: { userId: applicantInfo.userId || '', name: applicantInfo.name, at: new Date().toISOString() } } : {})
+            });
         });
     } catch (error) {
         console.error("Error cancelling application:", error);
@@ -259,25 +272,63 @@ export const cancelApplication = async (roomId: string, applicant: Applicant) =>
 };
 
 /**
- * 4-1. 게스트 참가 취소 (userId 기반)
+ * 4-1. 게스트 참가 취소 (userId 기반, transaction)
  */
 export const cancelMyApplication = async (roomId: string, userId: string) => {
     try {
         const roomRef = doc(db, "rooms", roomId);
-        const snap = await getDoc(roomRef);
-        if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
-
-        const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
-        const applicant = (roomData.applicants || []).find(a => a.userId === userId);
-        if (!applicant) throw new Error('APPLICATION_NOT_FOUND');
-
-        await updateDoc(roomRef, {
-            applicants: arrayRemove(applicant)
+        await runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(roomRef);
+            if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
+            const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+            const updatedApplicants = (roomData.applicants || []).filter(a => a.userId !== userId);
+            if (updatedApplicants.length === (roomData.applicants || []).length) {
+                throw new Error('APPLICATION_NOT_FOUND');
+            }
+            transaction.update(roomRef, { applicants: updatedApplicants });
         });
     } catch (error) {
         console.error("Error cancelling my application:", error);
         throw error;
     }
+};
+
+/**
+ * 4-2. 참가자 상태 변경 (승인/거절/복원 — transaction 기반)
+ */
+export const updateApplicantStatus = async (
+    roomId: string,
+    applicantId: string,
+    updates: Record<string, any>
+): Promise<any[]> => {
+    const roomRef = doc(db, "rooms", roomId);
+    return await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(roomRef);
+        if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
+        const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+        const updatedApplicants = (roomData.applicants || []).map(a =>
+            a.id === applicantId ? { ...a, ...updates } : a
+        );
+        transaction.update(roomRef, { applicants: updatedApplicants });
+        return updatedApplicants;
+    });
+};
+
+/**
+ * 4-3. 전체 승인 (transaction 기반)
+ */
+export const approveAllApplicants = async (roomId: string): Promise<any[]> => {
+    const roomRef = doc(db, "rooms", roomId);
+    return await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(roomRef);
+        if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
+        const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+        const updatedApplicants = (roomData.applicants || []).map(a =>
+            ({ ...a, isApproved: true, status: 'APPROVED' })
+        );
+        transaction.update(roomRef, { applicants: updatedApplicants });
+        return updatedApplicants;
+    });
 };
 
 /**

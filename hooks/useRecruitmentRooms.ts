@@ -6,6 +6,8 @@ import {
   updateRoomFcmToken,
   cancelApplication,
   updateRoomStatus,
+  updateApplicantStatus,
+  approveAllApplicants,
   addChatMember,
   removeChatMember,
   sendSystemMessage,
@@ -14,7 +16,7 @@ import {
   db,
 } from '../services/firebaseService';
 import { upsertPlayerFromApplicant, getApplicantStatus, getApprovedCount } from '../utils/helpers';
-import { doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
@@ -224,14 +226,9 @@ export const useRecruitmentRooms = (
 
   const handleApproveApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
     try {
-      const updatedApplicants = room.applicants.map(a =>
-        a.id === applicant.id ? { ...a, isApproved: true, status: 'APPROVED' as const } : a
-      );
-      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      const updatedApplicants = await updateApplicantStatus(room.id, applicant.id, { isApproved: true, status: 'APPROVED' });
       if (applicant.userId) addChatMember(room.id, applicant.userId);
-      // 시스템 메시지: "OOO님이 참가했습니다"
       sendSystemMessage(room.id, t('chatSystemJoined', applicant.name));
-
 
       // 자동 마감: 승인 후 정원 초과 체크
       const newApprovedCount = getApprovedCount(updatedApplicants);
@@ -292,11 +289,10 @@ export const useRecruitmentRooms = (
   };
 
   const handleRejectApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
+    // 방장 자신은 거절 불가
+    if (applicant.userId && applicant.userId === room.hostId) return;
     try {
-      const updatedApplicants = room.applicants.map(a =>
-        a.id === applicant.id ? { ...a, isApproved: false, status: 'REJECTED' as const } : a
-      );
-      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      await updateApplicantStatus(room.id, applicant.id, { isApproved: false, status: 'REJECTED' });
       if (applicant.userId) removeChatMember(room.id, applicant.userId);
     } catch (e) {
       console.error("Reject Error:", e);
@@ -306,10 +302,7 @@ export const useRecruitmentRooms = (
 
   const handleRestoreApplicant = async (room: RecruitmentRoom, applicant: Applicant) => {
     try {
-      const updatedApplicants = room.applicants.map(a =>
-        a.id === applicant.id ? { ...a, isApproved: false, status: 'PENDING' as const } : a
-      );
-      await updateDoc(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
+      await updateApplicantStatus(room.id, applicant.id, { isApproved: false, status: 'PENDING' });
     } catch (e) {
       console.error("Restore Error:", e);
       showAlert(t('saveErrorMsg'));
@@ -318,10 +311,7 @@ export const useRecruitmentRooms = (
 
   const handleApproveAllApplicants = async (room: RecruitmentRoom) => {
     try {
-      const updatedApplicants = room.applicants.map(a => ({ ...a, isApproved: true, status: 'APPROVED' as const }));
-      const batch = writeBatch(db);
-      batch.update(doc(db, 'rooms', room.id), { applicants: updatedApplicants });
-      await batch.commit();
+      const updatedApplicants = await approveAllApplicants(room.id);
 
       // memberUserIds에 모든 참가자 추가 + 시스템 메시지
       for (const a of room.applicants) {

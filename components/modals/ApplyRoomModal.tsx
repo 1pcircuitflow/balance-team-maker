@@ -23,6 +23,7 @@ export const ApplyRoomModal: React.FC<{
   const [room, setRoom] = useState<RecruitmentRoom | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const t = (key: keyof typeof TRANSLATIONS['ko'], ...args: any[]): string => {
     const translation = (TRANSLATIONS[lang] as any)[key];
     if (typeof translation === 'function') return (translation as (...args: any[]) => string)(...args);
@@ -30,7 +31,12 @@ export const ApplyRoomModal: React.FC<{
   };
   useEffect(() => {
     if (roomId && isOpen) {
-      getRoomInfo(roomId).then(setRoom);
+      setNotFound(false);
+      setRoom(null);
+      getRoomInfo(roomId).then(r => {
+        if (r && r.status !== 'DELETED') { setRoom(r); }
+        else { setNotFound(true); }
+      });
       setErrorMsg(null);
     }
   }, [roomId, isOpen]);
@@ -54,7 +60,21 @@ export const ApplyRoomModal: React.FC<{
       }
     } finally { setLoading(false); }
   };
-  if (!isOpen || !room) return null;
+  if (!isOpen) return null;
+  if (notFound) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z_INDEX.RESULT_OVERLAY }}>
+        <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
+        <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 space-y-6 text-center">
+          <div className="text-[48px]">😔</div>
+          <h3 className="text-[18px] font-bold text-slate-900 dark:text-white">{t('roomNotFoundTitle' as any)}</h3>
+          <p className="text-[14px] font-medium text-slate-400 dark:text-slate-500">{t('roomNotFoundDesc' as any)}</p>
+          <button onClick={onClose} className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">{t('confirm')}</button>
+        </div>
+      </div>
+    );
+  }
+  if (!room) return null;
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z_INDEX.RESULT_OVERLAY }}>
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
