@@ -18,9 +18,10 @@ export const ChatRoomPage: React.FC = React.memo(() => {
   const { navigateTo, goBack, navigateToUserProfile } = useNavigationContext();
   const { currentActiveRoom: room, setCurrentActiveRoom } = useRecruitmentContext();
 
-  // 만료 체크
+  // 만료 체크 (삭제된 방도 만료 처리)
   const isExpired = React.useMemo(() => {
     if (!room) return false;
+    if (room.status === 'DELETED') return true;
     try {
       const endDate = room.matchEndDate || room.matchDate;
       const endTimeStr = room.matchEndTime || room.matchTime;
@@ -34,7 +35,7 @@ export const ChatRoomPage: React.FC = React.memo(() => {
       const expiryLimit = new Date(endTime.getTime() + 3 * 60 * 60 * 1000);
       return expiryLimit <= new Date();
     } catch { return false; }
-  }, [room?.matchDate, room?.matchTime, room?.matchEndDate, room?.matchEndTime]);
+  }, [room?.matchDate, room?.matchTime, room?.matchEndDate, room?.matchEndTime, room?.status]);
 
   // 승인 여부
   const isApproved = React.useMemo(() => {

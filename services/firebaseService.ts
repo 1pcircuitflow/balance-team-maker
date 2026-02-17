@@ -772,7 +772,9 @@ export const subscribeToChatRooms = (
     );
 
     return onSnapshot(q, (snap) => {
-        const rooms = snap.docs.map(d => ({ id: d.id, ...d.data() } as RecruitmentRoom));
+        const rooms = snap.docs
+            .map(d => ({ id: d.id, ...d.data() } as RecruitmentRoom))
+            .filter(r => r.status !== 'DELETED');
         rooms.sort((a, b) => {
             const aTime = (a as any).lastChatMessage?.createdAt || a.createdAt;
             const bTime = (b as any).lastChatMessage?.createdAt || b.createdAt;
