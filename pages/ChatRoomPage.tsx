@@ -14,7 +14,7 @@ import { ArrowLeftIcon, CalendarIcon, ClockIcon, LocationArrowIcon, UsersIcon } 
 
 export const ChatRoomPage: React.FC = React.memo(() => {
   const { t, lang } = useAppContext();
-  const { currentUserId, userNickname, isAdFree, userProfile } = useAuthContext();
+  const { currentUserId, userNickname, adBannerHeight, userProfile } = useAuthContext();
   const { navigateTo, goBack, navigateToUserProfile } = useNavigationContext();
   const { currentActiveRoom: room, setCurrentActiveRoom } = useRecruitmentContext();
 
@@ -79,7 +79,7 @@ export const ChatRoomPage: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden" style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
+    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden" style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})` }}>
       {/* 헤더 */}
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 shrink-0">
         <div className="flex items-center gap-2 px-4 w-full">
@@ -98,7 +98,7 @@ export const ChatRoomPage: React.FC = React.memo(() => {
             <img src={(() => {
               const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
               const fallbackImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
-              return room.venueData?.photoUrl || fallbackImg;
+              return room.venueData?.thumbnailUrl || room.venueData?.photoUrl || fallbackImg;
             })()} alt="" className="w-full h-full object-cover" />
           </button>
 
@@ -139,7 +139,7 @@ export const ChatRoomPage: React.FC = React.memo(() => {
       </header>
 
       {/* 채팅 콘텐츠 */}
-      <div className="flex-1 flex flex-col px-4 overflow-hidden min-h-0" style={{ paddingBottom: isAdFree ? 'env(safe-area-inset-bottom, 0px)' : '0px' }}>
+      <div className="flex-1 flex flex-col px-4 overflow-hidden min-h-0">
         <ChatTab
           messages={chat.messages}
           inputText={chat.inputText}

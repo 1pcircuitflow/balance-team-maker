@@ -16,6 +16,8 @@ interface AuthContextValue {
   setUserNickname: React.Dispatch<React.SetStateAction<string>>;
   isAdFree: boolean;
   setIsAdFree: React.Dispatch<React.SetStateAction<boolean>>;
+  adBannerHeight: number;
+  setAdBannerHeight: React.Dispatch<React.SetStateAction<number>>;
   isProcessing: boolean;
   setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>;
   handleGoogleLogin: (setPlayers: React.Dispatch<React.SetStateAction<Player[]>>, setIsDataLoaded: React.Dispatch<React.SetStateAction<boolean>>) => Promise<void>;
@@ -62,6 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const currentUserId = user?.id || guestId;
 
   const [isAdFree, setIsAdFree] = useState(() => localStorage.getItem('app_is_ad_free') === 'true');
+  const [adBannerHeight, setAdBannerHeight] = useState(() => {
+    const cached = localStorage.getItem('ad_banner_height');
+    return cached ? parseInt(cached, 10) : 0;
+  });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
@@ -268,7 +274,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{
       user, setUser, guestId, currentUserId, userNickname, setUserNickname,
-      isAdFree, setIsAdFree, isProcessing, setIsProcessing,
+      isAdFree, setIsAdFree, adBannerHeight, setAdBannerHeight, isProcessing, setIsProcessing,
       handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout,
       showLoginModal, setShowLoginModal,
       userProfile, setUserProfile, needsOnboarding, updateAndSaveProfile

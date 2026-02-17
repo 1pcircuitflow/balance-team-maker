@@ -1,5 +1,16 @@
 import { useState, useCallback } from 'react';
-import { BottomTabType, AppPageType, DetailPageTab } from '../types';
+import { BottomTabType, AppPageType, DetailPageTab, SportType } from '../types';
+
+export interface ViewingApplicantData {
+  name: string;
+  tier: string;
+  primaryPositions?: string[];
+  secondaryPositions?: string[];
+  tertiaryPositions?: string[];
+  source?: string; // 'web' | undefined (host-added)
+  userId?: string;
+  sportType: SportType;
+}
 
 interface NavigationHistoryEntry {
   page: AppPageType;
@@ -65,16 +76,26 @@ export const useNavigation = () => {
   }, [currentPage, currentBottomTab]);
 
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null);
+  const [viewingApplicantData, setViewingApplicantData] = useState<ViewingApplicantData | null>(null);
 
   const navigateToProfile = useCallback(() => {
     setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
     setViewingProfileUserId(null);
+    setViewingApplicantData(null);
     setCurrentPage(AppPageType.PROFILE);
   }, [currentPage, currentBottomTab]);
 
-  const navigateToUserProfile = useCallback((userId: string) => {
+  const navigateToUserProfile = useCallback((userId: string, applicantData?: ViewingApplicantData) => {
     setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
     setViewingProfileUserId(userId);
+    setViewingApplicantData(applicantData || null);
+    setCurrentPage(AppPageType.PROFILE);
+  }, [currentPage, currentBottomTab]);
+
+  const navigateToApplicantProfile = useCallback((data: ViewingApplicantData) => {
+    setNavigationHistory(prev => [...prev, { page: currentPage, bottomTab: currentBottomTab }]);
+    setViewingProfileUserId(null);
+    setViewingApplicantData(data);
     setCurrentPage(AppPageType.PROFILE);
   }, [currentPage, currentBottomTab]);
 
@@ -87,6 +108,7 @@ export const useNavigation = () => {
     navigateToHome, navigateToDetail, navigateToBalance, navigateToEditRoom,
     navigateToMembersFromDetail, navigateToProfile,
     viewingProfileUserId, setViewingProfileUserId, navigateToUserProfile,
+    viewingApplicantData, setViewingApplicantData, navigateToApplicantProfile,
     navigateTo, goBack, isHistoryEmpty,
     navigationHistory,
   };

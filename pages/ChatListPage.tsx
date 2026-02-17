@@ -110,7 +110,7 @@ export const ChatListPage: React.FC = React.memo(() => {
         {chatRooms.map((room) => {
           const lastMsg = (room as any).lastChatMessage as { text: string; senderName: string; createdAt: string } | undefined;
           const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
-          const bgImg = room.venueData?.photoUrl || sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
+          const bgImg = room.venueData?.thumbnailUrl || room.venueData?.photoUrl || sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
           const approvedCount = getApprovedCount(room.applicants);
           const isUnread = unreadIds.has(room.id);
           const trans = TRANSLATIONS[lang as keyof typeof TRANSLATIONS] as any;
@@ -123,7 +123,7 @@ export const ChatListPage: React.FC = React.memo(() => {
             >
               {/* 방 썸네일 */}
               <div className="w-[72px] h-[72px] rounded-xl overflow-hidden shrink-0 relative">
-                <img src={bgImg} alt={room.sport} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = sportImgs[0]; }} />
+                <img src={bgImg} alt={room.sport} className="w-full h-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = sportImgs[0]; }} />
                 <div className="absolute inset-0 bg-black/20" />
                 {/* 종목 뱃지 오버레이 */}
                 <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-full">

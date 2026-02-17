@@ -93,7 +93,7 @@ export const VenueSearchInput: React.FC<VenueSearchInputProps> = ({
 
     setIsUploading(true);
     try {
-      const downloadUrl = await uploadVenuePhoto(venueData.placeId, file);
+      const { photoUrl, thumbnailUrl } = await uploadVenuePhoto(venueData.placeId, file);
 
       // venues 컬렉션 업데이트
       await saveVenueInfo(venueData.placeId, {
@@ -102,12 +102,13 @@ export const VenueSearchInput: React.FC<VenueSearchInputProps> = ({
         address: venueData.address,
         lat: venueData.lat,
         lng: venueData.lng,
-        photoUrl: downloadUrl,
+        photoUrl,
+        thumbnailUrl,
       });
 
       // 상태 업데이트
-      setVenueData({ ...venueData, photoUrl: downloadUrl });
-      setPreviewUrl(downloadUrl);
+      setVenueData({ ...venueData, photoUrl, thumbnailUrl });
+      setPreviewUrl(photoUrl);
     } catch (err) {
       console.error('Photo upload failed:', err);
     } finally {

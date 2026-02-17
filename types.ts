@@ -109,6 +109,7 @@ export interface VenueData {
   lat: number;           // 위도
   lng: number;           // 경도
   photoUrl?: string;     // Firebase Storage URL
+  thumbnailUrl?: string; // 썸네일 URL (200x150)
 }
 
 export interface UserSportProfile {

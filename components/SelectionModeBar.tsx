@@ -8,7 +8,7 @@ import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
 
 export const SelectionModeBar: React.FC = React.memo(() => {
   const { t } = useAppContext();
-  const { isAdFree } = useAuthContext();
+  const { isAdFree, adBannerHeight } = useAuthContext();
   const { currentPage } = useNavigationContext();
   const { selectionMode, selectedPlayerIds, setSelectionMode, setTeamConstraints } = useTeamBalanceContext();
 
@@ -18,11 +18,9 @@ export const SelectionModeBar: React.FC = React.memo(() => {
       style={{
         zIndex: Z_INDEX.SELECTION_BAR,
         bottom: currentPage === AppPageType.DETAIL
-          ? 0
-          : (isAdFree ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : 'calc(116px + env(safe-area-inset-bottom, 0px))'),
-        paddingBottom: currentPage === AppPageType.DETAIL
-          ? (isAdFree ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : 'calc(80px + 1rem)')
-          : '1rem',
+          ? `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})`
+          : `calc(${60 + adBannerHeight}px + env(safe-area-inset-bottom, 0px))`,
+        paddingBottom: '1rem',
       }}>
       <div className={`h-1 w-full ${selectionMode === 'MATCH' ? 'bg-blue-500' : 'bg-rose-500'}`} />
       <div className="max-w-4xl mx-auto flex flex-col gap-3 p-4">

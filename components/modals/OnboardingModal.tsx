@@ -23,7 +23,7 @@ const TIER_COLORS: Record<string, { active: string; dark: string }> = {
 
 export const OnboardingModal: React.FC = () => {
   const { t, lang, darkMode } = useAppContext();
-  const { updateAndSaveProfile, isAdFree } = useAuthContext();
+  const { updateAndSaveProfile, adBannerHeight } = useAuthContext();
 
   const [step, setStep] = useState(0);
   const [selectedSports, setSelectedSports] = useState<SportType[]>([]);
@@ -90,7 +90,7 @@ export const OnboardingModal: React.FC = () => {
       style={{
         zIndex: Z_INDEX.ALERT_MODAL - 1,
         paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
-        paddingBottom: isAdFree ? 'env(safe-area-inset-bottom, 0px)' : 'calc(56px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: `calc(${adBannerHeight}px + env(safe-area-inset-bottom, 0px))`,
       }}
     >
       {/* Progress bar */}

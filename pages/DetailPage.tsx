@@ -27,9 +27,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
 }) => {
   const [processingApplicantId, setProcessingApplicantId] = React.useState<string | null>(null);
   const { t, lang, darkMode, showAlert, setConfirmState } = useAppContext();
-  const { isAdFree, currentUserId, userNickname, userProfile } = useAuthContext();
+  const { isAdFree, adBannerHeight, currentUserId, userNickname, userProfile } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
-  const { navigateToHome, detailTab, setDetailTab, touchStartX, setTouchStartX, navigateToUserProfile, navigateTo, goBack } = useNavigationContext();
+  const { navigateToHome, detailTab, setDetailTab, touchStartX, setTouchStartX, navigateToUserProfile, navigateToApplicantProfile, navigateTo, goBack } = useNavigationContext();
   const {
     showTier, setShowTier, selectionMode, setSelectionMode,
     selectedPlayerIds, setSelectedPlayerIds, teamConstraints, setTeamConstraints,
@@ -126,7 +126,10 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   const bgImg = room.venueData?.photoUrl || fallbackImg;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden" style={{ zIndex: Z_INDEX.PAGE_OVERLAY }}>
+    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden" style={{
+      zIndex: Z_INDEX.PAGE_OVERLAY,
+      bottom: `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})`,
+    }}>
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
@@ -152,7 +155,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-5 pt-0 space-y-6" style={{ paddingBottom: `${bottomBarH + (selectionMode ? 160 : 84)}px` }}>
+      <div className="flex-1 overflow-y-auto px-5 pt-0 space-y-6" style={{ paddingBottom: '24px' }}>
         <div className="w-full">
           {/* Room banner */}
           <div className="w-full h-[120px] rounded-3xl overflow-hidden relative shadow-xl border border-slate-100 dark:border-transparent shrink-0">
@@ -691,7 +694,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
             {/* Constraints display */}
             {isHost && (() => {
               const approvedIds = new Set(room.applicants.filter(a => getApplicantStatus(a) === 'APPROVED').map(a => {
-                const member = players.find(p => p.name === a.name);
+                const member = players.find(p => p.name === a.name && p.sportType === room.sport);
                 return member ? member.id : a.id;
               }));
               const filtered = teamConstraints.filter(c => c.playerIds.every(id => approvedIds.has(id)));
@@ -728,7 +731,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
               {(!isHost ? approvedApplicants : (detailTab === DetailPageTab.PENDING ? pendingApplicants : detailTab === DetailPageTab.REJECTED ? rejectedApplicants : approvedApplicants)).map((app) => {
                 const tierVal = parseTier(app.tier);
                 const tierLabel = tierToLabel(app.tier);
-                const member = players.find(p => p.name === app.name);
+                const member = players.find(p => p.name === app.name && p.sportType === room.sport);
                 const effectiveId = member ? member.id : app.id;
                 const isSelected = selectedPlayerIds.includes(effectiveId);
                 const playerConstraint = teamConstraints.find(c => c.playerIds.includes(effectiveId));
@@ -744,8 +747,22 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                           setSelectedPlayerIds(prev =>
                             prev.includes(effectiveId) ? prev.filter(x => x !== effectiveId) : [...prev, effectiveId]
                           );
-                        } else if (app.userId) {
-                          navigateToUserProfile(app.userId);
+                        } else {
+                          const applicantData = {
+                            name: app.name,
+                            tier: app.tier,
+                            primaryPositions: app.primaryPositions,
+                            secondaryPositions: app.secondaryPositions,
+                            tertiaryPositions: app.tertiaryPositions,
+                            source: app.source,
+                            userId: app.userId,
+                            sportType: room.sport as SportType,
+                          };
+                          if (app.userId) {
+                            navigateToUserProfile(app.userId, applicantData);
+                          } else {
+                            navigateToApplicantProfile(applicantData);
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
@@ -756,7 +773,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                           );
                         }
                       }}
-                      className={`bg-white dark:bg-slate-950 flex items-center justify-between px-2 py-1 rounded-2xl transition-all ${selectionMode && detailTab === DetailPageTab.APPROVED ? 'cursor-pointer active:scale-[0.98]' : app.userId ? 'cursor-pointer active:scale-[0.98]' : ''} ${selectionMode && isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                      className={`bg-white dark:bg-slate-950 flex items-center justify-between px-2 py-1 rounded-2xl transition-all cursor-pointer active:scale-[0.98] ${selectionMode && isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
                     >
                       <div className="flex items-center gap-4">
                         {selectionMode && detailTab === DetailPageTab.APPROVED && (
@@ -779,12 +796,6 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                             <span className="text-[16px] font-medium text-slate-900 dark:text-white">
                               {app.name}
                             </span>
-                            {app.source === 'web' && (
-                              <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-[12px] font-medium text-blue-500 dark:text-blue-400">{t('webApplicant')}</span>
-                            )}
-                            {!app.userId && app.source !== 'web' && (
-                              <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/30 text-[12px] font-medium text-amber-600 dark:text-amber-400">{t('hostAdded')}</span>
-                            )}
                             {app.userId === room.hostId && (
                               <CrownIcon size={14} className="text-amber-400" />
                             )}
@@ -830,7 +841,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       </div>
 
                       {isHost && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         {detailTab === DetailPageTab.PENDING ? (
                           <>
                             <button
@@ -961,23 +972,34 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                 );
               })}
 
-              {(!isHost ? approvedApplicants : (detailTab === DetailPageTab.PENDING ? pendingApplicants : detailTab === DetailPageTab.REJECTED ? rejectedApplicants : approvedApplicants)).length === 0 && (
+              {(!isHost ? approvedApplicants : (detailTab === DetailPageTab.PENDING ? pendingApplicants : detailTab === DetailPageTab.REJECTED ? rejectedApplicants : approvedApplicants)).length === 0 ? (
                 <div className="py-16 text-center space-y-4 animate-in fade-in zoom-in-95 duration-500">
                   <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
                     <Icons.UsersIcon size={24} className="text-slate-300 dark:text-slate-600" />
                   </div>
-                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight">{!isHost ? t('noPlayers') : (detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : detailTab === DetailPageTab.REJECTED ? t('noRejectedApplicants') : t('noPlayersHost'))}</p>
+                  <p className="text-[13px] font-medium text-slate-400 dark:text-slate-500 tracking-tight whitespace-pre-line">{!isHost ? t('noPlayers') : (detailTab === DetailPageTab.PENDING ? t('noPendingApplicants') : detailTab === DetailPageTab.REJECTED ? t('noRejectedApplicants') : t('noPlayersHost'))}</p>
                 </div>
+              ) : (
+                <p className="text-[12px] font-medium text-slate-400 dark:text-slate-500 pt-3 pl-1">
+                  {isHost
+                    ? detailTab === DetailPageTab.PENDING ? t('guidePending')
+                    : detailTab === DetailPageTab.REJECTED ? t('guideRejected')
+                    : t('guideApproved')
+                    : t('guideApprovedGuest')
+                  }
+                </p>
               )}
             </div>
           </>)}
             {/* 스크롤 여백은 상위 div의 동적 paddingBottom으로 처리 */}
           </div>
+        </div>
+      </div>
 
-          {/* Host: Balance settings overlay backdrop */}
+      {/* Host: Balance settings overlay backdrop */}
           {isHost && isBalanceSettingsOpen && (
             <div
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+              className="absolute inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
               onClick={() => {
                 setIsBalanceSettingsOpen(false);
                 setIsQuotaSettingsExpanded(false);
@@ -989,12 +1011,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {isHost && (
           <div
             ref={bottomBarRef}
-            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
+            className={`shrink-0 relative z-50 flex flex-col items-center transition-all duration-300 ${isBalanceSettingsOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
             style={{
-              bottom: 0,
-              paddingBottom: isBalanceSettingsOpen
-                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px')
-                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px'),
+              paddingBottom: '12px',
               paddingTop: isBalanceSettingsOpen ? undefined : '12px',
               maxHeight: isBalanceSettingsOpen ? '85vh' : 'auto',
             }}
@@ -1116,40 +1135,56 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       return;
                     }
 
-                    const manualPlayers: Player[] = approvedApps.map(app => {
-                      const member = players.find(p => p.name === app.name);
-                      return applicantToPlayer(app, room.sport as SportType, { existingId: member?.id || app.id });
-                    });
+                    const executeBalance = () => {
+                      const manualPlayers: Player[] = approvedApps.map(app => {
+                        const member = players.find(p => p.name === app.name && p.sportType === room.sport);
+                        return applicantToPlayer(app, room.sport as SportType, { existingId: member?.id || app.id });
+                      });
 
-                    const perTeamCount = Math.floor(manualPlayers.length / teamCount);
-                    const targetSportSub = room.sport as SportType;
-                    const validPosForSport = POSITIONS_BY_SPORT[targetSportSub] || ['NONE'];
+                      const perTeamCount = Math.floor(manualPlayers.length / teamCount);
+                      const targetSportSub = room.sport as SportType;
+                      const validPosForSport = POSITIONS_BY_SPORT[targetSportSub] || ['NONE'];
 
-                    const totalQuotaSum = Object.entries(quotas).reduce((sum, [pos, v]) => {
-                      if (validPosForSport.includes(pos as Position)) {
-                        return sum + (Number(v) || 0);
+                      const totalQuotaSum = Object.entries(quotas).reduce((sum, [pos, v]) => {
+                        if (validPosForSport.includes(pos as Position)) {
+                          return sum + (Number(v) || 0);
+                        }
+                        return sum;
+                      }, 0 as number);
+
+                      if ((totalQuotaSum as number) > (perTeamCount as number)) {
+                        showAlert(t('quotaOverMaxAlert', perTeamCount, totalQuotaSum));
+                        return;
                       }
-                      return sum;
-                    }, 0 as number);
 
-                    if ((totalQuotaSum as number) > (perTeamCount as number)) {
-                      showAlert(t('quotaOverMaxAlert', perTeamCount, totalQuotaSum));
+                      setPlayers(prev => {
+                        let newList = [...prev];
+                        approvedApps.forEach(app => {
+                          newList = upsertPlayerFromApplicant(newList, app, room.sport as SportType, true);
+                        });
+                        return newList;
+                      });
+
+                      setResult(null);
+                      setSelectedPlayerIds([]);
+                      setSelectionMode(null);
+                      handleGenerate(manualPlayers, room.sport as SportType, room.id, room.status);
+                      setIsBalanceSettingsOpen(false);
+                    };
+
+                    if (room.status !== 'CLOSED') {
+                      setConfirmState({
+                        isOpen: true,
+                        message: t('recruitNotClosedConfirm'),
+                        onConfirm: () => {
+                          setConfirmState((prev: any) => ({ ...prev, isOpen: false }));
+                          executeBalance();
+                        },
+                      });
                       return;
                     }
 
-                    setPlayers(prev => {
-                      let newList = [...prev];
-                      approvedApps.forEach(app => {
-                        newList = upsertPlayerFromApplicant(newList, app, room.sport as SportType, true);
-                      });
-                      return newList;
-                    });
-
-                    setResult(null);
-                    setSelectedPlayerIds([]);
-                    setSelectionMode(null);
-                    handleGenerate(manualPlayers, room.sport as SportType, room.id, room.status);
-                    setIsBalanceSettingsOpen(false);
+                    executeBalance();
                   }}
                   className={`flex-1 py-3 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95 bg-slate-900 dark:bg-white text-white dark:text-slate-900 ${isBalanceSettingsOpen ? 'shadow-xl' : 'shadow-lg shadow-slate-900/30 dark:shadow-white/20'}`}
                 >
@@ -1163,7 +1198,7 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {/* Guest: Apply form overlay backdrop */}
           {!isHost && isApplyFormOpen && (
             <div
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+              className="absolute inset-0 z-40 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
               onClick={() => setIsApplyFormOpen(false)}
             />
           )}
@@ -1172,12 +1207,9 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {!isHost && (
           <div
             ref={bottomBarRef}
-            className={`fixed left-0 right-0 z-50 flex flex-col items-center transition-all duration-300 ${isApplyFormOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
+            className={`shrink-0 relative z-50 flex flex-col items-center transition-all duration-300 ${isApplyFormOpen ? 'bg-white dark:bg-slate-900 rounded-t-[32px] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)]' : 'bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800'}`}
             style={{
-              bottom: 0,
-              paddingBottom: isApplyFormOpen
-                ? (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px')
-                : (isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '100px'),
+              paddingBottom: '12px',
               paddingTop: isApplyFormOpen ? undefined : '12px',
               maxHeight: isApplyFormOpen ? '85vh' : 'auto',
             }}
@@ -1361,17 +1393,15 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {!isBalanceSettingsOpen && !isApplyFormOpen && !selectionMode && (
             <button
               onClick={() => navigateTo(AppPageType.CHAT_ROOM)}
-              className="fixed right-5 w-[52px] h-[52px] rounded-full bg-blue-500 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center active:scale-90 transition-all hover:bg-blue-600"
+              className="absolute right-5 w-[52px] h-[52px] rounded-full bg-blue-500 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center active:scale-90 transition-all hover:bg-blue-600"
               style={{
-                bottom: `${bottomBarH + 16}px`,
+                bottom: `${bottomBarH + 8}px`,
                 zIndex: Z_INDEX.FAB_BUTTON,
               }}
             >
               <Icons.ChatBubbleFilledIcon size={22} />
             </button>
           )}
-        </div>
-      </div>
     </div>
   );
 });

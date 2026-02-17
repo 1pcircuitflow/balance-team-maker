@@ -103,7 +103,7 @@ export const upsertPlayerFromApplicant = (
   sportType: SportType,
   isActive?: boolean
 ): Player[] => {
-  const existingIdx = players.findIndex(p => p.name === applicant.name);
+  const existingIdx = players.findIndex(p => p.name === applicant.name && p.sportType === sportType);
   const newPlayer = applicantToPlayer(applicant, sportType, {
     isActive: isActive ?? true,
     existingId: existingIdx > -1 ? players[existingIdx].id : undefined,

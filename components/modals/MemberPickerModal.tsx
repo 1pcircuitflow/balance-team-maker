@@ -23,7 +23,7 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
   isOpen, onClose,
 }) => {
   const { t, lang } = useAppContext();
-  const { isAdFree } = useAuthContext();
+  const { adBannerHeight } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
   const { showTier } = useTeamBalanceContext();
   const { currentActiveRoom } = useRecruitmentContext();
@@ -165,7 +165,7 @@ export const MemberPickerModal: React.FC<MemberPickerModalProps> = React.memo(({
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-white dark:bg-slate-950" style={{ zIndex: Z_INDEX.MEMBER_PICKER, paddingTop: 'env(safe-area-inset-top)', paddingBottom: isAdFree ? 'env(safe-area-inset-bottom)' : 'calc(56px + env(safe-area-inset-bottom))' }}>
+    <div className="fixed inset-0 flex flex-col bg-white dark:bg-slate-950" style={{ zIndex: Z_INDEX.MEMBER_PICKER, paddingTop: 'env(safe-area-inset-top)', paddingBottom: `calc(${adBannerHeight}px + env(safe-area-inset-bottom))` }}>
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-900">
         <div className="flex items-center gap-2">
           <button onClick={onClose} className="p-2 -ml-2 text-slate-900 dark:text-white transition-all active:scale-90"><ArrowLeftIcon size={24} /></button>

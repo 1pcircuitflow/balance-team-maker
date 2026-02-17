@@ -13,7 +13,7 @@ const { PlusIcon } = Icons;
 
 export const HomePage: React.FC = () => {
   const { t, lang, showConfirm, setConfirmState } = useAppContext();
-  const { currentUserId, isAdFree, showLoginModal } = useAuthContext();
+  const { currentUserId, isAdFree, adBannerHeight, showLoginModal } = useAuthContext();
   const { currentPage, navigateTo } = useNavigationContext();
   const {
     filteredRooms, appliedRooms, likedRooms, publicRooms,
@@ -92,7 +92,7 @@ export const HomePage: React.FC = () => {
           className="fixed left-0 right-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
           style={{
             zIndex: Z_INDEX.FAB_BUTTON,
-            bottom: isAdFree ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : 'calc(116px + env(safe-area-inset-bottom, 0px))',
+            bottom: `calc(${60 + adBannerHeight}px + env(safe-area-inset-bottom, 0px))`,
             paddingBottom: '12px',
           }}
         >
@@ -111,10 +111,11 @@ export const HomePage: React.FC = () => {
   );
 };
 
-// 종목 이미지 경로 헬퍼 (venueData 사진 우선)
-const getSportImage = (room: any) => {
+// 종목 이미지 경로 헬퍼 (썸네일 > 원본 > 폴백)
+const getSportImage = (room: any, useThumbnail = false) => {
   const sportImgs = SPORT_IMAGES[room.sport as SportType] || SPORT_IMAGES[SportType.GENERAL];
   const fallbackImg = sportImgs[room.id ? (room.id.charCodeAt(0) % sportImgs.length) : 0];
+  if (useThumbnail) return room.venueData?.thumbnailUrl || room.venueData?.photoUrl || fallbackImg;
   return room.venueData?.photoUrl || fallbackImg;
 };
 
@@ -170,9 +171,10 @@ const RoomCard: React.FC<{
       {/* 좌측 썸네일 */}
       <div className="w-[96px] shrink-0 relative self-stretch">
         <img
-          src={getSportImage(room)}
+          src={getSportImage(room, true)}
           alt={room.sport}
           className="w-full h-full object-cover"
+          loading="lazy"
           onError={(e) => { (e.target as HTMLImageElement).src = getFallbackSportImage(room); }}
         />
         {/* 종목 뱃지 오버레이 */}

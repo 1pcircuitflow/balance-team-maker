@@ -2,6 +2,7 @@ import React from 'react';
 import { Tier, SportType } from '../types';
 import { TIER_BADGE_COLORS, TEAM_COLORS, Z_INDEX } from '../constants';
 import { useAppContext } from '../contexts/AppContext';
+import { useAuthContext } from '../contexts/AuthContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
 import { useTeamBalanceContext } from '../contexts/TeamBalanceContext';
 import * as Icons from '../Icons';
@@ -10,6 +11,7 @@ const { ShareIcon } = Icons;
 
 export const ResultOverlay: React.FC = React.memo(() => {
   const { t, darkMode } = useAppContext();
+  const { adBannerHeight } = useAuthContext();
   const { activeTab } = useNavigationContext();
   const {
     result, isSharing, editingResultTeamIdx, setEditingResultTeamIdx,
@@ -20,7 +22,10 @@ export const ResultOverlay: React.FC = React.memo(() => {
   const TIER_COLORS = TIER_BADGE_COLORS;
 
   return (
-    <div id="results-capture-section" className="fixed inset-0 bg-white dark:bg-slate-950 flex flex-col px-5 py-4 pb-32 animate-in fade-in duration-300 overflow-y-auto" style={{ zIndex: Z_INDEX.RESULT_OVERLAY }}>
+    <div id="results-capture-section" className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col px-5 py-4 pb-6 animate-in fade-in duration-300 overflow-y-auto" style={{
+      zIndex: Z_INDEX.RESULT_OVERLAY,
+      bottom: `calc(${adBannerHeight > 0 ? adBannerHeight : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})`,
+    }}>
       <div className="flex items-center justify-between mb-6 bg-white dark:bg-slate-950">
         <h2 className="text-[20px] font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('resultsTitle')}</h2>
         <div data-capture-ignore="true" className="flex gap-2">

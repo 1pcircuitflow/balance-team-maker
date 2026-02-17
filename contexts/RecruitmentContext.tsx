@@ -81,12 +81,12 @@ const RecruitmentContext = createContext<RecruitmentContextValue>(null!);
 export const useRecruitmentContext = () => useContext(RecruitmentContext);
 
 export const RecruitmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { t, showAlert, lang } = useAppContext();
+  const { t, showAlert, showConfirm, lang } = useAppContext();
   const { currentUserId } = useAuthContext();
   const { players, setPlayers } = usePlayerContext();
   const { activeTab, setActiveTab, currentBottomTab } = useNavigationContext();
 
-  const rooms = useRecruitmentRooms(currentUserId, activeTab, currentBottomTab, players, setPlayers, showAlert, t, lang, setActiveTab);
+  const rooms = useRecruitmentRooms(currentUserId, activeTab, currentBottomTab, players, setPlayers, showAlert, showConfirm, t, lang, setActiveTab);
 
   return (
     <RecruitmentContext.Provider value={rooms}>

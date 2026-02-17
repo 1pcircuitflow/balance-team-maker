@@ -5,8 +5,9 @@ import { useAppContext } from '../contexts/AppContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlayerContext } from '../contexts/PlayerContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
+import { ViewingApplicantData } from '../hooks/useNavigation';
 import { FormationPicker } from '../components/FormationPicker';
-import { uploadProfilePhoto } from '../services/storageService';
+import { uploadProfilePhoto, deleteProfilePhoto } from '../services/storageService';
 import { updateNicknameInRooms, saveUserNickname, loadUserProfile, loadUserNickname } from '../services/firebaseService';
 import { ArrowLeftIcon, CameraIcon } from '../Icons';
 import * as Icons from '../Icons';
@@ -29,11 +30,12 @@ const ChevronIcon: React.FC<{ open: boolean }> = ({ open }) => (
 
 export const ProfileDetailPage: React.FC = React.memo(() => {
   const { t, lang, showAlert, showConfirm } = useAppContext();
-  const { user, currentUserId, userNickname, setUserNickname, isAdFree, userProfile, updateAndSaveProfile, handleLogout } = useAuthContext();
+  const { user, currentUserId, userNickname, setUserNickname, adBannerHeight, userProfile, updateAndSaveProfile, handleLogout } = useAuthContext();
   const { setPlayers, setIsDataLoaded } = usePlayerContext();
-  const { viewingProfileUserId, setViewingProfileUserId, goBack } = useNavigationContext();
+  const { viewingProfileUserId, setViewingProfileUserId, viewingApplicantData, setViewingApplicantData, goBack } = useNavigationContext();
 
   const isViewingOther = !!viewingProfileUserId;
+  const isApplicantOnly = !viewingProfileUserId && !!viewingApplicantData;
 
   const [editingSport, setEditingSport] = useState<SportType | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -104,20 +106,23 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
 
   const handleResetPhoto = async () => {
     setShowPhotoMenu(false);
-    const updated = { ...userProfile! };
-    delete updated.photoUrl;
+    const updated = { ...userProfile!, photoUrl: '' };
     await updateAndSaveProfile(updated);
+    if (currentUserId) {
+      deleteProfilePhoto(currentUserId).catch(console.error);
+    }
   };
 
   return (
     <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden"
-      style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
+      style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})` }}>
       {/* Header */}
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
             onClick={() => {
               if (isViewingOther) setViewingProfileUserId(null);
+              if (viewingApplicantData) setViewingApplicantData(null);
               goBack();
             }}
             className="p-1 -ml-1 text-slate-900 dark:text-white transition-all active:scale-90"
@@ -133,7 +138,7 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6"
-        style={{ paddingBottom: isAdFree ? 'env(safe-area-inset-bottom, 0px)' : '0px' }}>
+>
 
         {isLoadingProfile ? (
           <div className="flex items-center justify-center py-20">
@@ -151,7 +156,7 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
                 <span className="text-[12px] font-medium text-slate-400 dark:text-slate-400">BELO</span>
               )}
             </div>
-            {!isViewingOther && (
+            {!isViewingOther && !isApplicantOnly && (
               <>
                 <button
                   onClick={() => setShowPhotoMenu(true)}
@@ -197,13 +202,70 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
               </>
             )}
           </div>
-          <span className="text-[16px] font-semibold text-slate-900 dark:text-white">{displayNickname}</span>
+          <span className="text-[16px] font-semibold text-slate-900 dark:text-white">{isApplicantOnly ? viewingApplicantData?.name : displayNickname}</span>
+          {/* 신청 경로 배지 */}
+          {viewingApplicantData && (
+            <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${
+              viewingApplicantData.source === 'web'
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                : !viewingApplicantData.userId
+                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                  : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+            }`}>
+              {viewingApplicantData.source === 'web'
+                ? t('webApplicant')
+                : !viewingApplicantData.userId
+                  ? t('hostAdded')
+                  : t('appApplicant')}
+            </span>
+          )}
         </div>
 
         {/* Divider */}
         <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
         {/* My Skill Profile Section */}
+        {isApplicantOnly && viewingApplicantData ? (
+          /* Applicant-only 프로필: applicant 데이터로 표시 */
+          <div>
+            <div className="px-1 pb-2">
+              <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('mySkillProfile')}</span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+              <div className="w-full px-5 py-3.5 flex items-center border-b border-slate-100 dark:border-slate-800 text-left">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-[14px] shrink-0">{SPORT_OPTIONS.find(s => s.type === viewingApplicantData.sportType)?.emoji}</span>
+                  <span className="text-[12px] font-medium text-slate-900 dark:text-white shrink-0">{t(viewingApplicantData.sportType.toLowerCase() as any)}</span>
+                  <span className={`px-1.5 py-0.5 rounded-md text-[12px] font-medium shrink-0 ${TIER_BADGE_COLORS[Tier[viewingApplicantData.tier as keyof typeof Tier] as unknown as Tier] || ''}`}>
+                    {viewingApplicantData.tier}
+                  </span>
+                  {viewingApplicantData.sportType !== SportType.GENERAL && (
+                    <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                      {(viewingApplicantData.primaryPositions || []).map((pos: string, i: number) => (
+                        <div key={`p-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-emerald-500 uppercase shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span>{pos}</span>
+                        </div>
+                      ))}
+                      {(viewingApplicantData.secondaryPositions || []).map((pos: string, i: number) => (
+                        <div key={`s-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-yellow-400 uppercase shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                          <span>{pos}</span>
+                        </div>
+                      ))}
+                      {(viewingApplicantData.tertiaryPositions || []).map((pos: string, i: number) => (
+                        <div key={`t-${i}`} className="flex items-center gap-1 text-[12px] font-medium text-orange-400 uppercase shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                          <span>{pos}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div>
           <div className="px-1 pb-2">
             <span className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-wider">{t('mySkillProfile')}</span>
@@ -390,9 +452,10 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
             )}
           </div>
         </div>
+        )}
 
         {/* Account section (only for own profile) */}
-        {!isViewingOther && (<>
+        {!isViewingOther && !isApplicantOnly && (<>
         {/* Divider */}
         <div className="h-px bg-slate-200 dark:bg-slate-700" />
 

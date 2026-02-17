@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { BottomTabType, AppPageType, DetailPageTab, SportType } from '../types';
-import { useNavigation } from '../hooks/useNavigation';
+import { useNavigation, ViewingApplicantData } from '../hooks/useNavigation';
 
 interface NavigationContextValue {
   // From useNavigation
@@ -22,7 +22,10 @@ interface NavigationContextValue {
   navigateToProfile: () => void;
   viewingProfileUserId: string | null;
   setViewingProfileUserId: (id: string | null) => void;
-  navigateToUserProfile: (userId: string) => void;
+  navigateToUserProfile: (userId: string, applicantData?: ViewingApplicantData) => void;
+  viewingApplicantData: ViewingApplicantData | null;
+  setViewingApplicantData: (v: ViewingApplicantData | null) => void;
+  navigateToApplicantProfile: (data: ViewingApplicantData) => void;
   navigateTo: (page: AppPageType, bottomTab?: BottomTabType) => void;
   goBack: () => void;
   isHistoryEmpty: () => boolean;
@@ -47,10 +50,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return (saved as SportType) || SportType.ALL;
   });
 
-  const [membersTab, setMembersTab] = useState<SportType>(() => {
-    const saved = localStorage.getItem('last_active_tab');
-    return (saved as SportType) || SportType.SOCCER;
-  });
+  const [membersTab, setMembersTab] = useState<SportType>(SportType.ALL);
 
   const changeTab = useCallback((tab: SportType) => {
     setActiveTab(tab);

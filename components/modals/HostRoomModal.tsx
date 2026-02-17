@@ -40,7 +40,7 @@ export const HostRoomModal: React.FC<{
   activePlayerCount: number;
   showAlert: (msg: string, title?: string) => void;
 }> = ({ isOpen, onClose, onRoomCreated, activeRoom, activeRooms, activeTab, onCloseRoom, onApproveAll, lang, darkMode, isPro, onUpgrade, userNickname, currentUserId, activePlayerCount, showAlert }) => {
-  const { userProfile } = useAuthContext();
+  const { userProfile, adBannerHeight } = useAuthContext();
   /* 날짜/시간 초기값 및 상태 관리 */
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -306,7 +306,7 @@ export const HostRoomModal: React.FC<{
 
   return (
     <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden"
-      style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isPro ? '0px' : '80px' }}>
+      style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})` }}>
       {/* 상단 바 */}
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
@@ -378,7 +378,7 @@ export const HostRoomModal: React.FC<{
                   </div>
 
                   {/* 장소 입력 */}
-                  <div className="flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 relative z-10">
                     <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('venue' as any)}</label>
                     <VenueSearchInput
                       venue={venue}
@@ -498,7 +498,7 @@ export const HostRoomModal: React.FC<{
       {!activeRoom && selectedSport && (
         <div
           className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
-          style={{ paddingBottom: isPro ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}
+          style={{ paddingBottom: '12px' }}
         >
           <button
             onClick={handleCreate}

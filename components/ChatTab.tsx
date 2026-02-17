@@ -220,7 +220,7 @@ export const ChatTab: React.FC<ChatTabProps> = React.memo(({
 
                         {/* 시간 (그룹 마지막만) */}
                         {showTime ? (
-                          <span className="text-[11px] text-slate-300 dark:text-slate-600 shrink-0">
+                          <span className="text-[12px] font-medium text-slate-300 dark:text-slate-600 shrink-0">
                             {formatTime(msg.createdAt)}
                           </span>
                         ) : (

@@ -81,7 +81,7 @@ const App: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { lang, setLang, darkMode, t, showAlert, alertState, setAlertState, confirmState, setConfirmState } = useAppContext();
-  const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal, needsOnboarding } = useAuthContext();
+  const { user, currentUserId, userNickname, setUserNickname, isAdFree, setIsAdFree, adBannerHeight, handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout, showLoginModal, setShowLoginModal, needsOnboarding } = useAuthContext();
   const { players, setPlayers, setIsDataLoaded } = usePlayerContext();
   const { currentBottomTab, setCurrentBottomTab, currentPage, setCurrentPage, activeTab, setActiveTab, membersTab, setMembersTab, viewingProfileUserId, setViewingProfileUserId, detailTab, setDetailTab, navigateTo, goBack, isHistoryEmpty } = useNavigationContext();
   const {
@@ -274,7 +274,7 @@ const AppContent: React.FC = () => {
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const getAvailableTabs = useCallback((): SportType[] => {
-    return [SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL];
+    return [SportType.ALL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL];
   }, []);
 
   const handleSwipeTouchStart = useCallback((e: React.TouchEvent) => {
@@ -305,7 +305,7 @@ const AppContent: React.FC = () => {
   // ========= RENDER =========
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'} font-sans p-0 flex flex-col items-center`}
-      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: isAdFree ? 'calc(120px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' : 'calc(176px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))' }}
+      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: `calc(${120 + adBannerHeight}px + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))` }}
       onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
 
       <OfflineBanner />
@@ -456,7 +456,7 @@ const AppContent: React.FC = () => {
           setToastState({ isVisible: false, player: null });
         } : undefined}
         onDismiss={() => setToastState({ isVisible: false, player: null })}
-        bottom={isAdFree ? '76px' : '132px'}
+        bottom={`${76 + adBannerHeight}px`}
       />
     </div>
   );

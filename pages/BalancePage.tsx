@@ -13,7 +13,7 @@ const { ArrowLeftIcon, ShareIcon, RotateCcwIcon, CheckIcon, MinusIcon, PlusIcon 
 
 export const BalancePage: React.FC = React.memo(() => {
   const { t, lang, darkMode } = useAppContext();
-  const { isAdFree } = useAuthContext();
+  const { adBannerHeight } = useAuthContext();
   const { goBack } = useNavigationContext();
   const {
     teamCount, setTeamCount, result, setResult, isSharing,
@@ -29,7 +29,7 @@ export const BalancePage: React.FC = React.memo(() => {
   const TIER_COLORS = TIER_BADGE_COLORS;
 
   return (
-    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300" style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
+    <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300" style={{ zIndex: Z_INDEX.PAGE_OVERLAY, bottom: `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})` }}>
       <header className="sticky top-0 z-50 bg-white dark:bg-slate-950 px-4 pt-[40px] pb-[8px] border-b border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center w-full">
           <button
@@ -359,7 +359,7 @@ export const BalancePage: React.FC = React.memo(() => {
       {result && (
         <div className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
           data-capture-ignore="true"
-          style={{ paddingBottom: isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}>
+          style={{ paddingBottom: '12px' }}>
           <button
             onClick={() => handleGenerate()}
             className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl text-[16px] font-bold tracking-tight shadow-lg shadow-slate-900/30 dark:shadow-white/20 flex items-center justify-center gap-3 transition-all active:scale-[0.98] active:brightness-95"

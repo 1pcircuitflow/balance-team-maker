@@ -14,7 +14,7 @@ const { ArrowLeftIcon } = Icons;
 
 export const EditRoomPage: React.FC = React.memo(() => {
   const { t, lang } = useAppContext();
-  const { isProcessing, setIsProcessing, isAdFree } = useAuthContext();
+  const { isProcessing, setIsProcessing, adBannerHeight } = useAuthContext();
   const { goBack } = useNavigationContext();
   const {
     hostRoomSelectedSport, setHostRoomSelectedSport,
@@ -33,7 +33,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
   } = useRecruitmentContext();
   return (
     <div className="fixed left-0 right-0 top-0 bg-white dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden"
-      style={{ zIndex: Z_INDEX.RESULT_OVERLAY, bottom: isAdFree ? '0px' : '80px' }}>
+      style={{ zIndex: Z_INDEX.RESULT_OVERLAY, bottom: `calc(${adBannerHeight > 0 ? adBannerHeight + 24 : 0}px + ${adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px'})` }}>
       <header className="w-full pt-[40px] pb-[8px] bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-950 shrink-0">
         <div className="flex justify-between items-center px-4 w-full">
           <button
@@ -94,7 +94,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
             </div>
 
             {/* 장소 입력 */}
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 relative z-10">
               <label className="w-12 text-[14px] font-medium text-slate-900 dark:text-white shrink-0 pt-3">{t('venue')}</label>
               <VenueSearchInput
                 venue={hostRoomVenue}
@@ -213,7 +213,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
 
       {/* 하단 고정 수정 버튼 */}
       <div className="shrink-0 px-5 pt-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800"
-        style={{ paddingBottom: isAdFree ? 'calc(20px + env(safe-area-inset-bottom, 0px))' : '20px' }}>
+        style={{ paddingBottom: '12px' }}>
         <button
           onClick={() => handleUpdateRoom(isProcessing, setIsProcessing, goBack)}
           disabled={isProcessing}

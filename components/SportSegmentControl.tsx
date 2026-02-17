@@ -4,7 +4,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useNavigationContext } from '../contexts/NavigationContext';
 import { AnalyticsService } from '../services/analyticsService';
 
-const MEMBER_TABS: SportType[] = [SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL];
+const MEMBER_TABS: SportType[] = [SportType.ALL, SportType.SOCCER, SportType.FUTSAL, SportType.BASKETBALL, SportType.GENERAL];
 
 export const SportSegmentControl: React.FC = memo(() => {
   const { t } = useAppContext();

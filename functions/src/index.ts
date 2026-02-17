@@ -492,6 +492,9 @@ export const onChatMessageCreated = onDocumentCreated(
     const data = event.data?.data();
     if (!data) return;
 
+    // 시스템 메시지(참가 승인/퇴장 등)는 채팅 알림 스킵 — 별도 FCM으로 처리됨
+    if (data.type === "SYSTEM") return;
+
     const { senderId, senderName, text } = data;
     const roomId = event.params.roomId;
 

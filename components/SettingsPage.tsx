@@ -169,6 +169,8 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
+      <div className="h-px bg-slate-200 dark:bg-slate-700 mb-6" />
+
       {/* Section: Appearance */}
       <div className="mb-6">
         <div className="px-1 pb-2">

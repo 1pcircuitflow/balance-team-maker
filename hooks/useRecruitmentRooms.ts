@@ -26,6 +26,7 @@ export const useRecruitmentRooms = (
   players: Player[],
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
   showAlert: (msg: string, title?: string) => void,
+  showConfirm: (message: string, onConfirm: () => void, title?: string, confirmText?: string, cancelText?: string) => void,
   t: (key: string, ...args: any[]) => string,
   lang: string,
   setActiveTab: (tab: SportType) => void,
@@ -230,7 +231,7 @@ export const useRecruitmentRooms = (
       if (applicant.userId) addChatMember(room.id, applicant.userId);
       // 시스템 메시지: "OOO님이 참가했습니다"
       sendSystemMessage(room.id, t('chatSystemJoined', applicant.name));
-      setPlayers(prev => upsertPlayerFromApplicant(prev, applicant, room.sport as SportType));
+
 
       // 자동 마감: 승인 후 정원 초과 체크
       const newApprovedCount = getApprovedCount(updatedApplicants);
@@ -255,7 +256,7 @@ export const useRecruitmentRooms = (
       // Firebase 성공 후에만 로컬 상태 업데이트
       if (targetApp) {
         setPlayers(prev => prev.map(p => {
-          if (p.name === targetApp.name) {
+          if (p.name === targetApp.name && p.sportType === room.sport) {
             const playerUpdates: Partial<Player> = {};
             if (updates.tier !== undefined) {
               playerUpdates.tier = (Tier as any)[updates.tier] || Tier.B;
@@ -330,14 +331,25 @@ export const useRecruitmentRooms = (
         }
       }
 
-      // Firebase 성공 후에만 로컬 상태 업데이트
-      setPlayers(prev => {
-        let result = prev;
-        room.applicants.filter(a => getApplicantStatus(a) !== 'APPROVED').forEach(a => {
-          result = upsertPlayerFromApplicant(result, a, room.sport as SportType);
-        });
-        return result;
-      });
+      // 내선수단에 추가할지 확인 (기존에 없는 선수만)
+      const newApplicants = room.applicants.filter(a =>
+        getApplicantStatus(a) !== 'APPROVED' && !players.some(p => p.name === a.name && p.sportType === room.sport)
+      );
+      if (newApplicants.length > 0) {
+        showConfirm(
+          t('addToSquadBatchMsg', newApplicants.length),
+          () => setPlayers(prev => {
+            let result = prev;
+            newApplicants.forEach(a => {
+              result = upsertPlayerFromApplicant(result, a, room.sport as SportType);
+            });
+            return result;
+          }),
+          t('addToSquadTitle'),
+          t('addParticipant'),
+          t('skip'),
+        );
+      }
 
       // 자동 마감: 전체 승인 후 정원 초과 체크
       const newApprovedCount = getApprovedCount(updatedApplicants);

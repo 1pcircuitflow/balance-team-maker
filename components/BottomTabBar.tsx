@@ -13,7 +13,7 @@ const { HomeIcon, HomeFilledIcon, UserPlusIcon, UserPlusFilledIcon, ChatBubbleIc
 export const BottomTabBar: React.FC = React.memo(() => {
   const { currentBottomTab, setCurrentBottomTab } = useNavigationContext();
   const { t } = useAppContext();
-  const { isAdFree, currentUserId } = useAuthContext();
+  const { isAdFree, adBannerHeight, currentUserId } = useAuthContext();
   const [unreadCount, setUnreadCount] = useState(0);
 
   // 안읽은 채팅방 수 구독
@@ -27,7 +27,7 @@ export const BottomTabBar: React.FC = React.memo(() => {
 
   return (
     <div className="fixed left-0 right-0 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300 shadow-[0_-1px_10px_rgba(0,0,0,0.05)]"
-      style={{ zIndex: Z_INDEX.BOTTOM_TAB, bottom: isAdFree ? '0px' : '56px', height: 'calc(60px + env(safe-area-inset-bottom, 0px))', paddingBottom: isAdFree ? 'env(safe-area-inset-bottom, 0px)' : '0px' }}>
+      style={{ zIndex: Z_INDEX.BOTTOM_TAB, bottom: `${adBannerHeight}px`, height: 'calc(60px + env(safe-area-inset-bottom, 0px))', paddingBottom: adBannerHeight === 0 ? 'env(safe-area-inset-bottom, 0px)' : '0px' }}>
       <div className="flex h-[60px] max-w-lg mx-auto">
         <button onClick={() => setCurrentBottomTab(BottomTabType.HOME)} className="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
           <div className={currentBottomTab === BottomTabType.HOME ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}>{currentBottomTab === BottomTabType.HOME ? <HomeFilledIcon /> : <HomeIcon />}</div>
