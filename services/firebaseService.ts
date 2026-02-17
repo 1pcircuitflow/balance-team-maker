@@ -259,9 +259,14 @@ export const cancelApplication = async (roomId: string, applicantId: string, app
             const snap = await transaction.get(roomRef);
             if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
             const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+            const targetApplicant = (roomData.applicants || []).find(a => a.id === applicantId);
             const updatedApplicants = (roomData.applicants || []).filter(a => a.id !== applicantId);
+            // 승인된 참가자였으면 memberUserIds에서도 제거
+            const memberUserIds = roomData.memberUserIds || [];
+            const shouldRemoveFromChat = targetApplicant?.isApproved && targetApplicant?.userId && memberUserIds.includes(targetApplicant.userId);
             transaction.update(roomRef, {
                 applicants: updatedApplicants,
+                ...(shouldRemoveFromChat ? { memberUserIds: arrayRemove(targetApplicant!.userId!) } : {}),
                 ...(applicantInfo ? { lastExcluded: { userId: applicantInfo.userId || '', name: applicantInfo.name, at: new Date().toISOString() } } : {})
             });
         });
@@ -281,11 +286,16 @@ export const cancelMyApplication = async (roomId: string, userId: string) => {
             const snap = await transaction.get(roomRef);
             if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
             const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+            const myApp = (roomData.applicants || []).find(a => a.userId === userId);
+            if (!myApp) throw new Error('APPLICATION_NOT_FOUND');
             const updatedApplicants = (roomData.applicants || []).filter(a => a.userId !== userId);
-            if (updatedApplicants.length === (roomData.applicants || []).length) {
-                throw new Error('APPLICATION_NOT_FOUND');
-            }
-            transaction.update(roomRef, { applicants: updatedApplicants });
+            // 승인 상태였으면 memberUserIds에서도 제거
+            const memberUserIds = roomData.memberUserIds || [];
+            const shouldRemoveFromChat = myApp.isApproved && memberUserIds.includes(userId);
+            transaction.update(roomRef, {
+                applicants: updatedApplicants,
+                ...(shouldRemoveFromChat ? { memberUserIds: arrayRemove(userId) } : {}),
+            });
         });
     } catch (error) {
         console.error("Error cancelling my application:", error);

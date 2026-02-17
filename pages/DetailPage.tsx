@@ -1,7 +1,7 @@
 import React from 'react';
 import { Player, Tier, SportType, AppPageType, DetailPageTab, Position, BalanceResult } from '../types';
 import { TIER_BADGE_COLORS, SPORT_IMAGES, POSITIONS_BY_SPORT, Z_INDEX } from '../constants';
-import { cancelApplication, cancelMyApplication, applyForParticipation, incrementViewCount, toggleLikeRoom, removeChatMember, sendSystemMessage } from '../services/firebaseService';
+import { cancelApplication, cancelMyApplication, applyForParticipation, incrementViewCount, toggleLikeRoom, sendSystemMessage } from '../services/firebaseService';
 import { FormationPicker } from '../components/FormationPicker';
 import { QuotaFormationPicker } from '../components/QuotaFormationPicker';
 import { parseTier, tierToLabel, applicantToPlayer, upsertPlayerFromApplicant, getApplicantStatus, getApprovedCount, isRoomFull } from '../utils/helpers';
@@ -911,7 +911,6 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                                     const isMember = players.some(p => p.name === app.name);
                                     cancelApplication(room.id, app.id, { userId: app.userId, name: app.name });
                                     if (getApplicantStatus(app) === 'APPROVED' && app.userId) {
-                                      removeChatMember(room.id, app.userId);
                                       sendSystemMessage(room.id, t('chatSystemExcluded', app.name));
                                     }
                                     if (!isMember) {
@@ -1286,7 +1285,6 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
                       onConfirm: async () => {
                         try {
                           if (myStatus === 'APPROVED') {
-                            await removeChatMember(room.id, currentUserId);
                             await sendSystemMessage(room.id, t('chatSystemLeft', userNickname));
                           }
                           await cancelMyApplication(room.id, currentUserId);
