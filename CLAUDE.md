@@ -120,6 +120,9 @@ balance-team-maker/
 │   └── helpers.ts             # 유틸리티 함수
 ├── android/                   # Capacitor Android 네이티브
 ├── hosting/                   # Firebase Hosting (카카오 콜백 등)
+├── firestore.rules            # Firestore 보안 규칙
+├── firestore.indexes.json     # Firestore 인덱스
+├── storage.rules              # Storage 보안 규칙
 └── capacitor.config.ts        # Capacitor 설정
 ```
 

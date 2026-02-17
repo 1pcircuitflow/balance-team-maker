@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// ⚠️ 현재 앱이 Firebase Auth를 사용하지 않아 request.auth = null
+// Firebase Auth 통합 후 컬렉션별 세분화된 규칙으로 전환할 것
+//
+// ⚠️ 기존 Console 규칙에 2026-03-24 만료가 설정되어 있었음
+// 만료 전에 아래 규칙을 배포하거나, Console에서 날짜를 연장할 것
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 전체 와일드카드: 모든 컬렉션에 대해 읽기/쓰기 허용
+    // TODO(Firebase Auth 통합 후): 컬렉션별 세분화
+    //   - rooms: allow update: if request.auth.uid == resource.data.hostId
+    //   - users: allow write: if request.auth.uid == userId
+    //   - announcements: allow write: if false (관리자만)
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    // venues: 누구나 읽기, 로그인 사용자만 쓰기
+    // (현재 Firebase Auth 미사용으로 위 와일드카드가 우선 적용됨)
+    match /venues/{placeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

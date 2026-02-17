@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "rooms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sport", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "visibility", "order": "ASCENDING" },
+        { "fieldPath": "matchDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rooms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "visibility", "order": "ASCENDING" },
+        { "fieldPath": "matchDate", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
