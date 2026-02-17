@@ -40,8 +40,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { lang, showAlert, t } = useAppContext();
 
   const [user, setUser] = useState<any>(() => {
-    const saved = localStorage.getItem('app_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('app_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
   });
 
   const [userNickname, setUserNickname] = useState(() => {
@@ -71,8 +73,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isProcessing, setIsProcessing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem('app_user_profile');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('app_user_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
   });
 
   const needsOnboarding = !!user && (!userProfile || !userProfile.onboardingComplete);

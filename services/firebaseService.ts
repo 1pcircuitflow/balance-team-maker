@@ -17,7 +17,8 @@ import {
     limit,
     getDocs,
     writeBatch,
-    increment
+    increment,
+    runTransaction
 } from "firebase/firestore";
 import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -201,39 +202,39 @@ export const applyForParticipation = async (roomId: string, applicant: Omit<Appl
     try {
         const roomRef = doc(db, "rooms", roomId);
 
-        // 최신 방 정보 조회하여 중복/정원 체크
-        const snap = await getDoc(roomRef);
-        if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
+        const newApplicant = await runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(roomRef);
+            if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
 
-        const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
-        const currentApplicants = roomData.applicants || [];
+            const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
+            const currentApplicants = roomData.applicants || [];
 
-        // 마감된 방 체크
-        if (roomData.status === 'CLOSED') throw new Error('ROOM_CLOSED');
+            if (roomData.status === 'CLOSED') throw new Error('ROOM_CLOSED');
 
-        // 중복 신청 체크 (같은 fcmToken이 이미 있으면 차단)
-        if (applicant.fcmToken) {
-            const duplicate = currentApplicants.find(a => a.fcmToken === applicant.fcmToken);
-            if (duplicate) throw new Error('DUPLICATE_APPLICATION');
-        }
+            if (applicant.fcmToken) {
+                const duplicate = currentApplicants.find(a => a.fcmToken === applicant.fcmToken);
+                if (duplicate) throw new Error('DUPLICATE_APPLICATION');
+            }
 
-        // 정원 초과 체크 (승인된 인원 기준)
-        const approvedCount = currentApplicants.filter(a => a.status === 'APPROVED' || (a.isApproved && !a.status)).length;
-        if (roomData.maxApplicants > 0 && approvedCount >= roomData.maxApplicants) {
-            throw new Error('ROOM_FULL');
-        }
+            const approvedCount = currentApplicants.filter(a => a.status === 'APPROVED' || (a.isApproved && !a.status)).length;
+            if (roomData.maxApplicants > 0 && approvedCount >= roomData.maxApplicants) {
+                throw new Error('ROOM_FULL');
+            }
 
-        const newApplicant: Applicant = {
-            ...applicant,
-            id: Math.random().toString(36).substring(2, 9),
-            timestamp: new Date().toISOString(),
-            isApproved: false, // 명시적으로 false 설정 (동기화 안정성)
-            source: 'app',
-            status: 'PENDING',
-        };
-        await updateDoc(roomRef, {
-            applicants: arrayUnion(newApplicant)
+            const created: Applicant = {
+                ...applicant,
+                id: Math.random().toString(36).substring(2, 9),
+                timestamp: new Date().toISOString(),
+                isApproved: false,
+                source: 'app',
+                status: 'PENDING',
+            };
+            transaction.update(roomRef, {
+                applicants: [...currentApplicants, created]
+            });
+            return created;
         });
+
         return newApplicant;
     } catch (error) {
         console.error("Error applying:", error);
@@ -483,7 +484,7 @@ export const checkAppVersion = async () => {
 
         // 배포용 설정: 12시간 (43200000)
         // 테스트 시에는 0으로 설정하여 즉시 반영 확인 가능
-        remoteConfig.settings.minimumFetchIntervalMillis = 0;
+        remoteConfig.settings.minimumFetchIntervalMillis = 43200000;
 
         // 기본값 설정
         remoteConfig.defaultConfig = {
@@ -582,7 +583,7 @@ export const updateNicknameInRooms = async (userId: string, newName: string) => 
     try {
         await fetch('https://us-central1-balance-team-maker.cloudfunctions.net/updateNickname', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-App-Key': 'belo-app-2024-v2' },
             body: JSON.stringify({ userId, newName }),
         });
     } catch (error) {

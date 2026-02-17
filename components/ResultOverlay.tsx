@@ -58,8 +58,8 @@ export const ResultOverlay: React.FC = React.memo(() => {
             <span className={`text-[8px] font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'} mb-0.5 tracking-widest`}>{t('penaltyScore')}</span>
             <div className="flex flex-col items-center leading-tight">
               <span className={`text-[20px] font-semibold font-mono ${darkMode ? 'text-blue-400' : 'text-blue-500'}`}>
-                {result.teams.reduce((sum, t) =>
-                  sum + t.players.reduce((pSum, p) => {
+                {result.teams.reduce((sum, team) =>
+                  sum + team.players.reduce((pSum, p) => {
                     const assigned = p.assignedPosition || 'NONE';
                     const isP1 = (p.primaryPositions || []).includes(assigned) || p.primaryPosition === assigned;
                     const isP2 = (p.secondaryPositions || []).includes(assigned) || p.secondaryPosition === assigned;

@@ -63,6 +63,17 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
   const [applySecondaryPos, setApplySecondaryPos] = React.useState<string[]>(sportProfile?.secondaryPositions || []);
   const [applyTertiaryPos, setApplyTertiaryPos] = React.useState<string[]>(sportProfile?.tertiaryPositions || []);
   const [applyForbiddenPos, setApplyForbiddenPos] = React.useState<string[]>(sportProfile?.forbiddenPositions || []);
+
+  React.useEffect(() => { setApplyName(userNickname); }, [userNickname]);
+  React.useEffect(() => {
+    if (sportProfile) {
+      setApplyTier(sportProfile.tier || 'B');
+      setApplyPrimaryPos(sportProfile.primaryPositions || []);
+      setApplySecondaryPos(sportProfile.secondaryPositions || []);
+      setApplyTertiaryPos(sportProfile.tertiaryPositions || []);
+      setApplyForbiddenPos(sportProfile.forbiddenPositions || []);
+    }
+  }, [sportProfile]);
   const [applyLoading, setApplyLoading] = React.useState(false);
   const [applyError, setApplyError] = React.useState<string | null>(null);
   const [isDescExpanded, setIsDescExpanded] = React.useState(false);
@@ -459,20 +470,17 @@ export const DetailPage: React.FC<DetailPageProps> = React.memo(({
           {!isHost && myApplication && myStatus && myStatus !== 'APPROVED' && (
             <div className={`mt-3 px-4 py-2.5 rounded-2xl flex items-center justify-between ${
               myStatus === 'PENDING' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
-              myStatus === 'APPROVED' ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' :
               'bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800'
             }`}>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
-                  myStatus === 'PENDING' ? 'bg-emerald-500 animate-pulse' :
-                  myStatus === 'APPROVED' ? 'bg-emerald-500' : 'bg-rose-500'
+                  myStatus === 'PENDING' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
                 }`} />
                 <span className={`text-[13px] font-medium ${
                   myStatus === 'PENDING' ? 'text-emerald-700 dark:text-emerald-400' :
-                  myStatus === 'APPROVED' ? 'text-emerald-700 dark:text-emerald-400' :
                   'text-rose-700 dark:text-rose-400'
                 }`}>
-                  {myStatus === 'PENDING' ? t('statusPending') : myStatus === 'APPROVED' ? t('statusApproved') : t('statusRejected')}
+                  {myStatus === 'PENDING' ? t('statusPending') : t('statusRejected')}
                 </span>
               </div>
             </div>

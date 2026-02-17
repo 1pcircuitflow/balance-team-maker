@@ -129,13 +129,6 @@ export const SettingsPage: React.FC = () => {
     }, t('resetAllData'));
   };
 
-  const handleNicknameSave = () => {
-    const trimmed = nicknameInput.trim();
-    if (trimmed) {
-      onUpdateNickname(trimmed);
-    }
-    setEditingNickname(false);
-  };
 
   const handleRateApp = () => {
     window.open('https://play.google.com/store/apps/details?id=com.balanceteammaker', '_blank');

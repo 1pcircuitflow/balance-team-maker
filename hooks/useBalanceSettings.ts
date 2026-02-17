@@ -25,8 +25,10 @@ export const useBalanceSettings = (
   const [showQuotaSettings, setShowQuotaSettings] = useState(false);
   const [isQuotaSettingsExpanded, setIsQuotaSettingsExpanded] = useState(false);
   const [teamConstraints, setTeamConstraints] = useState<TeamConstraint[]>(() => {
-    const saved = localStorage.getItem(`app_constraints`);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(`app_constraints`);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
   });
   const [isBalanceSettingsOpen, setIsBalanceSettingsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

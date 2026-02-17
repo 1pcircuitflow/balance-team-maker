@@ -11,6 +11,17 @@ initializeApp();
 
 const db = getFirestore();
 
+const ALLOWED_ORIGINS = [
+  "https://localhost",
+  "capacitor://localhost",
+  "http://localhost",
+  "http://localhost:3000",
+  "https://balance-team-maker.web.app",
+  "https://balance-team-maker.firebaseapp.com",
+];
+
+const APP_API_KEY = "belo-app-2024-v2";
+
 interface Applicant {
   id: string;
   name: string;
@@ -326,15 +337,25 @@ export const onRoomUpdated = onDocumentUpdated("rooms/{roomId}", async (event) =
 /**
  * 닉네임 변경 시 모집방 동기화 (클라이언트 Firestore 읽기 절약)
  */
-export const updateNickname = onRequest({ cors: true }, async (req, res) => {
+export const updateNickname = onRequest({ cors: ALLOWED_ORIGINS }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  if (req.headers["x-app-key"] !== APP_API_KEY) {
+    res.status(403).json({ error: "Forbidden" });
     return;
   }
 
   const { userId, newName } = req.body;
   if (!userId || !newName) {
     res.status(400).json({ error: "Missing params" });
+    return;
+  }
+
+  if (typeof newName !== "string" || newName.trim().length < 1 || newName.trim().length > 20) {
+    res.status(400).json({ error: "Nickname must be 1-20 characters" });
     return;
   }
 
@@ -375,7 +396,7 @@ export const updateNickname = onRequest({ cors: true }, async (req, res) => {
  * 카카오 로그인: 인가 코드를 받아 토큰 교환 후 사용자 정보를 반환.
  */
 export const kakaoAuth = onRequest(
-  { secrets: [kakaoRestApiKey], cors: true },
+  { secrets: [kakaoRestApiKey], cors: ALLOWED_ORIGINS },
   async (req, res) => {
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
@@ -437,51 +458,6 @@ export const kakaoAuth = onRequest(
   }
 );
 
-/**
- * 기존 방에 memberUserIds 필드를 채워넣는 일회성 마이그레이션
- * 호출 후 삭제해도 됨
- */
-export const migrateMemberUserIds = onRequest({ cors: true }, async (req, res) => {
-  try {
-    const roomsSnap = await db.collection("rooms").get();
-    let updated = 0;
-    let skipped = 0;
-    const batch = db.batch();
-
-    for (const doc of roomsSnap.docs) {
-      const data = doc.data();
-      // 이미 memberUserIds가 있으면 스킵
-      if (data.memberUserIds && Array.isArray(data.memberUserIds) && data.memberUserIds.length > 0) {
-        skipped++;
-        continue;
-      }
-
-      const memberIds = new Set<string>();
-      // 방장 추가
-      if (data.hostId) {
-        memberIds.add(data.hostId);
-      }
-      // APPROVED 참가자 추가
-      for (const app of data.applicants || []) {
-        const status = app.status || (app.isApproved ? "APPROVED" : "PENDING");
-        if (status === "APPROVED" && app.userId) {
-          memberIds.add(app.userId);
-        }
-      }
-
-      if (memberIds.size > 0) {
-        batch.update(doc.ref, { memberUserIds: Array.from(memberIds) });
-        updated++;
-      }
-    }
-
-    await batch.commit();
-    res.json({ success: true, updated, skipped, total: roomsSnap.size });
-  } catch (e) {
-    console.error("migrateMemberUserIds error:", e);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 /**
  * 채팅 메시지 생성 시 → 방 참가자들에게 FCM 알림

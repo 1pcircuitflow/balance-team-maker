@@ -39,8 +39,10 @@ export const useBalanceGeneration = (
 
   const [totalGenCount, setTotalGenCount] = useState(() => parseInt(localStorage.getItem('app_total_gen_count') || '0', 10));
   const [positionUsage, setPositionUsage] = useState<{ count: number, lastDate: string }>(() => {
-    const saved = localStorage.getItem('app_position_usage');
-    return saved ? JSON.parse(saved) : { count: 0, lastDate: '' };
+    try {
+      const saved = localStorage.getItem('app_position_usage');
+      return saved ? JSON.parse(saved) : { count: 0, lastDate: '' };
+    } catch { return { count: 0, lastDate: '' }; }
   });
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showRewardAd, setShowRewardAd] = useState(false);

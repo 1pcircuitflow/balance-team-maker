@@ -161,8 +161,9 @@ export const useInitialization = (
     const today = new Date().toISOString().split('T')[0];
     const savedUsage = localStorage.getItem('app_position_usage');
     if (savedUsage) {
-      const parsed = JSON.parse(savedUsage);
-      if (parsed.lastDate !== today) {
+      let parsed;
+      try { parsed = JSON.parse(savedUsage); } catch { parsed = null; }
+      if (parsed && parsed.lastDate !== today) {
         const freshUsage = { count: 0, lastDate: today };
         localStorage.setItem('app_position_usage', JSON.stringify(freshUsage));
       }
