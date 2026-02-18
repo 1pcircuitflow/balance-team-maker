@@ -1,28 +1,47 @@
 rules_version = '2';
 
-// ⚠️ 현재 앱이 Firebase Auth를 사용하지 않아 request.auth = null
-// Firebase Auth 통합 후 컬렉션별 세분화된 규칙으로 전환할 것
-//
-// ⚠️ 기존 Console 규칙에 2026-03-24 만료가 설정되어 있었음
-// 만료 전에 아래 규칙을 배포하거나, Console에서 날짜를 연장할 것
+// Firebase Auth 통합 완료 후 배포할 규칙
+// ⚠️ 사용자들이 새 버전(Firebase Auth 포함)으로 업데이트한 후 배포할 것
+// 배포 전까지는 기존 allow read, write: if true 유지 (Firebase Console에서 관리)
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 전체 와일드카드: 모든 컬렉션에 대해 읽기/쓰기 허용
-    // TODO(Firebase Auth 통합 후): 컬렉션별 세분화
-    //   - rooms: allow update: if request.auth.uid == resource.data.hostId
-    //   - users: allow write: if request.auth.uid == userId
-    //   - announcements: allow write: if false (관리자만)
-    match /{document=**} {
-      allow read, write: if true;
+    // users/{userId}: 인증된 사용자만 읽기, 본인 문서만 쓰기
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // venues: 누구나 읽기, 로그인 사용자만 쓰기
-    // (현재 Firebase Auth 미사용으로 위 와일드카드가 우선 적용됨)
+    // rooms/{roomId}: 누구나 읽기, 인증 사용자만 생성/수정, 삭제 불가
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      allow delete: if false;
+
+      // rooms/{roomId}/messages/{msgId}: 인증 사용자만 읽기/생성
+      match /messages/{msgId} {
+        allow read, create: if request.auth != null;
+        allow update, delete: if false;
+      }
+    }
+
+    // venues/{placeId}: 누구나 읽기, 인증 사용자만 쓰기
     match /venues/{placeId} {
       allow read: if true;
       allow write: if request.auth != null;
+    }
+
+    // announcements: 누구나 읽기, 쓰기 불가 (관리자는 콘솔에서 직접)
+    match /announcements/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // appConfig: 누구나 읽기, 쓰기 불가
+    match /appConfig/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }

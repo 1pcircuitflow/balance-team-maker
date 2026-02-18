@@ -4,6 +4,8 @@ import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { getAuth } from "firebase-admin/auth";
+import { OAuth2Client } from "google-auth-library";
 
 const kakaoRestApiKey = defineSecret("KAKAO_REST_API_KEY");
 
@@ -444,12 +446,28 @@ export const kakaoAuth = onRequest(
       const kakaoAccount = userData.kakao_account || {};
       const profile = kakaoAccount.profile || {};
 
+      const kakaoUserId = `kakao_${userData.id}`;
+
+      // Firebase Auth 사용자 프로필 세팅 + Custom Token 생성 (실패해도 나머지 응답은 정상 반환)
+      let customToken: string | undefined;
+      try {
+        await ensureFirebaseAuthUser(kakaoUserId, {
+          displayName: profile.nickname || "",
+          email: kakaoAccount.email || undefined,
+          photoURL: profile.profile_image_url || undefined,
+        });
+        customToken = await getAuth().createCustomToken(kakaoUserId);
+      } catch (e) {
+        console.error("Failed to create custom token for kakao user:", e);
+      }
+
       res.json({
-        id: `kakao_${userData.id}`,
+        id: kakaoUserId,
         givenName: profile.nickname || "",
         imageUrl: profile.profile_image_url || "",
         email: kakaoAccount.email || "",
         provider: "kakao",
+        ...(customToken ? { customToken } : {}),
       });
     } catch (e) {
       console.error("kakaoAuth error:", e);
@@ -458,6 +476,125 @@ export const kakaoAuth = onRequest(
   }
 );
 
+
+/** Firebase Auth 사용자 프로필 생성/업데이트 */
+async function ensureFirebaseAuthUser(
+  uid: string,
+  profile: { displayName?: string; email?: string; photoURL?: string }
+) {
+  const auth = getAuth();
+  // undefined/빈 값 제거
+  const clean: Record<string, string> = {};
+  if (profile.displayName) clean.displayName = profile.displayName;
+  if (profile.email) clean.email = profile.email;
+  if (profile.photoURL) clean.photoURL = profile.photoURL;
+
+  try {
+    await auth.updateUser(uid, clean);
+  } catch (e: any) {
+    if (e.code === "auth/user-not-found") {
+      await auth.createUser({ uid, ...clean });
+    } else {
+      console.error("ensureFirebaseAuthUser error:", e);
+    }
+  }
+}
+
+/**
+ * Google 로그인용 Firebase Custom Token 발급.
+ * 클라이언트에서 Google idToken을 보내면 검증 후 Firebase Custom Token을 반환.
+ */
+const GOOGLE_WEB_CLIENT_ID = "834065889708-h51gv3lorhvq919876lbt91mc06kblj9.apps.googleusercontent.com";
+const googleOAuthClient = new OAuth2Client(GOOGLE_WEB_CLIENT_ID);
+
+export const getFirebaseToken = onRequest(
+  { cors: ALLOWED_ORIGINS },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    const { idToken, userId } = req.body;
+    if (!idToken || !userId) {
+      res.status(400).json({ error: "Missing idToken or userId" });
+      return;
+    }
+
+    try {
+      // Google idToken 검증
+      const ticket = await googleOAuthClient.verifyIdToken({
+        idToken,
+        audience: GOOGLE_WEB_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload || !payload.sub) {
+        res.status(401).json({ error: "Invalid token" });
+        return;
+      }
+
+      // 클라이언트가 보낸 userId와 Google sub이 일치하는지 검증
+      if (payload.sub !== userId) {
+        res.status(403).json({ error: "userId mismatch" });
+        return;
+      }
+
+      // Firebase Auth 사용자 프로필 세팅
+      await ensureFirebaseAuthUser(userId, {
+        displayName: payload.name,
+        email: payload.email,
+        photoURL: payload.picture,
+      });
+
+      // Firebase Custom Token 생성
+      const customToken = await getAuth().createCustomToken(userId);
+      res.json({ customToken });
+    } catch (e) {
+      console.error("getFirebaseToken error:", e);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * 카카오 재인증: userId로 Firebase Auth 사용자 확인 후 Custom Token 반환.
+ * 앱 재시작 시 Firebase Auth 세션 복원용.
+ */
+export const refreshFirebaseToken = onRequest(
+  { cors: ALLOWED_ORIGINS },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    if (req.headers["x-app-key"] !== APP_API_KEY) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    const { userId } = req.body;
+    if (!userId) {
+      res.status(400).json({ error: "Missing userId" });
+      return;
+    }
+
+    try {
+      // Firebase Auth에 해당 유저가 존재하는지 확인
+      await getAuth().getUser(userId);
+      // Custom Token 생성
+      const customToken = await getAuth().createCustomToken(userId);
+      res.json({ customToken });
+    } catch (e: any) {
+      if (e.code === "auth/user-not-found") {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+      console.error("refreshFirebaseToken error:", e);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
 
 /**
  * 채팅 메시지 생성 시 → 방 참가자들에게 FCM 알림

@@ -80,6 +80,11 @@ export const useInitialization = (
         localStorage.setItem('app_is_ad_free', hasAdFree ? 'true' : 'false');
       } catch (err) {
         console.error('IAP initialization failed', err);
+        // 네이티브가 아닌 환경(웹)에서 IAP 실패 시 무료 상태로 강제 (localStorage 조작 방지)
+        if (!Capacitor.isNativePlatform()) {
+          setIsAdFree(false);
+          localStorage.setItem('app_is_ad_free', 'false');
+        }
       }
     };
 

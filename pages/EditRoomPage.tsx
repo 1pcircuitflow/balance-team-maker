@@ -13,7 +13,7 @@ import * as Icons from '../Icons';
 const { ArrowLeftIcon } = Icons;
 
 export const EditRoomPage: React.FC = React.memo(() => {
-  const { t, lang } = useAppContext();
+  const { t, lang, showAlert } = useAppContext();
   const { isProcessing, setIsProcessing, adBannerHeight } = useAuthContext();
   const { goBack } = useNavigationContext();
   const {
@@ -103,6 +103,7 @@ export const EditRoomPage: React.FC = React.memo(() => {
                 setVenueData={setHostRoomVenueData}
                 placeholder={t('venuePlaceholder')}
                 t={t}
+                showAlert={showAlert}
               />
             </div>
           </div>

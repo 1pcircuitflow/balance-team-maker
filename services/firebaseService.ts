@@ -20,6 +20,7 @@ import {
     increment,
     runTransaction
 } from "firebase/firestore";
+import { getAuth, signInWithCustomToken, signOut as firebaseSignOut, onAuthStateChanged } from "firebase/auth";
 import { getRemoteConfig, fetchAndActivate, getValue, getAll } from "firebase/remote-config";
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Player, UserProfile, SportType, VenueData, ChatMessage } from "../types";
@@ -57,6 +58,69 @@ const firebaseConfig = {
 // Firebase 초기화
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+const FIREBASE_TOKEN_FUNCTION_URL = 'https://us-central1-balance-team-maker.cloudfunctions.net/getFirebaseToken';
+
+/**
+ * Google 로그인용: Cloud Function에 idToken을 보내 Firebase Custom Token을 받아옴
+ */
+export const getFirebaseCustomToken = async (idToken: string, userId: string): Promise<string> => {
+    const res = await fetch(FIREBASE_TOKEN_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken, userId }),
+    });
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `getFirebaseToken failed: ${res.status}`);
+    }
+    const data = await res.json();
+    return data.customToken;
+};
+
+/**
+ * Firebase Custom Token으로 로그인
+ */
+export const firebaseSignInWithCustomToken = async (customToken: string) => {
+    return signInWithCustomToken(auth, customToken);
+};
+
+/**
+ * Firebase Auth 로그아웃
+ */
+export const firebaseSignOutUser = async () => {
+    return firebaseSignOut(auth);
+};
+
+/**
+ * Firebase Auth 상태 변화 구독 (onAuthStateChanged 래퍼)
+ */
+export const subscribeToAuthState = (callback: (user: any) => void) => {
+    return onAuthStateChanged(auth, callback);
+};
+
+const REFRESH_TOKEN_FUNCTION_URL = 'https://us-central1-balance-team-maker.cloudfunctions.net/refreshFirebaseToken';
+
+/**
+ * 카카오 재인증용: Cloud Function을 호출해 새 Custom Token을 받아옴
+ */
+export const refreshFirebaseTokenForUser = async (userId: string): Promise<string> => {
+    const res = await fetch(REFRESH_TOKEN_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-App-Key': 'belo-app-2024-v2',
+        },
+        body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `refreshFirebaseToken failed: ${res.status}`);
+    }
+    const data = await res.json();
+    return data.customToken;
+};
 
 export interface Announcement {
     id: string;
@@ -309,7 +373,8 @@ export const cancelMyApplication = async (roomId: string, userId: string) => {
 export const updateApplicantStatus = async (
     roomId: string,
     applicantId: string,
-    updates: Record<string, any>
+    updates: Record<string, any>,
+    removeMemberUserId?: string, // 거절 시 채팅 멤버도 원자적으로 제거
 ): Promise<any[]> => {
     const roomRef = doc(db, "rooms", roomId);
     return await runTransaction(db, async (transaction) => {
@@ -319,7 +384,11 @@ export const updateApplicantStatus = async (
         const updatedApplicants = (roomData.applicants || []).map(a =>
             a.id === applicantId ? { ...a, ...updates } : a
         );
-        transaction.update(roomRef, { applicants: updatedApplicants });
+        const updateData: Record<string, any> = { applicants: updatedApplicants };
+        if (removeMemberUserId) {
+            updateData.memberUserIds = arrayRemove(removeMemberUserId);
+        }
+        transaction.update(roomRef, updateData);
         return updatedApplicants;
     });
 };
@@ -327,17 +396,28 @@ export const updateApplicantStatus = async (
 /**
  * 4-3. 전체 승인 (transaction 기반)
  */
-export const approveAllApplicants = async (roomId: string): Promise<any[]> => {
+export const approveAllApplicants = async (roomId: string): Promise<{ updatedApplicants: any[]; newlyApprovedNames: { userId?: string; name: string }[] }> => {
     const roomRef = doc(db, "rooms", roomId);
     return await runTransaction(db, async (transaction) => {
         const snap = await transaction.get(roomRef);
         if (!snap.exists()) throw new Error('ROOM_NOT_FOUND');
         const roomData = snap.data() as Omit<RecruitmentRoom, 'id'>;
-        const updatedApplicants = (roomData.applicants || []).map(a =>
-            ({ ...a, isApproved: true, status: 'APPROVED' })
-        );
-        transaction.update(roomRef, { applicants: updatedApplicants });
-        return updatedApplicants;
+        const currentApplicants = roomData.applicants || [];
+        const newlyApprovedNames: { userId?: string; name: string }[] = [];
+        const newMemberUserIds: string[] = [];
+        const updatedApplicants = currentApplicants.map(a => {
+            if (a.status !== 'APPROVED' || !a.isApproved) {
+                newlyApprovedNames.push({ userId: a.userId, name: a.name });
+                if (a.userId) newMemberUserIds.push(a.userId);
+                return { ...a, isApproved: true, status: 'APPROVED' };
+            }
+            return a;
+        });
+        // memberUserIds도 트랜잭션 내에서 원자적으로 추가
+        const currentMembers = roomData.memberUserIds || [];
+        const mergedMembers = [...new Set([...currentMembers, ...newMemberUserIds])];
+        transaction.update(roomRef, { applicants: updatedApplicants, memberUserIds: mergedMembers });
+        return { updatedApplicants, newlyApprovedNames };
     });
 };
 
@@ -643,13 +723,18 @@ export const loadUserNickname = async (userId: string): Promise<string | null> =
  */
 export const updateNicknameInRooms = async (userId: string, newName: string) => {
     try {
-        await fetch('https://us-central1-balance-team-maker.cloudfunctions.net/updateNickname', {
+        const res = await fetch('https://us-central1-balance-team-maker.cloudfunctions.net/updateNickname', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-App-Key': 'belo-app-2024-v2' },
             body: JSON.stringify({ userId, newName }),
         });
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Nickname sync failed: ${res.status}`);
+        }
     } catch (error) {
         console.error("Error updating nickname in rooms:", error);
+        throw error;
     }
 };
 

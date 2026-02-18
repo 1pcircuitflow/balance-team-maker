@@ -15,10 +15,11 @@ interface VenueSearchInputProps {
   placeholder: string;
   t: (key: string, ...args: any[]) => string;
   darkMode?: boolean;
+  showAlert?: (msg: string) => void;
 }
 
 export const VenueSearchInput: React.FC<VenueSearchInputProps> = ({
-  venue, setVenue, venueData, setVenueData, placeholder, t, darkMode,
+  venue, setVenue, venueData, setVenueData, placeholder, t, darkMode, showAlert,
 }) => {
   const [results, setResults] = useState<KakaoPlace[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -111,6 +112,7 @@ export const VenueSearchInput: React.FC<VenueSearchInputProps> = ({
       setPreviewUrl(photoUrl);
     } catch (err) {
       console.error('Photo upload failed:', err);
+      showAlert?.(t('photoUploadFailed'));
     } finally {
       setIsUploading(false);
       // 같은 파일 재선택 가능하도록 초기화

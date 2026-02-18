@@ -65,12 +65,17 @@ export const ProfileDetailPage: React.FC = React.memo(() => {
   const displayNickname = isViewingOther ? otherNickname : userNickname;
   const displayPhotoUrl = isViewingOther ? otherProfile?.photoUrl : userProfile?.photoUrl;
 
-  const onUpdateNickname = (name: string) => {
+  const onUpdateNickname = async (name: string) => {
     setUserNickname(name);
     localStorage.setItem('app_user_nickname', name);
     if (currentUserId) {
       saveUserNickname(currentUserId, name);
-      updateNicknameInRooms(currentUserId, name);
+      try {
+        await updateNicknameInRooms(currentUserId, name);
+      } catch (e) {
+        console.error('Nickname sync to rooms failed:', e);
+        showAlert(t('saveErrorMsg'));
+      }
     }
   };
 

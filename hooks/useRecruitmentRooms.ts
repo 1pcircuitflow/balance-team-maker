@@ -9,7 +9,6 @@ import {
   updateApplicantStatus,
   approveAllApplicants,
   addChatMember,
-  removeChatMember,
   sendSystemMessage,
   RecruitmentRoom,
   Applicant,
@@ -294,8 +293,7 @@ export const useRecruitmentRooms = (
     // 방장 자신은 거절 불가
     if (applicant.userId && applicant.userId === room.hostId) return;
     try {
-      await updateApplicantStatus(room.id, applicant.id, { isApproved: false, status: 'REJECTED' });
-      if (applicant.userId) removeChatMember(room.id, applicant.userId);
+      await updateApplicantStatus(room.id, applicant.id, { isApproved: false, status: 'REJECTED' }, applicant.userId || undefined);
     } catch (e) {
       console.error("Reject Error:", e);
       showAlert(t('saveErrorMsg'));
@@ -313,26 +311,25 @@ export const useRecruitmentRooms = (
 
   const handleApproveAllApplicants = async (room: RecruitmentRoom) => {
     try {
-      const updatedApplicants = await approveAllApplicants(room.id);
+      const { updatedApplicants, newlyApprovedNames } = await approveAllApplicants(room.id);
 
-      // memberUserIds에 모든 참가자 추가 + 시스템 메시지
-      for (const a of room.applicants) {
-        if (a.userId && getApplicantStatus(a) !== 'APPROVED') {
-          addChatMember(room.id, a.userId);
-          sendSystemMessage(room.id, t('chatSystemJoined', a.name));
-        }
+      // 시스템 메시지 (memberUserIds는 트랜잭션에서 이미 추가됨)
+      for (const a of newlyApprovedNames) {
+        sendSystemMessage(room.id, t('chatSystemJoined', a.name));
       }
 
       // 내선수단에 추가할지 확인 (기존에 없는 선수만)
-      const newApplicants = room.applicants.filter(a =>
-        getApplicantStatus(a) !== 'APPROVED' && !players.some(p => p.name === a.name && p.sportType === room.sport)
+      const newToSquad = newlyApprovedNames.filter(a =>
+        !players.some(p => p.name === a.name && p.sportType === room.sport)
       );
-      if (newApplicants.length > 0) {
+      if (newToSquad.length > 0) {
+        // room.applicants에서 상세 정보 가져오기
+        const detailedApplicants = room.applicants.filter(ra => newToSquad.some(n => n.name === ra.name));
         showConfirm(
-          t('addToSquadBatchMsg', newApplicants.length),
+          t('addToSquadBatchMsg', newToSquad.length),
           () => setPlayers(prev => {
             let result = prev;
-            newApplicants.forEach(a => {
+            detailedApplicants.forEach(a => {
               result = upsertPlayerFromApplicant(result, a, room.sport as SportType);
             });
             return result;

@@ -32,6 +32,7 @@ export async function exchangeKakaoCode(code: string): Promise<{
   imageUrl: string;
   email: string;
   provider: string;
+  customToken?: string;
 }> {
   const redirectUri = getRedirectUri();
   const res = await fetch(KAKAO_AUTH_FUNCTION_URL, {

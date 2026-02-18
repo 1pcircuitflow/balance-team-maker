@@ -468,6 +468,8 @@ export const TRANSLATIONS = {
     chatNotApproved: 'You can join the chat after being approved.',
     chatToday: 'Today',
     chatYesterday: 'Yesterday',
+    sessionExpiredTitle: 'Session Expired',
+    sessionExpiredMsg: 'Your session has expired. Please log in again.',
   },
   es: {
     appTitle: 'Generador de Equipos Pro',
@@ -935,6 +937,8 @@ export const TRANSLATIONS = {
     chatNotApproved: 'Puedes unirte al chat después de ser aprobado.',
     chatToday: 'Hoy',
     chatYesterday: 'Ayer',
+    sessionExpiredTitle: 'Sesión expirada',
+    sessionExpiredMsg: 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
   },
   ja: {
     appTitle: 'バランスチームメーカー Pro',
@@ -1402,6 +1406,8 @@ export const TRANSLATIONS = {
     chatNotApproved: '承認後にチャットに参加できます。',
     chatToday: '今日',
     chatYesterday: '昨日',
+    sessionExpiredTitle: 'セッション切れ',
+    sessionExpiredMsg: 'セッションの有効期限が切れました。再度ログインしてください。',
   },
   ko: {
     appTitle: 'Balance Team Maker Pro',
@@ -1868,6 +1874,8 @@ export const TRANSLATIONS = {
     chatNotApproved: '승인 후 채팅에 참여할 수 있습니다.',
     chatToday: '오늘',
     chatYesterday: '어제',
+    sessionExpiredTitle: '세션 만료',
+    sessionExpiredMsg: '세션이 만료되었어요. 다시 로그인해주세요.',
   },
   pt: {
     appTitle: 'Gerador de Equipes Pro',
@@ -2337,6 +2345,8 @@ export const TRANSLATIONS = {
     chatNotApproved: 'Você pode participar do chat após ser aprovado.',
     chatToday: 'Hoje',
     chatYesterday: 'Ontem',
+    sessionExpiredTitle: 'Sessão expirada',
+    sessionExpiredMsg: 'Sua sessão expirou. Por favor, faça login novamente.',
   },
 };
 

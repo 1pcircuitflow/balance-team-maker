@@ -388,6 +388,7 @@ export const HostRoomModal: React.FC<{
                       placeholder={t('venuePlaceholder' as any)}
                       t={t}
                       darkMode={darkMode}
+                      showAlert={showAlert}
                     />
                   </div>
                 </>

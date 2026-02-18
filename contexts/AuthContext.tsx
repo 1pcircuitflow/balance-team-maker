@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { TRANSLATIONS } from '../translations';
 import { useAppContext } from './AppContext';
-import { loadPlayersFromCloud, removeUserFcmToken, loadUserProfile, saveUserProfile, loadUserNickname, syncApplicantProfile } from '../services/firebaseService';
+import { auth, loadPlayersFromCloud, removeUserFcmToken, loadUserProfile, saveUserProfile, loadUserNickname, syncApplicantProfile, getFirebaseCustomToken, firebaseSignInWithCustomToken, firebaseSignOutUser, subscribeToAuthState, refreshFirebaseTokenForUser } from '../services/firebaseService';
 import { SAMPLE_PLAYERS_BY_LANG } from '../sampleData';
 import { Player, UserProfile } from '../types';
 import { openKakaoAuth, exchangeKakaoCode } from '../services/kakaoAuthService';
@@ -30,6 +30,8 @@ interface AuthContextValue {
   setUserProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   needsOnboarding: boolean;
   updateAndSaveProfile: (profile: UserProfile) => Promise<void>;
+  firebaseAuthReady: boolean;
+  isReauthenticating: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue>(null!);
@@ -81,6 +83,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const needsOnboarding = !!user && (!userProfile || !userProfile.onboardingComplete);
 
+  const [firebaseAuthReady, setFirebaseAuthReady] = useState(false);
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
+  const reauthAttemptedRef = useRef(false);
+
+  // Firebase Auth 상태 감시 + 자동 재인증
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthState(async (firebaseUser) => {
+      if (firebaseUser) {
+        // Firebase Auth 세션이 이미 있음 → 준비 완료
+        setFirebaseAuthReady(true);
+        reauthAttemptedRef.current = false;
+        return;
+      }
+
+      // firebaseUser가 null — 아직 IndexedDB 복원 중일 수 있으니 1.5초 대기 후 재확인
+      if (!user) {
+        // 로그인한 유저 자체가 없으면 재인증 불필요
+        setFirebaseAuthReady(true);
+        return;
+      }
+
+      // 중복 재인증 방지
+      if (reauthAttemptedRef.current) return;
+
+      // 1.5초 후 다시 확인 (Firebase SDK IndexedDB 복원 시간)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // 이미 복원되었으면 스킵 (onAuthStateChanged가 다시 호출됐을 수 있음)
+      if (auth.currentUser) {
+        setFirebaseAuthReady(true);
+        return;
+      }
+
+      // Firebase Auth 세션이 없는데 localStorage에 유저가 있음 → 재인증 시도
+      reauthAttemptedRef.current = true;
+      setIsReauthenticating(true);
+
+      try {
+        const provider = user.provider;
+
+        if (provider === 'kakao') {
+          // 카카오: Cloud Function으로 새 Custom Token 발급
+          const customToken = await refreshFirebaseTokenForUser(user.id);
+          await firebaseSignInWithCustomToken(customToken);
+          console.log('Firebase Auth (Kakao) re-authenticated successfully');
+        } else {
+          // Google: GoogleAuth.refresh()로 새 idToken → getFirebaseCustomToken → signIn
+          try {
+            const refreshResult = await GoogleAuth.refresh();
+            const idToken = refreshResult?.idToken || refreshResult?.accessToken;
+            if (idToken) {
+              const customToken = await getFirebaseCustomToken(idToken, user.id);
+              await firebaseSignInWithCustomToken(customToken);
+              console.log('Firebase Auth (Google) re-authenticated successfully');
+            } else {
+              throw new Error('No idToken from GoogleAuth.refresh()');
+            }
+          } catch (googleErr) {
+            // Google refresh 실패 시 Kakao 방식으로 fallback (이미 Firebase Auth 유저가 있을 수 있음)
+            console.warn('Google refresh failed, trying refreshFirebaseToken fallback:', googleErr);
+            const customToken = await refreshFirebaseTokenForUser(user.id);
+            await firebaseSignInWithCustomToken(customToken);
+            console.log('Firebase Auth (Google fallback) re-authenticated successfully');
+          }
+        }
+
+        setFirebaseAuthReady(true);
+      } catch (e) {
+        console.error('Firebase re-authentication failed:', e);
+        // 재인증 실패 → 세션 만료 알림
+        showAlert(t('sessionExpiredMsg'), t('sessionExpiredTitle'));
+        setFirebaseAuthReady(false);
+      } finally {
+        setIsReauthenticating(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user?.id, user?.provider]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const updateAndSaveProfile = useCallback(async (profile: UserProfile) => {
     setUserProfile(profile);
     localStorage.setItem('app_user_profile', JSON.stringify(profile));
@@ -102,8 +184,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsProcessing(true);
     try {
       const googleUser = await GoogleAuth.signIn();
-      setUser(googleUser);
-      localStorage.setItem('app_user', JSON.stringify(googleUser));
+      const googleUserWithProvider = { ...googleUser, provider: 'google' };
+      setUser(googleUserWithProvider);
+      localStorage.setItem('app_user', JSON.stringify(googleUserWithProvider));
+
+      // Firebase Auth 세션 생성 (non-blocking — 실패해도 기존 플로우 계속)
+      try {
+        const idToken = googleUser.authentication?.idToken;
+        if (idToken) {
+          const customToken = await getFirebaseCustomToken(idToken, googleUser.id);
+          await firebaseSignInWithCustomToken(customToken);
+        }
+      } catch (e) {
+        console.warn('Firebase Auth (Google) failed — continuing without auth session:', e);
+      }
 
       setShowLoginModal(false);
       showAlert(t('welcomeMsg', googleUser.givenName), t('loginSuccessMsg'));
@@ -187,6 +281,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userObj);
       localStorage.setItem('app_user', JSON.stringify(userObj));
 
+      // Firebase Auth 세션 생성 (non-blocking — 실패해도 기존 플로우 계속)
+      if (kakaoUser.customToken) {
+        try {
+          await firebaseSignInWithCustomToken(kakaoUser.customToken);
+        } catch (e) {
+          console.warn('Firebase Auth (Kakao) failed — continuing without auth session:', e);
+        }
+      }
+
       setShowLoginModal(false);
       showAlert(t('welcomeMsg', kakaoUser.givenName), t('loginSuccessMsg'));
 
@@ -251,6 +354,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!user?.provider || user.provider !== 'kakao') {
           await GoogleAuth.signOut();
         }
+        // Firebase Auth 세션 종료
+        await firebaseSignOutUser();
       } catch (e) {
         console.error('Sign out error', e);
       }
@@ -281,7 +386,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAdFree, setIsAdFree, adBannerHeight, setAdBannerHeight, isProcessing, setIsProcessing,
       handleGoogleLogin, handleKakaoLogin, completeKakaoLogin, handleLogout,
       showLoginModal, setShowLoginModal,
-      userProfile, setUserProfile, needsOnboarding, updateAndSaveProfile
+      userProfile, setUserProfile, needsOnboarding, updateAndSaveProfile,
+      firebaseAuthReady, isReauthenticating
     }}>
       {children}
     </AuthContext.Provider>

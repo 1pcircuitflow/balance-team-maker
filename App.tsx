@@ -151,6 +151,23 @@ const AppContent: React.FC = () => {
     localStorage.setItem('last_active_tab', activeTab);
   }, [activeTab]);
 
+  // MEMBERS 탭이 아닌 곳으로 전환 시 선택 모드 초기화
+  useEffect(() => {
+    if (currentBottomTab !== BottomTabType.MEMBERS && selectionMode !== null) {
+      setSelectionMode(null);
+      setSelectedPlayerIds([]);
+    }
+  }, [currentBottomTab]);
+
+  // 선수 데이터 변경 시 밸런싱 결과 무효화 (BALANCE 페이지에서는 유지)
+  const prevPlayersRef = useRef(players);
+  useEffect(() => {
+    if (result && currentPage !== AppPageType.BALANCE && prevPlayersRef.current !== players) {
+      setResult(null);
+    }
+    prevPlayersRef.current = players;
+  }, [players]);
+
   // Deep link auto-open
   useEffect(() => {
     if (pendingJoinRoomId) setShowApplyRoomModal(true);
