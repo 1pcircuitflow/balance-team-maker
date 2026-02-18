@@ -33,11 +33,11 @@ export const AdBanner: React.FC<{ lang: Language; darkMode: boolean; isAdFree: b
       timerId = setTimeout(async () => {
         try {
           const options = {
-            adId: 'ca-app-pub-3940256099942544/6300978111',
+            adId: 'ca-app-pub-4761157658396004/6797378026',
             adSize: BannerAdSize.ADAPTIVE_BANNER,
             position: BannerAdPosition.BOTTOM_CENTER,
             margin: 0,
-            isTesting: true
+            isTesting: false
           };
           await AdMob.showBanner(options);
         } catch (e) {

@@ -330,7 +330,7 @@ export const SettingsPage: React.FC = () => {
           {/* Version */}
           <div className="px-5 py-3.5 flex items-center justify-between">
             <span className="text-[12px] font-normal text-slate-900 dark:text-white">{t('version')}</span>
-            <span className="text-[12px] text-slate-400">2.1.26</span>
+            <span className="text-[12px] text-slate-400">2.2.0</span>
           </div>
         </div>
       </div>
